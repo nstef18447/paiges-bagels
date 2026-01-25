@@ -40,11 +40,15 @@ export async function PATCH(request: NextRequest) {
     const supabase = getServiceSupabase();
 
     // Update each pricing entry
-    const promises = updates.map(({ bagel_quantity, price }) =>
+    const promises = updates.map(({ id, bagel_quantity, price, label }) =>
       supabase
         .from('pricing')
-        .update({ price })
-        .eq('bagel_quantity', bagel_quantity)
+        .update({
+          bagel_quantity,
+          price,
+          label,
+        })
+        .eq('id', id)
     );
 
     const results = await Promise.all(promises);

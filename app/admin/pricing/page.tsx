@@ -4,11 +4,17 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Pricing } from '@/types';
 
+interface EditedPricing {
+  quantity: string;
+  price: string;
+  label: string;
+}
+
 export default function AdminPricingPage() {
   const [pricing, setPricing] = useState<Pricing[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [editedPrices, setEditedPrices] = useState<{ [key: number]: string }>({});
+  const [editedPricing, setEditedPricing] = useState<{ [id: string]: EditedPricing }>({});
 
   useEffect(() => {
     fetchPricing();
@@ -20,12 +26,16 @@ export default function AdminPricingPage() {
       const data = await response.json();
       setPricing(data);
 
-      // Initialize edited prices
-      const prices: { [key: number]: string } = {};
+      // Initialize edited pricing
+      const edited: { [id: string]: EditedPricing } = {};
       data.forEach((p: Pricing) => {
-        prices[p.bagel_quantity] = p.price.toFixed(2);
+        edited[p.id] = {
+          quantity: p.bagel_quantity.toString(),
+          price: p.price.toFixed(2),
+          label: p.label || `${p.bagel_quantity} Bagel${p.bagel_quantity === 1 ? '' : 's'}`,
+        };
       });
-      setEditedPrices(prices);
+      setEditedPricing(edited);
     } catch (error) {
       console.error('Failed to fetch pricing:', error);
     } finally {
@@ -33,10 +43,13 @@ export default function AdminPricingPage() {
     }
   };
 
-  const handlePriceChange = (quantity: number, value: string) => {
-    setEditedPrices((prev) => ({
+  const handleChange = (id: string, field: keyof EditedPricing, value: string) => {
+    setEditedPricing((prev) => ({
       ...prev,
-      [quantity]: value,
+      [id]: {
+        ...prev[id],
+        [field]: value,
+      },
     }));
   };
 
@@ -44,9 +57,11 @@ export default function AdminPricingPage() {
     setSaving(true);
 
     try {
-      const updates = Object.entries(editedPrices).map(([quantity, price]) => ({
-        bagel_quantity: parseInt(quantity),
-        price: parseFloat(price),
+      const updates = Object.entries(editedPricing).map(([id, data]) => ({
+        id,
+        bagel_quantity: parseInt(data.quantity),
+        price: parseFloat(data.price),
+        label: data.label.trim(),
       }));
 
       const response = await fetch('/api/pricing', {
@@ -98,25 +113,58 @@ export default function AdminPricingPage() {
         </nav>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-md">
+      <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl">
         <h2 className="text-2xl font-semibold mb-6">Manage Pricing</h2>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           {pricing.map((item) => (
-            <div key={item.id} className="flex items-center justify-between">
-              <label className="font-medium text-lg">
-                {item.bagel_quantity} {item.bagel_quantity === 1 ? 'Bagel' : 'Bagels'}:
-              </label>
-              <div className="flex items-center">
-                <span className="mr-2 text-lg">$</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={editedPrices[item.bagel_quantity] || ''}
-                  onChange={(e) => handlePriceChange(item.bagel_quantity, e.target.value)}
-                  className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+            <div key={item.id} className="border border-gray-200 rounded-lg p-4">
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Quantity (number of bagels)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={editedPricing[item.id]?.quantity || ''}
+                    onChange={(e) => handleChange(item.id, 'quantity', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Display Label
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g., 3 bagels and 1 free"
+                    value={editedPricing[item.id]?.label || ''}
+                    onChange={(e) => handleChange(item.id, 'label', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    This is what customers will see on the order form
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Price
+                  </label>
+                  <div className="flex items-center">
+                    <span className="mr-2 text-lg">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={editedPricing[item.id]?.price || ''}
+                      onChange={(e) => handleChange(item.id, 'price', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           ))}

@@ -135,7 +135,9 @@ export default function OrderForm() {
           <div className="grid grid-cols-3 gap-4 text-center">
             {pricing.map((item) => (
               <div key={item.id}>
-                <div className="font-bold text-lg">{item.bagel_quantity} {item.bagel_quantity === 1 ? 'Bagel' : 'Bagels'}</div>
+                <div className="font-bold text-lg">
+                  {item.label || `${item.bagel_quantity} ${item.bagel_quantity === 1 ? 'Bagel' : 'Bagels'}`}
+                </div>
                 <div className="text-2xl font-bold text-blue-600">${item.price.toFixed(2)}</div>
               </div>
             ))}

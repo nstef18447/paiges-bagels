@@ -72,5 +72,6 @@ export interface Pricing {
   id: string;
   bagel_quantity: number;
   price: number;
+  label?: string;
   updated_at: string;
 }
