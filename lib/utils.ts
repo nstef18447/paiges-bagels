@@ -16,7 +16,7 @@ export function isValidTotal(total: number): boolean {
 }
 
 export function generateVenmoNote(orderId: string): string {
-  return `bagel-${orderId.slice(0, 8)}`;
+  return `Paige's Bagels :) 🥯 Order: ${orderId.slice(0, 8)}`;
 }
 
 export function formatDate(dateString: string): string {
