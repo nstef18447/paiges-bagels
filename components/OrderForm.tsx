@@ -111,14 +111,14 @@ export default function OrderForm() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen" style={{ backgroundColor: '#FAF9F7' }}>
+      <div className="flex justify-center items-center min-h-screen" style={{ backgroundColor: '#FFF8F0' }}>
         <div className="text-lg" style={{ color: '#4A4A4A' }}>Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#FAF9F7' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#FFF8F0' }}>
       <div className="max-w-xl mx-auto px-6 py-10">
         {/* Logo Section */}
         <div className="mb-10 flex flex-col items-center">
