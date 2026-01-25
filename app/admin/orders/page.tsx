@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { OrderWithSlot } from '@/types';
+import { OrderWithDetails } from '@/types';
 import AdminOrderCard from '@/components/AdminOrderCard';
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<OrderWithSlot[]>([]);
+  const [orders, setOrders] = useState<OrderWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'pending' | 'confirmed' | 'ready'>('pending');
 
@@ -37,7 +37,7 @@ export default function AdminOrdersPage() {
       .order('created_at', { ascending: false });
 
     if (data) {
-      setOrders(data as unknown as OrderWithSlot[]);
+      setOrders(data as unknown as OrderWithDetails[]);
     }
     setLoading(false);
   };
