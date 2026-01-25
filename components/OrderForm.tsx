@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { BagelCounts, BagelType, TimeSlotWithCapacity } from '@/types';
-import { calculateTotal, calculatePrice, isValidTotal } from '@/lib/utils';
+import { BagelCounts, BagelType, TimeSlotWithCapacity, Pricing } from '@/types';
+import { calculateTotal, isValidTotal } from '@/lib/utils';
 import BagelSelector from './BagelSelector';
 import TimeSlotSelector from './TimeSlotSelector';
 
@@ -12,6 +12,7 @@ export default function OrderForm() {
   const router = useRouter();
   const [slots, setSlots] = useState<TimeSlotWithCapacity[]>([]);
   const [bagelTypes, setBagelTypes] = useState<BagelType[]>([]);
+  const [pricing, setPricing] = useState<Pricing[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -28,16 +29,19 @@ export default function OrderForm() {
 
   const fetchData = async () => {
     try {
-      const [slotsResponse, typesResponse] = await Promise.all([
+      const [slotsResponse, typesResponse, pricingResponse] = await Promise.all([
         fetch('/api/slots'),
         fetch('/api/bagel-types'),
+        fetch('/api/pricing'),
       ]);
 
       const slotsData = await slotsResponse.json();
       const typesData = await typesResponse.json();
+      const pricingData = await pricingResponse.json();
 
       setSlots(slotsData);
       setBagelTypes(typesData);
+      setPricing(pricingData);
     } catch (err) {
       console.error('Failed to fetch data:', err);
     } finally {
@@ -46,6 +50,13 @@ export default function OrderForm() {
   };
 
   const total = calculateTotal(bagelCounts);
+
+  // Calculate price from pricing table
+  const calculatePrice = (total: number): number => {
+    const priceEntry = pricing.find((p) => p.bagel_quantity === total);
+    return priceEntry ? priceEntry.price : 0;
+  };
+
   const price = calculatePrice(total);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -117,6 +128,20 @@ export default function OrderForm() {
           priority
         />
       </div>
+
+      {pricing.length > 0 && (
+        <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <h2 className="text-xl font-semibold mb-3 text-center">Pricing</h2>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            {pricing.map((item) => (
+              <div key={item.id}>
+                <div className="font-bold text-lg">{item.bagel_quantity} {item.bagel_quantity === 1 ? 'Bagel' : 'Bagels'}</div>
+                <div className="text-2xl font-bold text-blue-600">${item.price.toFixed(2)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <TimeSlotSelector

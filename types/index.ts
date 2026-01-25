@@ -67,3 +67,10 @@ export interface OrderFormData {
   customerPhone: string;
   bagelCounts: BagelCounts;
 }
+
+export interface Pricing {
+  id: string;
+  bagel_quantity: number;
+  price: number;
+  updated_at: string;
+}
