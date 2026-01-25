@@ -27,16 +27,19 @@ export default function TimeSlotSelector({
 
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold text-lg">Select Pickup Time</h3>
-
       {Object.entries(slotsByDate).length === 0 ? (
-        <p className="text-gray-500">No time slots available</p>
+        <p style={{ color: '#6B6B6B' }}>No time slots available</p>
       ) : (
         <div className="space-y-6">
           {Object.entries(slotsByDate).map(([date, dateSlots]) => (
             <div key={date}>
-              <h4 className="font-medium text-gray-700 mb-2">{formatDate(date)}</h4>
-              <div className="grid grid-cols-2 gap-2">
+              <h4
+                className="font-medium mb-3"
+                style={{ color: '#4A4A4A' }}
+              >
+                {formatDate(date)}
+              </h4>
+              <div className="grid grid-cols-2 gap-3">
                 {dateSlots.map((slot) => {
                   const isAvailable = slot.remaining >= requiredCapacity;
                   const isSelected = slot.id === selectedSlotId;
@@ -47,18 +50,25 @@ export default function TimeSlotSelector({
                       type="button"
                       onClick={() => isAvailable && onChange(slot.id)}
                       disabled={!isAvailable}
-                      className={`
-                        p-3 rounded-lg border-2 text-left transition-all
-                        ${isSelected
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 bg-white hover:border-gray-300'
-                        }
-                        ${!isAvailable && 'opacity-50 cursor-not-allowed'}
-                      `}
+                      className="p-4 rounded-lg text-left transition-all"
+                      style={{
+                        border: isSelected ? '2px solid #D4894B' : '1px solid #E5E0DB',
+                        backgroundColor: isSelected ? '#FDF8F3' : '#FFFFFF',
+                        opacity: isAvailable ? 1 : 0.5,
+                        cursor: isAvailable ? 'pointer' : 'not-allowed'
+                      }}
                     >
-                      <div className="font-medium">{formatTime(slot.time)}</div>
-                      <div className={`text-sm ${isAvailable ? 'text-gray-600' : 'text-red-600'}`}>
-                        {slot.remaining} bagels left
+                      <div
+                        className="font-semibold"
+                        style={{ color: isSelected ? '#B8743D' : '#1A1A1A' }}
+                      >
+                        {formatTime(slot.time)}
+                      </div>
+                      <div
+                        className="text-sm mt-1"
+                        style={{ color: isAvailable ? '#6B6B6B' : '#C75050' }}
+                      >
+                        {slot.remaining} bagels available
                       </div>
                     </button>
                   );

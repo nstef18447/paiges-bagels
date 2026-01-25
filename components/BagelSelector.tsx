@@ -29,16 +29,13 @@ export default function BagelSelector({ bagelTypes, counts, onChange, maxTotal }
   if (bagelTypes.length === 0) {
     return (
       <div className="space-y-4">
-        <h3 className="font-semibold text-lg">Select Your Bagels</h3>
-        <p className="text-gray-500">No bagel types available. Please contact the shop.</p>
+        <p style={{ color: '#6B6B6B' }}>No bagel types available. Please contact the shop.</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold text-lg">Select Your Bagels</h3>
-
       <div className="space-y-3">
         {bagelTypes.map((type) => (
           <BagelCounter
@@ -52,12 +49,18 @@ export default function BagelSelector({ bagelTypes, counts, onChange, maxTotal }
         ))}
       </div>
 
-      <div className="mt-4 p-4 bg-gray-100 rounded-lg">
-        <p className="text-sm text-gray-600">
-          Total: <span className="font-bold text-gray-900">{total}</span> bagels
+      <div
+        className="mt-4 p-4 rounded-lg"
+        style={{
+          backgroundColor: '#F5E6D3',
+          border: '1px solid #E8D4BC'
+        }}
+      >
+        <p style={{ color: '#4A4A4A' }}>
+          Total: <span className="font-bold" style={{ color: '#1A1A1A' }}>{total}</span> bagels
         </p>
         {total > 0 && total !== 1 && total !== 3 && total !== 6 && (
-          <p className="text-sm text-red-600 mt-1">
+          <p className="text-sm mt-1" style={{ color: '#C75050' }}>
             Please select exactly 1, 3, or 6 bagels
           </p>
         )}
@@ -76,23 +79,48 @@ interface BagelCounterProps {
 
 function BagelCounter({ label, count, onIncrement, onDecrement, disabled }: BagelCounterProps) {
   return (
-    <div className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
-      <span className="font-medium">{label}</span>
+    <div
+      className="flex items-center justify-between p-4 rounded-lg"
+      style={{
+        backgroundColor: '#FFFFFF',
+        border: '1px solid #E5E0DB'
+      }}
+    >
+      <span className="font-medium" style={{ color: '#1A1A1A' }}>{label}</span>
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={onDecrement}
           disabled={count === 0}
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-9 h-9 flex items-center justify-center rounded-full transition-all"
+          style={{
+            backgroundColor: count === 0 ? '#E5E0DB' : '#F5E6D3',
+            color: count === 0 ? '#A0A0A0' : '#B8743D',
+            cursor: count === 0 ? 'not-allowed' : 'pointer',
+            fontWeight: 'bold',
+            fontSize: '18px'
+          }}
         >
-          -
+          −
         </button>
-        <span className="w-8 text-center font-semibold">{count}</span>
+        <span
+          className="w-8 text-center font-bold text-lg"
+          style={{ color: '#1A1A1A' }}
+        >
+          {count}
+        </span>
         <button
           type="button"
           onClick={onIncrement}
           disabled={disabled}
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-9 h-9 flex items-center justify-center rounded-full transition-all"
+          style={{
+            backgroundColor: disabled ? '#E5E0DB' : '#D4894B',
+            color: disabled ? '#A0A0A0' : '#FFFFFF',
+            cursor: disabled ? 'not-allowed' : 'pointer',
+            fontWeight: 'bold',
+            fontSize: '18px'
+          }}
         >
           +
         </button>
