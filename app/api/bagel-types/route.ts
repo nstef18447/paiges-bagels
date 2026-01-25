@@ -10,8 +10,9 @@ export async function GET() {
       .order('display_order', { ascending: true });
 
     if (error) {
+      console.error('Supabase error:', error);
       return NextResponse.json(
-        { error: 'Failed to fetch bagel types' },
+        { error: 'Failed to fetch bagel types', details: error.message, code: error.code },
         { status: 500 }
       );
     }
