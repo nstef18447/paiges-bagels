@@ -45,5 +45,7 @@ export function generateVenmoLink(
   amount: number,
   note: string
 ): string {
-  return `https://venmo.com/${username}?txn=pay&amount=${amount}&note=${encodeURIComponent(note)}`;
+  // Use Venmo's paycharge URL format which better supports the note parameter
+  const encodedNote = encodeURIComponent(note);
+  return `https://venmo.com/paycharge?txn=pay&recipients=${username}&amount=${amount}&note=${encodedNote}`;
 }
