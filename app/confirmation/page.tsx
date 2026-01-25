@@ -4,15 +4,14 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
-import { Order, TimeSlot } from '@/types';
+import { OrderWithDetails } from '@/types';
 import { formatDate, formatTime, generateVenmoLink } from '@/lib/utils';
 
 function ConfirmationContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId');
 
-  const [order, setOrder] = useState<Order | null>(null);
-  const [timeSlot, setTimeSlot] = useState<TimeSlot | null>(null);
+  const [order, setOrder] = useState<OrderWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,20 +20,16 @@ function ConfirmationContent() {
     const fetchOrder = async () => {
       const { data: orderData } = await supabase
         .from('orders')
-        .select('*')
+        .select(`
+          *,
+          time_slot:time_slots(*),
+          order_items(*, bagel_type:bagel_types(*))
+        `)
         .eq('id', orderId)
         .single();
 
       if (orderData) {
-        setOrder(orderData);
-
-        const { data: slotData } = await supabase
-          .from('time_slots')
-          .select('*')
-          .eq('id', orderData.time_slot_id)
-          .single();
-
-        setTimeSlot(slotData);
+        setOrder(orderData as unknown as OrderWithDetails);
       }
 
       setLoading(false);
@@ -51,7 +46,7 @@ function ConfirmationContent() {
     );
   }
 
-  if (!order || !timeSlot) {
+  if (!order) {
     return (
       <div className="max-w-2xl mx-auto p-6">
         <h1 className="text-2xl font-bold text-red-600">Order not found</h1>
@@ -62,10 +57,14 @@ function ConfirmationContent() {
   const venmoUsername = process.env.NEXT_PUBLIC_VENMO_USERNAME || 'paiges-bagels';
   const venmoLink = generateVenmoLink(venmoUsername, order.total_price, order.venmo_note);
 
-  const bagelList = [];
-  if (order.plain_count > 0) bagelList.push(`${order.plain_count} Plain`);
-  if (order.everything_count > 0) bagelList.push(`${order.everything_count} Everything`);
-  if (order.sesame_count > 0) bagelList.push(`${order.sesame_count} Sesame`);
+  // Use order_items if available, otherwise fallback to old columns
+  const bagelList = order.order_items && order.order_items.length > 0
+    ? order.order_items.map(item => `${item.quantity} ${item.bagel_type.name}`)
+    : [
+        order.plain_count > 0 && `${order.plain_count} Plain`,
+        order.everything_count > 0 && `${order.everything_count} Everything`,
+        order.sesame_count > 0 && `${order.sesame_count} Sesame`,
+      ].filter(Boolean) as string[];
 
   return (
     <div className="max-w-2xl mx-auto p-6">
@@ -88,7 +87,7 @@ function ConfirmationContent() {
           <div>
             <p className="text-sm text-gray-600">Pickup Time</p>
             <p className="font-semibold">
-              {formatDate(timeSlot.date)} at {formatTime(timeSlot.time)}
+              {formatDate(order.time_slot.date)} at {formatTime(order.time_slot.time)}
             </p>
           </div>
 
