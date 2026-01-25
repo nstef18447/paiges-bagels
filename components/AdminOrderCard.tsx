@@ -7,9 +7,10 @@ interface AdminOrderCardProps {
   order: OrderWithDetails;
   onConfirm?: (orderId: string) => void;
   onMarkReady?: (orderId: string) => void;
+  onDelete?: (orderId: string) => void;
 }
 
-export default function AdminOrderCard({ order, onConfirm, onMarkReady }: AdminOrderCardProps) {
+export default function AdminOrderCard({ order, onConfirm, onMarkReady, onDelete }: AdminOrderCardProps) {
   // Get bagel list from order_items if available, otherwise fallback to old columns
   const bagelList = order.order_items && order.order_items.length > 0
     ? order.order_items.map(item => `${item.quantity} ${item.bagel_type.name}`)
@@ -73,6 +74,15 @@ export default function AdminOrderCard({ order, onConfirm, onMarkReady }: AdminO
         <div className="w-full py-2 px-4 bg-gray-100 text-gray-700 font-semibold rounded-lg text-center">
           Ready for Pickup
         </div>
+      )}
+
+      {onDelete && (
+        <button
+          onClick={() => onDelete(order.id)}
+          className="w-full mt-2 py-2 px-4 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition-colors"
+        >
+          Delete Order
+        </button>
       )}
     </div>
   );

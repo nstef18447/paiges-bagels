@@ -74,6 +74,26 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const handleDelete = async (orderId: string) => {
+    if (!confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/orders/${orderId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        fetchOrders();
+      } else {
+        alert('Failed to delete order');
+      }
+    } catch (error) {
+      alert('An error occurred');
+    }
+  };
+
   const filteredOrders = orders.filter((order) => order.status === activeTab);
 
   if (loading) {
@@ -153,6 +173,7 @@ export default function AdminOrdersPage() {
               order={order}
               onConfirm={activeTab === 'pending' ? handleConfirm : undefined}
               onMarkReady={activeTab === 'confirmed' ? handleMarkReady : undefined}
+              onDelete={handleDelete}
             />
           ))
         )}
