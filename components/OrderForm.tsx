@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { BagelCounts, BagelType, TimeSlotWithCapacity, Pricing } from '@/types';
 import { calculateTotal, isValidTotal } from '@/lib/utils';
 import BagelSelector from './BagelSelector';
@@ -122,13 +123,16 @@ export default function OrderForm() {
       <div className="max-w-xl mx-auto px-6 py-10">
         {/* Logo Section */}
         <div className="mb-10 flex flex-col items-center">
-          <Image
-            src="/logo.png"
-            alt="Paige's Bagels"
-            width={450}
-            height={450}
-            priority
-          />
+          <Link href="/">
+            <Image
+              src="/logo.png"
+              alt="Paige's Bagels"
+              width={450}
+              height={450}
+              priority
+              className="cursor-pointer"
+            />
+          </Link>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -364,13 +368,13 @@ export default function OrderForm() {
             {submitting ? 'Placing Order...' : 'Place Order'}
           </button>
 
-          {/* Instagram Link */}
-          <div className="text-center pt-2">
+          {/* Footer Links */}
+          <div className="text-center pt-4 flex flex-col gap-3">
             <a
               href="https://www.instagram.com/paigesbagels"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 transition-colors"
+              className="inline-flex items-center justify-center gap-2 transition-colors"
               style={{ color: '#6B6B6B' }}
               onMouseOver={(e) => e.currentTarget.style.color = '#004AAD'}
               onMouseOut={(e) => e.currentTarget.style.color = '#6B6B6B'}
@@ -380,6 +384,15 @@ export default function OrderForm() {
               </svg>
               Follow us on Instagram
             </a>
+            <Link
+              href="/about"
+              className="transition-colors"
+              style={{ color: '#6B6B6B' }}
+              onMouseOver={(e) => e.currentTarget.style.color = '#004AAD'}
+              onMouseOut={(e) => e.currentTarget.style.color = '#6B6B6B'}
+            >
+              About Us
+            </Link>
           </div>
         </form>
       </div>

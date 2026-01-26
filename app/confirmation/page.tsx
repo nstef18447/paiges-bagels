@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { OrderWithDetails } from '@/types';
 import { formatDate, formatTime, generateVenmoLink } from '@/lib/utils';
@@ -72,13 +73,15 @@ function ConfirmationContent() {
     <div className="min-h-screen" style={{ backgroundColor: '#FAF5EF' }}>
       <div className="max-w-xl mx-auto px-6 py-10">
         <div className="mb-8 flex flex-col items-center">
-          <Image
-            src="/logo.png"
-            alt="Paige's Bagels"
-            width={450}
-            height={450}
-            className="mb-6"
-          />
+          <Link href="/">
+            <Image
+              src="/logo.png"
+              alt="Paige's Bagels"
+              width={450}
+              height={450}
+              className="mb-6 cursor-pointer"
+            />
+          </Link>
           <h1 className="text-4xl mb-2" style={{ color: '#4A7C59' }}>Order Placed!</h1>
           <p style={{ color: '#6B6B6B' }}>Thank you for your order</p>
         </div>
