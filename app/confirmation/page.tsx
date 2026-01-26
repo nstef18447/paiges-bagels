@@ -40,16 +40,18 @@ function ConfirmationContent() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-lg">Loading...</div>
+      <div className="flex justify-center items-center min-h-screen" style={{ backgroundColor: '#FAF5EF' }}>
+        <div className="text-lg" style={{ color: '#4A4A4A' }}>Loading...</div>
       </div>
     );
   }
 
   if (!order) {
     return (
-      <div className="max-w-2xl mx-auto p-6">
-        <h1 className="text-2xl font-bold text-red-600">Order not found</h1>
+      <div className="min-h-screen" style={{ backgroundColor: '#FAF5EF' }}>
+        <div className="max-w-2xl mx-auto p-6">
+          <h1 className="text-2xl" style={{ color: '#C75050' }}>Order not found</h1>
+        </div>
       </div>
     );
   }
@@ -67,88 +69,163 @@ function ConfirmationContent() {
       ].filter(Boolean) as string[];
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <div className="mb-8 flex flex-col items-center">
-        <Image
-          src="/logo.png"
-          alt="Paige's Bagels"
-          width={350}
-          height={350}
-          className="mb-6"
-        />
-        <h1 className="text-3xl font-bold mb-2 text-green-600">Order Placed!</h1>
-        <p className="text-gray-600">Thank you for your order</p>
-      </div>
+    <div className="min-h-screen" style={{ backgroundColor: '#FAF5EF' }}>
+      <div className="max-w-xl mx-auto px-6 py-10">
+        <div className="mb-8 flex flex-col items-center">
+          <Image
+            src="/logo.png"
+            alt="Paige's Bagels"
+            width={450}
+            height={450}
+            className="mb-6"
+          />
+          <h1 className="text-4xl mb-2" style={{ color: '#4A7C59' }}>Order Placed!</h1>
+          <p style={{ color: '#6B6B6B' }}>Thank you for your order</p>
+        </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+        <div
+          className="rounded-lg p-6 mb-6"
+          style={{
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #E5E0DB'
+          }}
+        >
+          <h2
+            className="text-2xl mb-4 pb-2"
+            style={{
+              color: '#1A1A1A',
+              borderBottom: '2px solid #004AAD'
+            }}
+          >
+            Order Summary
+          </h2>
 
-        <div className="space-y-3">
-          <div>
-            <p className="text-sm text-gray-600">Pickup Time</p>
-            <p className="font-semibold">
-              {formatDate(order.time_slot.date)} at {formatTime(order.time_slot.time)}
-            </p>
-          </div>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm uppercase tracking-wide" style={{ color: '#6B6B6B' }}>Pickup Time</p>
+              <p className="font-semibold text-lg" style={{ color: '#1A1A1A' }}>
+                {formatDate(order.time_slot.date)} at {formatTime(order.time_slot.time)}
+              </p>
+            </div>
 
-          <div>
-            <p className="text-sm text-gray-600">Your Bagels</p>
-            <ul className="font-semibold">
-              {bagelList.map((item, i) => (
-                <li key={i}>{item}</li>
-              ))}
-            </ul>
-          </div>
+            <div>
+              <p className="text-sm uppercase tracking-wide" style={{ color: '#6B6B6B' }}>Your Bagels</p>
+              <ul className="font-semibold text-lg" style={{ color: '#1A1A1A' }}>
+                {bagelList.map((item, i) => (
+                  <li key={i}>{item}</li>
+                ))}
+              </ul>
+            </div>
 
-          <div className="pt-3 border-t">
-            <div className="flex justify-between items-center">
-              <span className="font-semibold">Total:</span>
-              <span className="text-2xl font-bold text-green-600">${order.total_price.toFixed(2)}</span>
+            <div
+              className="pt-4 mt-4"
+              style={{ borderTop: '1px solid #E5E0DB' }}
+            >
+              <div className="flex justify-between items-center">
+                <span className="font-semibold" style={{ color: '#4A4A4A' }}>Total:</span>
+                <span className="text-3xl font-bold" style={{ color: '#4A7C59' }}>${order.total_price.toFixed(2)}</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Next Steps</h2>
+        <div
+          className="rounded-lg p-6 mb-6"
+          style={{
+            backgroundColor: '#E8EDF5',
+            border: '1px solid #D4DCE8'
+          }}
+        >
+          <h2
+            className="text-2xl mb-4 pb-2"
+            style={{
+              color: '#1A1A1A',
+              borderBottom: '2px solid #004AAD'
+            }}
+          >
+            Next Steps
+          </h2>
 
-        <ol className="space-y-3 list-decimal list-inside">
-          <li className="font-medium">
-            Pay via Venmo
-            <p className="text-sm text-gray-600 ml-6 mt-1">
-              Use the button below to pay ${order.total_price.toFixed(2)}
-            </p>
-          </li>
-          <li className="font-medium">
-            Wait for confirmation email
-            <p className="text-sm text-gray-600 ml-6 mt-1">
-              We&apos;ll send a confirmation to {order.customer_email} once payment is verified
-            </p>
-          </li>
-          <li className="font-medium">
-            Pick up your bagels
-            <p className="text-sm text-gray-600 ml-6 mt-1">
-              You&apos;ll receive another email when your order is ready for pickup
-            </p>
-          </li>
-        </ol>
-      </div>
+          <ol className="space-y-4">
+            <li className="flex gap-3">
+              <span
+                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold"
+                style={{ backgroundColor: '#004AAD', color: '#FFFFFF' }}
+              >
+                1
+              </span>
+              <div>
+                <p className="font-semibold" style={{ color: '#1A1A1A' }}>Pay via Venmo</p>
+                <p className="text-sm" style={{ color: '#6B6B6B' }}>
+                  Use the button below to pay ${order.total_price.toFixed(2)}
+                </p>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span
+                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold"
+                style={{ backgroundColor: '#004AAD', color: '#FFFFFF' }}
+              >
+                2
+              </span>
+              <div>
+                <p className="font-semibold" style={{ color: '#1A1A1A' }}>Wait for confirmation email</p>
+                <p className="text-sm" style={{ color: '#6B6B6B' }}>
+                  We&apos;ll send a confirmation to {order.customer_email} once payment is verified
+                </p>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span
+                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold"
+                style={{ backgroundColor: '#004AAD', color: '#FFFFFF' }}
+              >
+                3
+              </span>
+              <div>
+                <p className="font-semibold" style={{ color: '#1A1A1A' }}>Pick up your bagels</p>
+                <p className="text-sm" style={{ color: '#6B6B6B' }}>
+                  You&apos;ll receive another email when your order is ready for pickup
+                </p>
+              </div>
+            </li>
+          </ol>
+        </div>
 
-      <a
-        href={venmoLink}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block w-full py-4 px-6 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors text-center"
-      >
-        Pay ${order.total_price.toFixed(2)} on Venmo
-      </a>
+        <a
+          href={venmoLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block w-full py-4 px-6 font-semibold rounded-lg text-center transition-all"
+          style={{
+            backgroundColor: '#004AAD',
+            color: '#FFFFFF'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#003A8C'}
+          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#004AAD'}
+        >
+          Pay ${order.total_price.toFixed(2)} on Venmo
+        </a>
 
-      <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-        <p className="text-sm text-gray-600">
-          <strong>Important:</strong> Your payment note is <code className="bg-white px-2 py-1 rounded">{order.venmo_note}</code>
-          <br />
-          This will be automatically included when you use the button above.
-        </p>
+        <div
+          className="mt-4 p-4 rounded-lg"
+          style={{
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #E5E0DB'
+          }}
+        >
+          <p className="text-sm" style={{ color: '#6B6B6B' }}>
+            <strong style={{ color: '#1A1A1A' }}>Important:</strong> Your payment note is{' '}
+            <code
+              className="px-2 py-1 rounded"
+              style={{ backgroundColor: '#E8EDF5', color: '#004AAD' }}
+            >
+              {order.venmo_note}
+            </code>
+            <br />
+            Please include this note when paying on Venmo.
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -157,8 +234,8 @@ function ConfirmationContent() {
 export default function ConfirmationPage() {
   return (
     <Suspense fallback={
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-lg">Loading...</div>
+      <div className="flex justify-center items-center min-h-screen" style={{ backgroundColor: '#FAF5EF' }}>
+        <div className="text-lg" style={{ color: '#4A4A4A' }}>Loading...</div>
       </div>
     }>
       <ConfirmationContent />

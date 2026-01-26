@@ -125,8 +125,8 @@ export default function OrderForm() {
           <Image
             src="/logo.png"
             alt="Paige's Bagels"
-            width={320}
-            height={320}
+            width={450}
+            height={450}
             priority
           />
         </div>
@@ -135,7 +135,7 @@ export default function OrderForm() {
           {/* Pickup Time Section */}
           <section>
             <h2
-              className="text-xl mb-4 pb-2"
+              className="text-2xl mb-4 pb-2"
               style={{
                 color: '#1A1A1A',
                 borderBottom: '2px solid #004AAD'
@@ -161,7 +161,7 @@ export default function OrderForm() {
               }}
             >
               <h2
-                className="text-xl mb-4 text-center"
+                className="text-2xl mb-4 text-center"
                 style={{ color: '#1A1A1A' }}
               >
                 Our Pricing
@@ -194,7 +194,7 @@ export default function OrderForm() {
           {/* Bagel Selection Section */}
           <section>
             <h2
-              className="text-xl mb-4 pb-2"
+              className="text-2xl mb-4 pb-2"
               style={{
                 color: '#1A1A1A',
                 borderBottom: '2px solid #004AAD'
@@ -213,7 +213,7 @@ export default function OrderForm() {
           {/* Customer Information Section */}
           <section>
             <h2
-              className="text-xl mb-4 pb-2"
+              className="text-2xl mb-4 pb-2"
               style={{
                 color: '#1A1A1A',
                 borderBottom: '2px solid #004AAD'
