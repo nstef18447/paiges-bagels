@@ -111,14 +111,14 @@ export default function OrderForm() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen" style={{ backgroundColor: '#FFF8F0' }}>
+      <div className="flex justify-center items-center min-h-screen" style={{ backgroundColor: '#FAF5EF' }}>
         <div className="text-lg" style={{ color: '#4A4A4A' }}>Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#FFF8F0' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#FAF5EF' }}>
       <div className="max-w-xl mx-auto px-6 py-10">
         {/* Logo Section */}
         <div className="mb-10 flex flex-col items-center">
@@ -138,7 +138,7 @@ export default function OrderForm() {
               className="text-xl mb-4 pb-2"
               style={{
                 color: '#1A1A1A',
-                borderBottom: '2px solid #D4894B'
+                borderBottom: '2px solid #004AAD'
               }}
             >
               Select Pickup Time
@@ -156,8 +156,8 @@ export default function OrderForm() {
             <section
               className="rounded-lg p-6"
               style={{
-                backgroundColor: '#F5E6D3',
-                border: '1px solid #E8D4BC'
+                backgroundColor: '#E8EDF5',
+                border: '1px solid #D4DCE8'
               }}
             >
               <h2
@@ -171,7 +171,7 @@ export default function OrderForm() {
                   <div
                     key={item.id}
                     className="text-center p-3 rounded-lg"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.6)' }}
+                    style={{ backgroundColor: 'rgba(255,255,255,0.7)' }}
                   >
                     <div
                       className="font-semibold text-sm mb-1"
@@ -181,7 +181,7 @@ export default function OrderForm() {
                     </div>
                     <div
                       className="text-2xl font-bold"
-                      style={{ color: '#B8743D' }}
+                      style={{ color: '#004AAD' }}
                     >
                       ${item.price.toFixed(2)}
                     </div>
@@ -197,7 +197,7 @@ export default function OrderForm() {
               className="text-xl mb-4 pb-2"
               style={{
                 color: '#1A1A1A',
-                borderBottom: '2px solid #D4894B'
+                borderBottom: '2px solid #004AAD'
               }}
             >
               Choose Your Bagels
@@ -216,7 +216,7 @@ export default function OrderForm() {
               className="text-xl mb-4 pb-2"
               style={{
                 color: '#1A1A1A',
-                borderBottom: '2px solid #D4894B'
+                borderBottom: '2px solid #004AAD'
               }}
             >
               Your Information
@@ -242,7 +242,7 @@ export default function OrderForm() {
                     backgroundColor: '#FFFFFF',
                     outline: 'none'
                   }}
-                  onFocus={(e) => e.target.style.borderColor = '#D4894B'}
+                  onFocus={(e) => e.target.style.borderColor = '#004AAD'}
                   onBlur={(e) => e.target.style.borderColor = '#E5E0DB'}
                   required
                 />
@@ -267,7 +267,7 @@ export default function OrderForm() {
                     backgroundColor: '#FFFFFF',
                     outline: 'none'
                   }}
-                  onFocus={(e) => e.target.style.borderColor = '#D4894B'}
+                  onFocus={(e) => e.target.style.borderColor = '#004AAD'}
                   onBlur={(e) => e.target.style.borderColor = '#E5E0DB'}
                   required
                 />
@@ -292,7 +292,7 @@ export default function OrderForm() {
                     backgroundColor: '#FFFFFF',
                     outline: 'none'
                   }}
-                  onFocus={(e) => e.target.style.borderColor = '#D4894B'}
+                  onFocus={(e) => e.target.style.borderColor = '#004AAD'}
                   onBlur={(e) => e.target.style.borderColor = '#E5E0DB'}
                   required
                 />
@@ -346,18 +346,18 @@ export default function OrderForm() {
             disabled={submitting || !isValidTotal(total)}
             className="w-full py-4 px-6 font-semibold rounded-lg transition-all"
             style={{
-              backgroundColor: submitting || !isValidTotal(total) ? '#D1D1D1' : '#D4894B',
+              backgroundColor: submitting || !isValidTotal(total) ? '#D1D1D1' : '#004AAD',
               color: submitting || !isValidTotal(total) ? '#8A8A8A' : '#FFFFFF',
               cursor: submitting || !isValidTotal(total) ? 'not-allowed' : 'pointer'
             }}
             onMouseOver={(e) => {
               if (!submitting && isValidTotal(total)) {
-                e.currentTarget.style.backgroundColor = '#B8743D';
+                e.currentTarget.style.backgroundColor = '#003A8C';
               }
             }}
             onMouseOut={(e) => {
               if (!submitting && isValidTotal(total)) {
-                e.currentTarget.style.backgroundColor = '#D4894B';
+                e.currentTarget.style.backgroundColor = '#004AAD';
               }
             }}
           >
@@ -372,7 +372,7 @@ export default function OrderForm() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 transition-colors"
               style={{ color: '#6B6B6B' }}
-              onMouseOver={(e) => e.currentTarget.style.color = '#D4894B'}
+              onMouseOver={(e) => e.currentTarget.style.color = '#004AAD'}
               onMouseOut={(e) => e.currentTarget.style.color = '#6B6B6B'}
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">

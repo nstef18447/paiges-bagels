@@ -52,15 +52,15 @@ export default function TimeSlotSelector({
                       disabled={!isAvailable}
                       className="p-4 rounded-lg text-left transition-all"
                       style={{
-                        border: isSelected ? '2px solid #D4894B' : '1px solid #E5E0DB',
-                        backgroundColor: isSelected ? '#FDF8F3' : '#FFFFFF',
+                        border: isSelected ? '2px solid #004AAD' : '1px solid #E5E0DB',
+                        backgroundColor: isSelected ? '#E8EDF5' : '#FFFFFF',
                         opacity: isAvailable ? 1 : 0.5,
                         cursor: isAvailable ? 'pointer' : 'not-allowed'
                       }}
                     >
                       <div
                         className="font-semibold"
-                        style={{ color: isSelected ? '#B8743D' : '#1A1A1A' }}
+                        style={{ color: isSelected ? '#004AAD' : '#1A1A1A' }}
                       >
                         {formatTime(slot.time)}
                       </div>

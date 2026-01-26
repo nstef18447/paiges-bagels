@@ -52,8 +52,8 @@ export default function BagelSelector({ bagelTypes, counts, onChange, maxTotal }
       <div
         className="mt-4 p-4 rounded-lg"
         style={{
-          backgroundColor: '#F5E6D3',
-          border: '1px solid #E8D4BC'
+          backgroundColor: '#E8EDF5',
+          border: '1px solid #D4DCE8'
         }}
       >
         <p style={{ color: '#4A4A4A' }}>
@@ -94,8 +94,8 @@ function BagelCounter({ label, count, onIncrement, onDecrement, disabled }: Bage
           disabled={count === 0}
           className="w-9 h-9 flex items-center justify-center rounded-full transition-all"
           style={{
-            backgroundColor: count === 0 ? '#E5E0DB' : '#F5E6D3',
-            color: count === 0 ? '#A0A0A0' : '#B8743D',
+            backgroundColor: count === 0 ? '#E5E0DB' : '#E8EDF5',
+            color: count === 0 ? '#A0A0A0' : '#004AAD',
             cursor: count === 0 ? 'not-allowed' : 'pointer',
             fontWeight: 'bold',
             fontSize: '18px'
@@ -115,7 +115,7 @@ function BagelCounter({ label, count, onIncrement, onDecrement, disabled }: Bage
           disabled={disabled}
           className="w-9 h-9 flex items-center justify-center rounded-full transition-all"
           style={{
-            backgroundColor: disabled ? '#E5E0DB' : '#D4894B',
+            backgroundColor: disabled ? '#E5E0DB' : '#004AAD',
             color: disabled ? '#A0A0A0' : '#FFFFFF',
             cursor: disabled ? 'not-allowed' : 'pointer',
             fontWeight: 'bold',
