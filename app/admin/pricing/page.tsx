@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Pricing } from '@/types';
 
 interface EditedPricing {
@@ -96,26 +97,18 @@ export default function AdminPricingPage() {
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-4">Paige&apos;s Bagels - Pricing</h1>
+        <div className="mb-4">
+          <Link href="/admin/orders">
+            <Image src="/logo.png" alt="Paige's Bagels" width={200} height={80} priority />
+          </Link>
+        </div>
         <nav className="flex gap-4">
-          <Link href="/admin/orders" className="text-blue-600 hover:underline">
-            Orders
-          </Link>
-          <Link href="/admin/slots" className="text-blue-600 hover:underline">
-            Time Slots
-          </Link>
-          <Link href="/admin/bagel-types" className="text-blue-600 hover:underline">
-            Bagel Types
-          </Link>
-          <Link href="/admin/pricing" className="text-blue-600 hover:underline font-semibold">
-            Pricing
-          </Link>
-          <Link href="/admin/costs" className="text-blue-600 hover:underline">
-            Costs
-          </Link>
-          <Link href="/admin/financials" className="text-blue-600 hover:underline">
-            Financials
-          </Link>
+          <Link href="/admin/orders" className="hover:underline" style={{ color: '#004AAD' }}>Orders</Link>
+          <Link href="/admin/slots" className="hover:underline" style={{ color: '#004AAD' }}>Time Slots</Link>
+          <Link href="/admin/bagel-types" className="hover:underline" style={{ color: '#004AAD' }}>Bagel Types</Link>
+          <Link href="/admin/pricing" className="hover:underline font-semibold" style={{ color: '#004AAD' }}>Pricing</Link>
+          <Link href="/admin/costs" className="hover:underline" style={{ color: '#004AAD' }}>Costs</Link>
+          <Link href="/admin/financials" className="hover:underline" style={{ color: '#004AAD' }}>Financials</Link>
         </nav>
       </div>
 
@@ -135,7 +128,7 @@ export default function AdminPricingPage() {
                     min="1"
                     value={editedPricing[item.id]?.quantity || ''}
                     onChange={(e) => handleChange(item.id, 'quantity', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
                   />
                 </div>
 
@@ -148,7 +141,7 @@ export default function AdminPricingPage() {
                     placeholder="e.g., 3 bagels and 1 free"
                     value={editedPricing[item.id]?.label || ''}
                     onChange={(e) => handleChange(item.id, 'label', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     This is what customers will see on the order form
@@ -167,7 +160,7 @@ export default function AdminPricingPage() {
                       min="0"
                       value={editedPricing[item.id]?.price || ''}
                       onChange={(e) => handleChange(item.id, 'price', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -179,7 +172,7 @@ export default function AdminPricingPage() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="w-full mt-6 py-3 px-6 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+          className="w-full mt-6 py-3 px-6 bg-[#004AAD] text-white font-semibold rounded-lg hover:bg-[#003A8C] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
         >
           {saving ? 'Saving...' : 'Save Pricing'}
         </button>

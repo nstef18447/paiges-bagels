@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { DailyFinancials } from '@/types';
 
 interface FinancialsData {
@@ -72,26 +73,18 @@ export default function AdminFinancialsPage() {
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-4">Paige&apos;s Bagels - Financials</h1>
+        <div className="mb-4">
+          <Link href="/admin/orders">
+            <Image src="/logo.png" alt="Paige's Bagels" width={200} height={80} priority />
+          </Link>
+        </div>
         <nav className="flex gap-4">
-          <Link href="/admin/orders" className="text-blue-600 hover:underline">
-            Orders
-          </Link>
-          <Link href="/admin/slots" className="text-blue-600 hover:underline">
-            Time Slots
-          </Link>
-          <Link href="/admin/bagel-types" className="text-blue-600 hover:underline">
-            Bagel Types
-          </Link>
-          <Link href="/admin/pricing" className="text-blue-600 hover:underline">
-            Pricing
-          </Link>
-          <Link href="/admin/costs" className="text-blue-600 hover:underline">
-            Costs
-          </Link>
-          <Link href="/admin/financials" className="text-blue-600 hover:underline font-semibold">
-            Financials
-          </Link>
+          <Link href="/admin/orders" className="hover:underline" style={{ color: '#004AAD' }}>Orders</Link>
+          <Link href="/admin/slots" className="hover:underline" style={{ color: '#004AAD' }}>Time Slots</Link>
+          <Link href="/admin/bagel-types" className="hover:underline" style={{ color: '#004AAD' }}>Bagel Types</Link>
+          <Link href="/admin/pricing" className="hover:underline" style={{ color: '#004AAD' }}>Pricing</Link>
+          <Link href="/admin/costs" className="hover:underline" style={{ color: '#004AAD' }}>Costs</Link>
+          <Link href="/admin/financials" className="hover:underline font-semibold" style={{ color: '#004AAD' }}>Financials</Link>
         </nav>
       </div>
 
@@ -108,7 +101,7 @@ export default function AdminFinancialsPage() {
           </div>
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <div className="text-sm text-gray-500 mb-1">Total Profit</div>
-            <div className="text-2xl font-bold text-blue-600">{fmt(summary.total_profit)}</div>
+            <div className="text-2xl font-bold text-[#004AAD]">{fmt(summary.total_profit)}</div>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <div className="text-sm text-gray-500 mb-1">Total Orders</div>
@@ -139,7 +132,7 @@ export default function AdminFinancialsPage() {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
             />
           </div>
           <div>
@@ -148,13 +141,13 @@ export default function AdminFinancialsPage() {
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
             />
           </div>
           <button
             onClick={handleFilter}
             disabled={loading}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 transition-colors"
+            className="px-4 py-2 bg-[#004AAD] text-white rounded-lg hover:bg-[#003A8C] disabled:bg-gray-300 transition-colors"
           >
             {loading ? 'Loading...' : 'Filter'}
           </button>
@@ -193,7 +186,7 @@ export default function AdminFinancialsPage() {
                   <td className="py-2 px-2">{day.bagels_sold}</td>
                   <td className="py-2 px-2 text-green-600">{fmt(day.revenue)}</td>
                   <td className="py-2 px-2 text-red-600">{fmt(day.cogs)}</td>
-                  <td className="py-2 px-2 text-blue-600 font-medium">{fmt(day.profit)}</td>
+                  <td className="py-2 px-2 text-[#004AAD] font-medium">{fmt(day.profit)}</td>
                   <td className="py-2 px-2">{day.profit_margin.toFixed(1)}%</td>
                 </tr>
               ))}

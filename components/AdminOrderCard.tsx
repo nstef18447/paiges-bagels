@@ -64,7 +64,7 @@ export default function AdminOrderCard({ order, onConfirm, onMarkReady, onDelete
       {order.status === 'confirmed' && onMarkReady && (
         <button
           onClick={() => onMarkReady(order.id)}
-          className="w-full py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors"
+          className="w-full py-2 px-4 bg-[#004AAD] text-white font-semibold rounded-lg hover:bg-[#003A8C] transition-colors"
         >
           Mark Ready for Pickup
         </button>

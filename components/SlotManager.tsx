@@ -119,7 +119,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
         <h2 className="text-2xl font-bold">Time Slot Management</h2>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          className="px-4 py-2 bg-[#004AAD] text-white rounded-lg hover:bg-[#003A8C] transition-colors"
         >
           {showForm ? 'Cancel' : 'Add Time Slot'}
         </button>
@@ -140,7 +140,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 min={today}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
                 required
               />
             </div>
@@ -154,7 +154,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
                 id="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
                 required
               />
             </div>
@@ -169,7 +169,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
                 value={capacity}
                 onChange={(e) => setCapacity(parseInt(e.target.value))}
                 min="1"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
                 required
               />
             </div>
@@ -262,7 +262,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
                     <div className="flex gap-2 ml-4">
                       <button
                         onClick={() => startEditing(slot)}
-                        className="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
+                        className="px-3 py-1 bg-[#004AAD] text-white rounded-lg hover:bg-[#003A8C] text-sm"
                       >
                         Edit
                       </button>

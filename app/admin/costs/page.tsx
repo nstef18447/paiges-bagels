@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Ingredient } from '@/types';
 
 interface EditableIngredient {
@@ -161,26 +162,18 @@ export default function AdminCostsPage() {
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-4">Paige&apos;s Bagels - Costs</h1>
+        <div className="mb-4">
+          <Link href="/admin/orders">
+            <Image src="/logo.png" alt="Paige's Bagels" width={200} height={80} priority />
+          </Link>
+        </div>
         <nav className="flex gap-4">
-          <Link href="/admin/orders" className="text-blue-600 hover:underline">
-            Orders
-          </Link>
-          <Link href="/admin/slots" className="text-blue-600 hover:underline">
-            Time Slots
-          </Link>
-          <Link href="/admin/bagel-types" className="text-blue-600 hover:underline">
-            Bagel Types
-          </Link>
-          <Link href="/admin/pricing" className="text-blue-600 hover:underline">
-            Pricing
-          </Link>
-          <Link href="/admin/costs" className="text-blue-600 hover:underline font-semibold">
-            Costs
-          </Link>
-          <Link href="/admin/financials" className="text-blue-600 hover:underline">
-            Financials
-          </Link>
+          <Link href="/admin/orders" className="hover:underline" style={{ color: '#004AAD' }}>Orders</Link>
+          <Link href="/admin/slots" className="hover:underline" style={{ color: '#004AAD' }}>Time Slots</Link>
+          <Link href="/admin/bagel-types" className="hover:underline" style={{ color: '#004AAD' }}>Bagel Types</Link>
+          <Link href="/admin/pricing" className="hover:underline" style={{ color: '#004AAD' }}>Pricing</Link>
+          <Link href="/admin/costs" className="hover:underline font-semibold" style={{ color: '#004AAD' }}>Costs</Link>
+          <Link href="/admin/financials" className="hover:underline" style={{ color: '#004AAD' }}>Financials</Link>
         </nav>
       </div>
 
@@ -219,7 +212,7 @@ export default function AdminCostsPage() {
                         value={item.name}
                         onChange={(e) => handleChange(key, 'name', e.target.value)}
                         placeholder="e.g., Bread Flour"
-                        className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
                       />
                     </td>
                     <td className="py-2 px-2">
@@ -228,7 +221,7 @@ export default function AdminCostsPage() {
                         value={item.unit}
                         onChange={(e) => handleChange(key, 'unit', e.target.value)}
                         placeholder="e.g., lb"
-                        className="w-24 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-24 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
                       />
                     </td>
                     <td className="py-2 px-2">
@@ -238,7 +231,7 @@ export default function AdminCostsPage() {
                         min="0"
                         value={item.cost_per_unit}
                         onChange={(e) => handleChange(key, 'cost_per_unit', e.target.value)}
-                        className="w-28 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-28 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
                       />
                     </td>
                     <td className="py-2 px-2">
@@ -248,7 +241,7 @@ export default function AdminCostsPage() {
                         min="0"
                         value={item.units_per_bagel}
                         onChange={(e) => handleChange(key, 'units_per_bagel', e.target.value)}
-                        className="w-28 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-28 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
                       />
                     </td>
                     <td className="py-2 px-2 text-gray-700">
@@ -286,7 +279,7 @@ export default function AdminCostsPage() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="w-full mt-6 py-3 px-6 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+          className="w-full mt-6 py-3 px-6 bg-[#004AAD] text-white font-semibold rounded-lg hover:bg-[#003A8C] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
         >
           {saving ? 'Saving...' : 'Save All Ingredients'}
         </button>

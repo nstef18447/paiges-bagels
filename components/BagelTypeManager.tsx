@@ -95,7 +95,7 @@ export default function BagelTypeManager({ bagelTypes, onRefresh }: BagelTypeMan
         <h2 className="text-2xl font-bold">Bagel Types</h2>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          className="px-4 py-2 bg-[#004AAD] text-white rounded-lg hover:bg-[#003A8C] transition-colors"
         >
           {showForm ? 'Cancel' : 'Add Bagel Type'}
         </button>
@@ -116,7 +116,7 @@ export default function BagelTypeManager({ bagelTypes, onRefresh }: BagelTypeMan
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g., Poppy Seed, Cinnamon Raisin"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
                 required
               />
             </div>
@@ -183,7 +183,7 @@ export default function BagelTypeManager({ bagelTypes, onRefresh }: BagelTypeMan
                           setEditingId(type.id);
                           setEditingName(type.name);
                         }}
-                        className="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                        className="px-3 py-1 bg-[#004AAD] text-white rounded-lg hover:bg-[#003A8C]"
                       >
                         Edit
                       </button>

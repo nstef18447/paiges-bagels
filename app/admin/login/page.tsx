@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -34,9 +36,14 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#f6f4f0' }}>
       <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
-        <h1 className="text-2xl font-bold mb-6 text-center">Admin Login</h1>
+        <div className="flex justify-center mb-6">
+          <Link href="/">
+            <Image src="/logo.png" alt="Paige's Bagels" width={200} height={80} priority />
+          </Link>
+        </div>
+        <h1 className="text-2xl font-bold mb-6 text-center" style={{ color: '#004AAD' }}>Admin Login</h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -48,7 +55,7 @@ export default function AdminLoginPage() {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
               required
             />
           </div>
@@ -62,7 +69,10 @@ export default function AdminLoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 disabled:bg-gray-300 transition-colors"
+            className="w-full py-2 px-4 text-white font-semibold rounded-lg disabled:bg-gray-300 transition-colors"
+            style={{ backgroundColor: '#004AAD' }}
+            onMouseOver={(e) => { if (!loading) e.currentTarget.style.backgroundColor = '#003A8C'; }}
+            onMouseOut={(e) => { if (!loading) e.currentTarget.style.backgroundColor = '#004AAD'; }}
           >
             {loading ? 'Logging in...' : 'Login'}
           </button>
