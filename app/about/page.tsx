@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#FAF5EF' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#f6f4f0' }}>
       <div className="max-w-xl mx-auto px-6 py-10">
         {/* Logo Section */}
         <div className="mb-10 flex flex-col items-center">

@@ -41,7 +41,7 @@ function ConfirmationContent() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen" style={{ backgroundColor: '#FAF5EF' }}>
+      <div className="flex justify-center items-center min-h-screen" style={{ backgroundColor: '#f6f4f0' }}>
         <div className="text-lg" style={{ color: '#4A4A4A' }}>Loading...</div>
       </div>
     );
@@ -49,7 +49,7 @@ function ConfirmationContent() {
 
   if (!order) {
     return (
-      <div className="min-h-screen" style={{ backgroundColor: '#FAF5EF' }}>
+      <div className="min-h-screen" style={{ backgroundColor: '#f6f4f0' }}>
         <div className="max-w-2xl mx-auto p-6">
           <h1 className="text-2xl" style={{ color: '#C75050' }}>Order not found</h1>
         </div>
@@ -70,7 +70,7 @@ function ConfirmationContent() {
       ].filter(Boolean) as string[];
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#FAF5EF' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#f6f4f0' }}>
       <div className="max-w-xl mx-auto px-6 py-10">
         <div className="mb-8 flex flex-col items-center">
           <Link href="/">
@@ -237,7 +237,7 @@ function ConfirmationContent() {
 export default function ConfirmationPage() {
   return (
     <Suspense fallback={
-      <div className="flex justify-center items-center min-h-screen" style={{ backgroundColor: '#FAF5EF' }}>
+      <div className="flex justify-center items-center min-h-screen" style={{ backgroundColor: '#f6f4f0' }}>
         <div className="text-lg" style={{ color: '#4A4A4A' }}>Loading...</div>
       </div>
     }>

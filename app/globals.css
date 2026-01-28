@@ -1,11 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FAF5EF;
+  --background: #f6f4f0;
   --foreground: #2D2D2D;
   --primary: #004AAD;
   --primary-dark: #003A8C;
   --primary-light: #1A5FBD;
+  --brown: #7A4900;
   --accent: #E8EDF5;
   --accent-dark: #D4DCE8;
   --text-dark: #1A1A1A;
@@ -14,38 +15,40 @@
   --border: #E5E0DB;
   --success: #4A7C59;
   --error: #C75050;
-  --font-pacifico: var(--font-pacifico);
-  --font-lekton: var(--font-lekton);
+  --font-arapey: var(--font-arapey);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-lekton);
-  --font-mono: var(--font-lekton);
+  --font-sans: var(--font-arapey);
+  --font-mono: var(--font-arapey);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-lekton), 'Courier New', monospace;
+  font-family: var(--font-arapey), Georgia, serif;
+  font-style: italic;
   min-height: 100vh;
 }
 
 h1, h2, h3 {
-  font-family: var(--font-pacifico), cursive;
+  font-family: var(--font-arapey), Georgia, serif;
+  font-style: italic;
   font-weight: 400;
 }
 
 h4, h5, h6 {
-  font-family: var(--font-lekton), 'Courier New', monospace;
-  font-weight: 700;
+  font-family: var(--font-arapey), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 input, select, button {
-  font-family: var(--font-lekton), 'Courier New', monospace;
+  font-family: var(--font-arapey), Georgia, serif;
 }
 
 /* Custom scrollbar */

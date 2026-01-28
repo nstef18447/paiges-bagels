@@ -1,16 +1,11 @@
 import type { Metadata } from "next";
-import { Pacifico, Lekton } from "next/font/google";
+import { Arapey } from "next/font/google";
 import "./globals.css";
 
-const pacifico = Pacifico({
+const arapey = Arapey({
   weight: "400",
-  variable: "--font-pacifico",
-  subsets: ["latin"],
-});
-
-const lekton = Lekton({
-  weight: ["400", "700"],
-  variable: "--font-lekton",
+  style: ["normal", "italic"],
+  variable: "--font-arapey",
   subsets: ["latin"],
 });
 
@@ -27,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${pacifico.variable} ${lekton.variable} antialiased`}
+        className={`${arapey.variable} antialiased`}
       >
         {children}
       </body>
