@@ -62,6 +62,18 @@ export default function AdminBagelTypesPage() {
           >
             Pricing
           </Link>
+          <Link
+            href="/admin/costs"
+            className="text-blue-600 hover:underline"
+          >
+            Costs
+          </Link>
+          <Link
+            href="/admin/financials"
+            className="text-blue-600 hover:underline"
+          >
+            Financials
+          </Link>
         </nav>
       </div>
 

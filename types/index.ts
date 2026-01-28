@@ -75,3 +75,23 @@ export interface Pricing {
   label?: string;
   updated_at: string;
 }
+
+export interface Ingredient {
+  id: string;
+  name: string;
+  unit: string;
+  cost_per_unit: number;
+  units_per_bagel: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DailyFinancials {
+  date: string;
+  orders: number;
+  bagels_sold: number;
+  revenue: number;
+  cogs: number;
+  profit: number;
+  profit_margin: number;
+}

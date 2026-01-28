@@ -110,6 +110,12 @@ export default function AdminPricingPage() {
           <Link href="/admin/pricing" className="text-blue-600 hover:underline font-semibold">
             Pricing
           </Link>
+          <Link href="/admin/costs" className="text-blue-600 hover:underline">
+            Costs
+          </Link>
+          <Link href="/admin/financials" className="text-blue-600 hover:underline">
+            Financials
+          </Link>
         </nav>
       </div>
 
