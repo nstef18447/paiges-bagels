@@ -10,15 +10,16 @@ export default function Home() {
       style={{ backgroundColor: '#f6f4f0' }}
     >
       {/* Logo - Big and Centered */}
-      <div className="mb-12">
+      <div className="mb-4 overflow-hidden" style={{ marginBottom: '-40px' }}>
         <Image
           src="/logo.svg"
           alt="Paige's Bagels"
-          width={822}
-          height={452}
+          width={375}
+          height={375}
           priority
           unoptimized
-          className="w-auto h-auto max-w-[500px]"
+          className="w-auto h-auto max-w-[400px]"
+          style={{ marginBottom: '-60px' }}
         />
       </div>
 
