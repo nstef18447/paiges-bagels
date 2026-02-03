@@ -16,9 +16,8 @@ export default function AboutPage() {
               width={822}
               height={452}
               unoptimized
-              className="w-auto h-auto max-w-[350px]"
+              className="w-auto h-auto max-w-[350px] cursor-pointer"
               priority
-              className="cursor-pointer"
             />
           </Link>
         </div>

@@ -80,8 +80,7 @@ function ConfirmationContent() {
               width={822}
               height={452}
               unoptimized
-              className="w-auto h-auto max-w-[350px]"
-              className="mb-6 cursor-pointer"
+              className="w-auto h-auto max-w-[350px] mb-6 cursor-pointer"
             />
           </Link>
           <h1 className="text-4xl mb-2" style={{ color: '#4A7C59' }}>Order Placed!</h1>
