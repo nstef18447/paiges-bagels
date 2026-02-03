@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-export default function AboutPage() {
+export default function ContactPage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#f6f4f0' }}>
       <div className="max-w-xl mx-auto px-6 py-10">
@@ -25,8 +25,8 @@ export default function AboutPage() {
         <nav className="flex justify-center gap-8 mb-10">
           <Link
             href="/about"
-            className="font-semibold tracking-widest transition-all"
-            style={{ color: '#1A1A1A', borderBottom: '2px solid #004AAD' }}
+            className="font-semibold tracking-widest transition-all hover:scale-105"
+            style={{ color: '#004AAD' }}
           >
             ABOUT
           </Link>
@@ -39,14 +39,14 @@ export default function AboutPage() {
           </Link>
           <Link
             href="/contact"
-            className="font-semibold tracking-widest transition-all hover:scale-105"
-            style={{ color: '#004AAD' }}
+            className="font-semibold tracking-widest transition-all"
+            style={{ color: '#1A1A1A', borderBottom: '2px solid #004AAD' }}
           >
             CONTACT
           </Link>
         </nav>
 
-        {/* About Section */}
+        {/* Contact Section */}
         <div
           className="rounded-lg p-6 mb-6"
           style={{
@@ -55,31 +55,49 @@ export default function AboutPage() {
           }}
         >
           <h1
-            className="text-3xl mb-4 pb-2 text-center"
+            className="text-3xl mb-6 pb-2 text-center"
             style={{
               color: '#1A1A1A',
               borderBottom: '2px solid #004AAD'
             }}
           >
-            About Us
+            Get In Touch
           </h1>
 
-          <div className="space-y-4" style={{ color: '#4A4A4A' }}>
-            <p>
-              Welcome to Paige&apos;s Bagels! We&apos;re passionate about crafting
-              authentic sourdough bagels using traditional methods and the finest ingredients.
-            </p>
+          <div className="space-y-6" style={{ color: '#4A4A4A' }}>
+            <div className="text-center">
+              <p className="font-semibold text-lg mb-2" style={{ color: '#1A1A1A' }}>
+                Instagram
+              </p>
+              <a
+                href="https://www.instagram.com/paigesbagels"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: '#004AAD' }}
+                className="text-lg hover:underline"
+              >
+                @paigesbagels
+              </a>
+            </div>
 
-            <p>
-              Each bagel is hand-rolled and boiled before baking, giving them that
-              perfect chewy interior and crispy exterior that bagel lovers crave.
-            </p>
+            <div className="text-center">
+              <p className="font-semibold text-lg mb-2" style={{ color: '#1A1A1A' }}>
+                Email
+              </p>
+              <a
+                href="mailto:hello@paigesbagels.com"
+                style={{ color: '#004AAD' }}
+                className="text-lg hover:underline"
+              >
+                hello@paigesbagels.com
+              </a>
+            </div>
 
-            <p>
-              Our sourdough starter has been carefully maintained to develop complex
-              flavors that make our bagels truly special. We believe in quality over
-              quantity, which is why we make limited batches to ensure freshness.
-            </p>
+            <div className="text-center pt-4">
+              <p style={{ color: '#6B6B6B' }}>
+                Questions about your order? DM us on Instagram or send us an email!
+              </p>
+            </div>
           </div>
         </div>
 
