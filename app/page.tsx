@@ -24,24 +24,24 @@ export default function Home() {
       </div>
 
       {/* Navigation Bar */}
-      <nav className="flex gap-16">
+      <nav className="flex flex-col sm:flex-row gap-4 sm:gap-16 items-center">
         <Link
           href="/about"
-          className="text-3xl font-bold tracking-widest transition-all hover:scale-105"
+          className="text-2xl sm:text-3xl font-bold tracking-widest transition-all hover:scale-105"
           style={{ color: '#004AAD' }}
         >
           ABOUT
         </Link>
         <Link
           href="/order"
-          className="text-3xl font-bold tracking-widest transition-all hover:scale-105"
+          className="text-2xl sm:text-3xl font-bold tracking-widest transition-all hover:scale-105"
           style={{ color: '#004AAD' }}
         >
           ORDER
         </Link>
         <Link
           href="/contact"
-          className="text-3xl font-bold tracking-widest transition-all hover:scale-105"
+          className="text-2xl sm:text-3xl font-bold tracking-widest transition-all hover:scale-105"
           style={{ color: '#004AAD' }}
         >
           CONTACT
