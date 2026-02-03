@@ -125,7 +125,7 @@ export default function OrderForm() {
         <div className="mb-10 flex flex-col items-center">
           <Link href="/">
             <Image
-              src="/logo.png"
+              src="/logo.svg"
               alt="Paige's Bagels"
               width={822}
               height={452}

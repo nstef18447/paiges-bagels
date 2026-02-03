@@ -75,7 +75,7 @@ function ConfirmationContent() {
         <div className="mb-8 flex flex-col items-center">
           <Link href="/">
             <Image
-              src="/logo.png"
+              src="/logo.svg"
               alt="Paige's Bagels"
               width={822}
               height={452}

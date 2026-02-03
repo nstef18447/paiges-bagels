@@ -12,7 +12,7 @@ export default function Home() {
       {/* Logo - Big and Centered */}
       <div className="mb-12">
         <Image
-          src="/logo.png"
+          src="/logo.svg"
           alt="Paige's Bagels"
           width={822}
           height={452}
