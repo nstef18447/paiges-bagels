@@ -24,21 +24,21 @@ export default function Home() {
       <nav className="flex gap-12">
         <Link
           href="/about"
-          className="text-xl font-semibold tracking-widest transition-all hover:scale-105"
+          className="text-xl font-bold tracking-widest transition-all hover:scale-105"
           style={{ color: '#004AAD' }}
         >
           ABOUT
         </Link>
         <Link
           href="/order"
-          className="text-xl font-semibold tracking-widest transition-all hover:scale-105"
+          className="text-xl font-bold tracking-widest transition-all hover:scale-105"
           style={{ color: '#004AAD' }}
         >
           ORDER
         </Link>
         <Link
           href="/contact"
-          className="text-xl font-semibold tracking-widest transition-all hover:scale-105"
+          className="text-xl font-bold tracking-widest transition-all hover:scale-105"
           style={{ color: '#004AAD' }}
         >
           CONTACT
