@@ -209,26 +209,6 @@ function ConfirmationContent() {
         >
           Pay ${order.total_price.toFixed(2)} on Venmo
         </a>
-
-        <div
-          className="mt-4 p-4 rounded-lg"
-          style={{
-            backgroundColor: '#FFFFFF',
-            border: '1px solid #E5E0DB'
-          }}
-        >
-          <p className="text-sm" style={{ color: '#6B6B6B' }}>
-            <strong style={{ color: '#1A1A1A' }}>Important:</strong> Your payment note is{' '}
-            <code
-              className="px-2 py-1 rounded"
-              style={{ backgroundColor: '#E8EDF5', color: '#004AAD' }}
-            >
-              {order.venmo_note}
-            </code>
-            <br />
-            Please include this note when paying on Venmo.
-          </p>
-        </div>
       </div>
     </div>
   );
