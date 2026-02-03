@@ -39,7 +39,7 @@ export async function sendConfirmationEmail(
   `;
 
   await resend.emails.send({
-    from: 'Paige\'s Bagels <onboarding@resend.dev>',
+    from: 'Paige\'s Bagels <orders@paigesbagels.com>',
     to: order.customer_email,
     subject: 'Your Paige\'s Bagels Order is Confirmed! 🥯',
     html: emailHtml,
@@ -60,7 +60,7 @@ export async function sendReadyEmail(
   `;
 
   await resend.emails.send({
-    from: 'Paige\'s Bagels <onboarding@resend.dev>',
+    from: 'Paige\'s Bagels <orders@paigesbagels.com>',
     to: order.customer_email,
     subject: 'Your Bagels are Ready! 🥯',
     html: emailHtml,
