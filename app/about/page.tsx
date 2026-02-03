@@ -13,8 +13,10 @@ export default function AboutPage() {
             <Image
               src="/logo.png"
               alt="Paige's Bagels"
-              width={350}
-              height={350}
+              width={822}
+              height={452}
+              unoptimized
+              className="w-auto h-auto max-w-[350px]"
               priority
               className="cursor-pointer"
             />

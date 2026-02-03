@@ -77,8 +77,10 @@ function ConfirmationContent() {
             <Image
               src="/logo.png"
               alt="Paige's Bagels"
-              width={450}
-              height={450}
+              width={822}
+              height={452}
+              unoptimized
+              className="w-auto h-auto max-w-[350px]"
               className="mb-6 cursor-pointer"
             />
           </Link>

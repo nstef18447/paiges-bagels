@@ -14,9 +14,11 @@ export default function Home() {
         <Image
           src="/logo.png"
           alt="Paige's Bagels"
-          width={500}
-          height={500}
+          width={822}
+          height={452}
           priority
+          unoptimized
+          className="w-auto h-auto max-w-[500px]"
         />
       </div>
 
