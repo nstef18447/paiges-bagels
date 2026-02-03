@@ -41,7 +41,8 @@ export default function TimeSlotSelector({
               </h4>
               <div className="grid grid-cols-2 gap-3">
                 {dateSlots.map((slot) => {
-                  const isAvailable = slot.remaining >= requiredCapacity;
+                  const isSoldOut = slot.remaining === 0;
+                  const isAvailable = slot.remaining >= requiredCapacity && !isSoldOut;
                   const isSelected = slot.id === selectedSlotId;
 
                   return (
@@ -50,26 +51,60 @@ export default function TimeSlotSelector({
                       type="button"
                       onClick={() => isAvailable && onChange(slot.id)}
                       disabled={!isAvailable}
-                      className="p-4 rounded-lg text-left transition-all"
+                      className="p-4 rounded-lg text-left transition-all relative overflow-hidden"
                       style={{
-                        border: isSelected ? '2px solid #004AAD' : '1px solid #E5E0DB',
-                        backgroundColor: isSelected ? '#E8EDF5' : '#FFFFFF',
-                        opacity: isAvailable ? 1 : 0.5,
+                        border: isSoldOut
+                          ? '2px solid #DC2626'
+                          : isSelected
+                            ? '2px solid #004AAD'
+                            : '1px solid #E5E0DB',
+                        backgroundColor: isSoldOut
+                          ? '#FEF2F2'
+                          : isSelected
+                            ? '#E8EDF5'
+                            : '#FFFFFF',
+                        opacity: isAvailable ? 1 : isSoldOut ? 1 : 0.5,
                         cursor: isAvailable ? 'pointer' : 'not-allowed'
                       }}
                     >
+                      {/* X overlay for sold out */}
+                      {isSoldOut && (
+                        <>
+                          <div
+                            className="absolute inset-0 pointer-events-none"
+                            style={{
+                              background: 'linear-gradient(to top right, transparent calc(50% - 1px), #DC2626 calc(50% - 1px), #DC2626 calc(50% + 1px), transparent calc(50% + 1px))'
+                            }}
+                          />
+                          <div
+                            className="absolute inset-0 pointer-events-none"
+                            style={{
+                              background: 'linear-gradient(to bottom right, transparent calc(50% - 1px), #DC2626 calc(50% - 1px), #DC2626 calc(50% + 1px), transparent calc(50% + 1px))'
+                            }}
+                          />
+                        </>
+                      )}
                       <div
                         className="font-semibold"
-                        style={{ color: isSelected ? '#004AAD' : '#1A1A1A' }}
+                        style={{ color: isSoldOut ? '#991B1B' : isSelected ? '#004AAD' : '#1A1A1A' }}
                       >
                         {formatTime(slot.time)}
                       </div>
-                      <div
-                        className="text-sm mt-1"
-                        style={{ color: isAvailable ? '#6B6B6B' : '#C75050' }}
-                      >
-                        {slot.remaining} bagels available
-                      </div>
+                      {isSoldOut ? (
+                        <div
+                          className="text-sm mt-1 font-bold uppercase tracking-wide"
+                          style={{ color: '#DC2626' }}
+                        >
+                          SOLD OUT
+                        </div>
+                      ) : (
+                        <div
+                          className="text-sm mt-1"
+                          style={{ color: isAvailable ? '#6B6B6B' : '#C75050' }}
+                        >
+                          {slot.remaining} bagels available
+                        </div>
+                      )}
                     </button>
                   );
                 })}
