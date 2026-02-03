@@ -10,7 +10,7 @@ export default function Home() {
       style={{ backgroundColor: '#f6f4f0' }}
     >
       {/* Logo - Big and Centered */}
-      <div className="mb-4 overflow-hidden" style={{ marginBottom: '-40px' }}>
+      <div className="mb-4 overflow-hidden" style={{ marginBottom: '-60px' }}>
         <Image
           src="/logo.svg"
           alt="Paige's Bagels"
@@ -18,30 +18,30 @@ export default function Home() {
           height={375}
           priority
           unoptimized
-          className="w-auto h-auto max-w-[400px]"
-          style={{ marginBottom: '-60px' }}
+          className="w-auto h-auto max-w-[550px]"
+          style={{ marginBottom: '-80px' }}
         />
       </div>
 
       {/* Navigation Bar */}
-      <nav className="flex gap-12">
+      <nav className="flex gap-16">
         <Link
           href="/about"
-          className="text-xl font-bold tracking-widest transition-all hover:scale-105"
+          className="text-3xl font-bold tracking-widest transition-all hover:scale-105"
           style={{ color: '#004AAD' }}
         >
           ABOUT
         </Link>
         <Link
           href="/order"
-          className="text-xl font-bold tracking-widest transition-all hover:scale-105"
+          className="text-3xl font-bold tracking-widest transition-all hover:scale-105"
           style={{ color: '#004AAD' }}
         >
           ORDER
         </Link>
         <Link
           href="/contact"
-          className="text-xl font-bold tracking-widest transition-all hover:scale-105"
+          className="text-3xl font-bold tracking-widest transition-all hover:scale-105"
           style={{ color: '#004AAD' }}
         >
           CONTACT
