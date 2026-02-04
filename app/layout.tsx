@@ -12,6 +12,10 @@ const arapey = Arapey({
 export const metadata: Metadata = {
   title: "Paige's Bagels - Sourdough Bagels",
   description: "Fresh sourdough bagels made to order. Worth waking up for!",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
   openGraph: {
     title: "Paige's Bagels",
     description: "Fresh sourdough bagels made to order. Worth waking up for!",
