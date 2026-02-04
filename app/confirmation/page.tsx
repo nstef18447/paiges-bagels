@@ -71,18 +71,24 @@ function ConfirmationContent() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#f6f4f0' }}>
-      <div className="max-w-xl mx-auto px-6 py-10">
-        <div className="mb-8 flex flex-col items-center">
+      <div className="max-w-xl mx-auto px-6 pb-10">
+        {/* Logo Section */}
+        <div className="flex flex-col items-center overflow-hidden" style={{ marginBottom: '-30px' }}>
           <Link href="/">
             <Image
               src="/logo.svg"
               alt="Paige's Bagels"
-              width={822}
-              height={452}
+              width={375}
+              height={375}
               unoptimized
-              className="w-auto h-auto max-w-[350px] mb-6 cursor-pointer"
+              className="w-auto h-auto max-w-[450px] cursor-pointer"
+              style={{ marginTop: '-50px', marginBottom: '-70px' }}
+              priority
             />
           </Link>
+        </div>
+
+        <div className="mb-8 flex flex-col items-center text-center">
           <h1 className="text-4xl mb-2" style={{ color: '#4A7C59' }}>Order Placed!</h1>
           <p style={{ color: '#6B6B6B' }}>Thank you for your order</p>
         </div>
