@@ -8,22 +8,23 @@ export default function AboutPage() {
     <div className="min-h-screen" style={{ backgroundColor: '#f6f4f0' }}>
       <div className="max-w-xl mx-auto px-6 py-10">
         {/* Logo Section */}
-        <div className="mb-10 flex flex-col items-center">
+        <div className="flex flex-col items-center overflow-hidden" style={{ marginBottom: '-40px' }}>
           <Link href="/">
             <Image
               src="/logo.svg"
               alt="Paige's Bagels"
-              width={822}
-              height={452}
+              width={375}
+              height={375}
               unoptimized
-              className="w-auto h-auto max-w-[350px] cursor-pointer"
+              className="w-auto h-auto max-w-[300px] cursor-pointer"
+              style={{ marginBottom: '-50px' }}
               priority
             />
           </Link>
         </div>
 
         {/* Navigation */}
-        <nav className="flex justify-center gap-8 mb-10">
+        <nav className="flex justify-center gap-8 mb-8">
           <Link
             href="/about"
             className="font-semibold tracking-widest transition-all"
