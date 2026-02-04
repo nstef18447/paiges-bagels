@@ -8,7 +8,7 @@ export default function ContactPage() {
     <div className="min-h-screen" style={{ backgroundColor: '#f6f4f0' }}>
       <div className="max-w-xl mx-auto px-6 pb-10">
         {/* Logo Section */}
-        <div className="flex flex-col items-center overflow-hidden" style={{ marginBottom: '-70px' }}>
+        <div className="flex flex-col items-center overflow-hidden" style={{ marginBottom: '-30px' }}>
           <Link href="/">
             <Image
               src="/logo.svg"
