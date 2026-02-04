@@ -3,6 +3,7 @@ export interface TimeSlot {
   date: string;
   time: string;
   capacity: number;
+  cutoff_time: string | null;
   created_at: string;
 }
 

@@ -43,7 +43,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { date, time, capacity } = await request.json();
+    const { date, time, capacity, cutoff_time } = await request.json();
 
     if (!date || !time || !capacity) {
       return NextResponse.json(
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     const supabase = getServiceSupabase();
     const { data: slot, error } = await supabase
       .from('time_slots')
-      .insert({ date, time, capacity })
+      .insert({ date, time, capacity, cutoff_time })
       .select()
       .single();
 

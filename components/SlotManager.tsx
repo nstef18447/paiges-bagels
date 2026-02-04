@@ -14,11 +14,15 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [capacity, setCapacity] = useState(12);
+  const [cutoffDate, setCutoffDate] = useState('');
+  const [cutoffTime, setCutoffTime] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDate, setEditDate] = useState('');
   const [editTime, setEditTime] = useState('');
   const [editCapacity, setEditCapacity] = useState(12);
+  const [editCutoffDate, setEditCutoffDate] = useState('');
+  const [editCutoffTime, setEditCutoffTime] = useState('');
 
   // Get today's date in YYYY-MM-DD format for min date
   const today = new Date().toISOString().split('T')[0];
@@ -27,17 +31,24 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
     e.preventDefault();
     setSubmitting(true);
 
+    // Combine cutoff date and time into ISO string if both provided
+    const cutoff_time = cutoffDate && cutoffTime
+      ? new Date(`${cutoffDate}T${cutoffTime}`).toISOString()
+      : null;
+
     try {
       const response = await fetch('/api/slots', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date, time, capacity }),
+        body: JSON.stringify({ date, time, capacity, cutoff_time }),
       });
 
       if (response.ok) {
         setDate('');
         setTime('');
         setCapacity(12);
+        setCutoffDate('');
+        setCutoffTime('');
         setShowForm(false);
         onRefresh();
       } else {
@@ -53,6 +64,11 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
   const handleEdit = async (id: string) => {
     setSubmitting(true);
 
+    // Combine cutoff date and time into ISO string if both provided
+    const cutoff_time = editCutoffDate && editCutoffTime
+      ? new Date(`${editCutoffDate}T${editCutoffTime}`).toISOString()
+      : null;
+
     try {
       const response = await fetch(`/api/slots/${id}`, {
         method: 'PATCH',
@@ -61,6 +77,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
           date: editDate,
           time: editTime,
           capacity: editCapacity,
+          cutoff_time,
         }),
       });
 
@@ -104,6 +121,14 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
     setEditDate(slot.date);
     setEditTime(slot.time);
     setEditCapacity(slot.capacity);
+    if (slot.cutoff_time) {
+      const cutoff = new Date(slot.cutoff_time);
+      setEditCutoffDate(cutoff.toISOString().split('T')[0]);
+      setEditCutoffTime(cutoff.toTimeString().slice(0, 5));
+    } else {
+      setEditCutoffDate('');
+      setEditCutoffTime('');
+    }
   };
 
   const cancelEditing = () => {
@@ -111,6 +136,8 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
     setEditDate('');
     setEditTime('');
     setEditCapacity(12);
+    setEditCutoffDate('');
+    setEditCutoffTime('');
   };
 
   return (
@@ -174,6 +201,37 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
               />
             </div>
 
+            <div className="border-t pt-4 mt-2">
+              <p className="text-sm font-medium text-gray-700 mb-2">Order Cutoff (optional)</p>
+              <p className="text-xs text-gray-500 mb-3">Orders will be disabled after this time</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="cutoffDate" className="block text-xs text-gray-600 mb-1">
+                    Cutoff Date
+                  </label>
+                  <input
+                    type="date"
+                    id="cutoffDate"
+                    value={cutoffDate}
+                    onChange={(e) => setCutoffDate(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent text-sm"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="cutoffTime" className="block text-xs text-gray-600 mb-1">
+                    Cutoff Time
+                  </label>
+                  <input
+                    type="time"
+                    id="cutoffTime"
+                    value={cutoffTime}
+                    onChange={(e) => setCutoffTime(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
             <button
               type="submit"
               disabled={submitting}
@@ -229,6 +287,26 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
                         />
                       </div>
                     </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Cutoff Date</label>
+                        <input
+                          type="date"
+                          value={editCutoffDate}
+                          onChange={(e) => setEditCutoffDate(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Cutoff Time</label>
+                        <input
+                          type="time"
+                          value={editCutoffTime}
+                          onChange={(e) => setEditCutoffTime(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                        />
+                      </div>
+                    </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleEdit(slot.id)}
@@ -250,6 +328,11 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
                     <div>
                       <p className="font-semibold">{formatDate(slot.date)}</p>
                       <p className="text-sm text-gray-600">{formatTime(slot.time)}</p>
+                      {slot.cutoff_time && (
+                        <p className="text-xs text-orange-600 mt-1">
+                          Orders close: {new Date(slot.cutoff_time).toLocaleString()}
+                        </p>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className="font-semibold">

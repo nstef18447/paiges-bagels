@@ -10,6 +10,28 @@ interface TimeSlotSelectorProps {
   requiredCapacity: number;
 }
 
+// Helper to check if cutoff has passed
+function isPastCutoff(cutoffTime: string | null): boolean {
+  if (!cutoffTime) return false;
+  return new Date() > new Date(cutoffTime);
+}
+
+// Helper to format cutoff time nicely
+function formatCutoff(cutoffTime: string): string {
+  const date = new Date(cutoffTime);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const isTomorrow = date.toDateString() === tomorrow.toDateString();
+
+  const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+  if (isToday) return `today at ${timeStr}`;
+  if (isTomorrow) return `tomorrow at ${timeStr}`;
+  return `${date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} at ${timeStr}`;
+}
+
 export default function TimeSlotSelector({
   slots,
   selectedSlotId,
@@ -31,18 +53,34 @@ export default function TimeSlotSelector({
         <p style={{ color: '#6B6B6B' }}>No time slots available</p>
       ) : (
         <div className="space-y-6">
-          {Object.entries(slotsByDate).map(([date, dateSlots]) => (
+          {Object.entries(slotsByDate).map(([date, dateSlots]) => {
+            // Find the earliest cutoff for this date to show in header
+            const cutoffSlot = dateSlots.find(s => s.cutoff_time && !isPastCutoff(s.cutoff_time));
+            const allPastCutoff = dateSlots.every(s => s.cutoff_time && isPastCutoff(s.cutoff_time));
+
+            return (
             <div key={date}>
               <h4
-                className="font-medium mb-3"
+                className="font-medium mb-1"
                 style={{ color: '#4A4A4A' }}
               >
                 {formatDate(date)}
               </h4>
+              {cutoffSlot && cutoffSlot.cutoff_time && (
+                <p className="text-sm mb-3" style={{ color: '#B45309' }}>
+                  Orders close {formatCutoff(cutoffSlot.cutoff_time)}
+                </p>
+              )}
+              {allPastCutoff && (
+                <p className="text-sm mb-3 font-semibold" style={{ color: '#DC2626' }}>
+                  Orders closed
+                </p>
+              )}
               <div className="grid grid-cols-2 gap-3">
                 {dateSlots.map((slot) => {
                   const isSoldOut = slot.remaining === 0;
-                  const isAvailable = slot.remaining >= requiredCapacity && !isSoldOut;
+                  const isCutoffPassed = isPastCutoff(slot.cutoff_time);
+                  const isAvailable = slot.remaining >= requiredCapacity && !isSoldOut && !isCutoffPassed;
                   const isSelected = slot.id === selectedSlotId;
 
                   return (
@@ -53,22 +91,22 @@ export default function TimeSlotSelector({
                       disabled={!isAvailable}
                       className="p-4 rounded-lg text-left transition-all relative overflow-hidden"
                       style={{
-                        border: isSoldOut
+                        border: (isSoldOut || isCutoffPassed)
                           ? '2px solid #DC2626'
                           : isSelected
                             ? '2px solid #004AAD'
                             : '1px solid #E5E0DB',
-                        backgroundColor: isSoldOut
+                        backgroundColor: (isSoldOut || isCutoffPassed)
                           ? '#FEF2F2'
                           : isSelected
                             ? '#E8EDF5'
                             : '#FFFFFF',
-                        opacity: isAvailable ? 1 : isSoldOut ? 1 : 0.5,
+                        opacity: isAvailable ? 1 : (isSoldOut || isCutoffPassed) ? 1 : 0.5,
                         cursor: isAvailable ? 'pointer' : 'not-allowed'
                       }}
                     >
-                      {/* X overlay for sold out */}
-                      {isSoldOut && (
+                      {/* X overlay for sold out or cutoff passed */}
+                      {(isSoldOut || isCutoffPassed) && (
                         <>
                           <div
                             className="absolute inset-0 pointer-events-none"
@@ -86,11 +124,18 @@ export default function TimeSlotSelector({
                       )}
                       <div
                         className="font-semibold"
-                        style={{ color: isSoldOut ? '#991B1B' : isSelected ? '#004AAD' : '#1A1A1A' }}
+                        style={{ color: (isSoldOut || isCutoffPassed) ? '#991B1B' : isSelected ? '#004AAD' : '#1A1A1A' }}
                       >
                         {formatTime(slot.time)}
                       </div>
-                      {isSoldOut ? (
+                      {isCutoffPassed ? (
+                        <div
+                          className="text-sm mt-1 font-bold uppercase tracking-wide"
+                          style={{ color: '#DC2626' }}
+                        >
+                          CLOSED
+                        </div>
+                      ) : isSoldOut ? (
                         <div
                           className="text-sm mt-1 font-bold uppercase tracking-wide"
                           style={{ color: '#DC2626' }}
@@ -110,7 +155,8 @@ export default function TimeSlotSelector({
                 })}
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       )}
     </div>

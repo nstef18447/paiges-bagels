@@ -14,6 +14,7 @@ export async function PATCH(
     if (body.date !== undefined) updateData.date = body.date;
     if (body.time !== undefined) updateData.time = body.time;
     if (body.capacity !== undefined) updateData.capacity = body.capacity;
+    if (body.cutoff_time !== undefined) updateData.cutoff_time = body.cutoff_time;
 
     const { data: slot, error } = await supabase
       .from('time_slots')
