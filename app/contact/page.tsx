@@ -68,7 +68,7 @@ export default function ContactPage() {
 
           <div className="space-y-6" style={{ color: '#4A4A4A' }}>
             <div className="text-center">
-              <p className="font-semibold text-lg mb-2" style={{ color: '#1A1A1A' }}>
+              <p className="font-semibold text-xl md:text-2xl mb-2" style={{ color: '#1A1A1A' }}>
                 Instagram
               </p>
               <a
@@ -76,14 +76,14 @@ export default function ContactPage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ color: '#004AAD' }}
-                className="text-lg hover:underline"
+                className="text-xl md:text-2xl hover:underline"
               >
                 @paigesbagels
               </a>
             </div>
 
             <div className="text-center pt-4">
-              <p style={{ color: '#6B6B6B' }}>
+              <p className="text-lg md:text-xl" style={{ color: '#6B6B6B' }}>
                 Questions about your order? DM us on Instagram!
               </p>
             </div>
