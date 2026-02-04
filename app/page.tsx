@@ -18,7 +18,7 @@ export default function Home() {
           height={375}
           priority
           unoptimized
-          className="w-auto h-auto max-w-[380px] sm:max-w-[550px] lg:max-w-[700px] -mb-14 sm:-mb-16 lg:-mb-20"
+          className="w-auto h-auto max-w-[380px] sm:max-w-[550px] lg:max-w-[700px] -mt-10 sm:-mt-14 lg:-mt-16 -mb-14 sm:-mb-16 lg:-mb-20"
         />
       </div>
 
