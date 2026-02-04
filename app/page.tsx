@@ -7,10 +7,10 @@ export default function Home() {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center"
-      style={{ backgroundColor: '#f6f4f0', marginTop: '-80px' }}
+      style={{ backgroundColor: '#f6f4f0' }}
     >
       {/* Logo - Big and Centered */}
-      <div className="mb-4 overflow-hidden" style={{ marginBottom: '-60px' }}>
+      <div className="overflow-hidden -mb-6 sm:-mb-12 lg:-mb-16">
         <Image
           src="/logo.svg"
           alt="Paige's Bagels"
@@ -18,8 +18,7 @@ export default function Home() {
           height={375}
           priority
           unoptimized
-          className="w-auto h-auto max-w-[350px] sm:max-w-[550px] lg:max-w-[700px]"
-          style={{ marginBottom: '-80px' }}
+          className="w-auto h-auto max-w-[280px] sm:max-w-[550px] lg:max-w-[700px] -mb-10 sm:-mb-16 lg:-mb-20"
         />
       </div>
 
