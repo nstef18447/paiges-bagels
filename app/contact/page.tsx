@@ -8,7 +8,7 @@ export default function ContactPage() {
     <div className="min-h-screen" style={{ backgroundColor: '#f6f4f0' }}>
       <div className="max-w-xl mx-auto px-6 py-10">
         {/* Logo Section */}
-        <div className="flex flex-col items-center overflow-hidden" style={{ marginBottom: '-40px' }}>
+        <div className="flex flex-col items-center overflow-hidden" style={{ marginBottom: '-70px' }}>
           <Link href="/">
             <Image
               src="/logo.svg"
@@ -16,8 +16,8 @@ export default function ContactPage() {
               width={375}
               height={375}
               unoptimized
-              className="w-auto h-auto max-w-[300px] cursor-pointer"
-              style={{ marginBottom: '-50px' }}
+              className="w-auto h-auto max-w-[450px] cursor-pointer"
+              style={{ marginBottom: '-70px' }}
               priority
             />
           </Link>
