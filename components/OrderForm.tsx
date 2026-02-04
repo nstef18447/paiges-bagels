@@ -120,7 +120,7 @@ export default function OrderForm() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#f6f4f0' }}>
-      <div className="max-w-xl mx-auto px-6 py-10">
+      <div className="max-w-xl mx-auto px-6 pb-10">
         {/* Logo Section */}
         <div className="flex flex-col items-center overflow-hidden" style={{ marginBottom: '-70px' }}>
           <Link href="/">
@@ -131,7 +131,7 @@ export default function OrderForm() {
               height={375}
               unoptimized
               className="w-auto h-auto max-w-[450px] cursor-pointer"
-              style={{ marginBottom: '-70px' }}
+              style={{ marginTop: '-50px', marginBottom: '-70px' }}
               priority
             />
           </Link>
