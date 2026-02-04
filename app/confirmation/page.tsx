@@ -181,7 +181,7 @@ function ConfirmationContent() {
               <div>
                 <p className="font-semibold" style={{ color: '#1A1A1A' }}>Wait for confirmation email</p>
                 <p className="text-sm" style={{ color: '#6B6B6B' }}>
-                  We&apos;ll send a confirmation to {order.customer_email} once payment is verified
+                  We&apos;ll send a confirmation to {order.customer_email} once payment is verified. This may take a few hours as we manually review each order.
                 </p>
               </div>
             </li>
@@ -216,6 +216,10 @@ function ConfirmationContent() {
         >
           Pay ${order.total_price.toFixed(2)} on Venmo
         </a>
+
+        <p className="text-center text-sm mt-4" style={{ color: '#6B6B6B' }}>
+          Please allow some time for confirmation as we personally review each order. Thank you for your patience!
+        </p>
       </div>
     </div>
   );
