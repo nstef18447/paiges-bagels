@@ -34,7 +34,7 @@ function formatCutoff(cutoffTime: string): string {
     timeZone
   });
 
-  return `${dateStr} at ${timeStr} CST`;
+  return `${dateStr} at ${timeStr}`;
 }
 
 export default function TimeSlotSelector({
