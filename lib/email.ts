@@ -29,6 +29,7 @@ export async function sendConfirmationEmail(
     <p>Hi ${order.customer_name},</p>
     <p>Thanks for your order! Your bagels will be ready for pickup on:</p>
     <p><strong>📅 ${formatDate(timeSlot.date)} at ${formatTime(timeSlot.time)}</strong></p>
+    <p><strong>📍 Pickup Location: E2 1510W</strong></p>
     <h3>Your order:</h3>
     <ul>
       ${bagelList.map(item => `<li>${item}</li>`).join('\n')}
@@ -54,7 +55,8 @@ export async function sendReadyEmail(
     <h1>Your Bagels are Ready! 🥯</h1>
     <p>Hi ${order.customer_name},</p>
     <p>Your Paige's Bagels order is ready for pickup!</p>
-    <p><strong>Pickup: ${formatDate(timeSlot.date)} at ${formatTime(timeSlot.time)}</strong></p>
+    <p><strong>📅 Pickup: ${formatDate(timeSlot.date)} at ${formatTime(timeSlot.time)}</strong></p>
+    <p><strong>📍 Location: E2 1510W</strong></p>
     <p>See you soon!</p>
     <p>Paige's Bagels</p>
   `;
