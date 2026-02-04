@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { OrderFormData } from '@/types';
-import { calculateTotal, calculatePrice, isValidTotal, generateVenmoNote } from '@/lib/utils';
+import { calculateTotal, isValidTotal, generateVenmoNote } from '@/lib/utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,8 +37,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Fetch pricing from database
+    const { data: pricingData, error: pricingError } = await supabase
+      .from('pricing')
+      .select('*')
+      .eq('bagel_quantity', total)
+      .single();
+
+    if (pricingError || !pricingData) {
+      return NextResponse.json(
+        { error: 'Failed to fetch pricing' },
+        { status: 500 }
+      );
+    }
+
     // Create order
-    const price = calculatePrice(total);
+    const price = pricingData.price;
     const orderData = {
       time_slot_id: formData.timeSlotId,
       customer_name: formData.customerName,
