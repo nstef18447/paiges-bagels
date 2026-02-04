@@ -68,7 +68,7 @@ export default function AboutPage() {
               About Paige&apos;s Bagels
             </h1>
 
-            <div className="space-y-3 text-sm md:text-base" style={{ color: '#4A4A4A' }}>
+            <div className="space-y-4 text-sm md:text-lg" style={{ color: '#4A4A4A' }}>
               <p>
                 Paige&apos;s Bagels started at business school at Kellogg, as a side project fueled by a love of bagels, long runs, and the challenge of finding food that actually felt good to eat.
               </p>
