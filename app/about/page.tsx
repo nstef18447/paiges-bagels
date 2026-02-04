@@ -6,7 +6,7 @@ import Link from 'next/link';
 export default function AboutPage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#f6f4f0' }}>
-      <div className="max-w-xl mx-auto px-6 py-10">
+      <div className="max-w-4xl mx-auto px-6 py-10">
         {/* Logo Section */}
         <div className="flex flex-col items-center overflow-hidden" style={{ marginBottom: '-70px' }}>
           <Link href="/">
@@ -48,51 +48,56 @@ export default function AboutPage() {
           </Link>
         </nav>
 
-        {/* Bagel Image */}
-        <div className="rounded-lg overflow-hidden mb-6">
-          <Image
-            src="/bagels.jpg"
-            alt="Fresh sourdough bagels"
-            width={800}
-            height={600}
-            className="w-full h-auto"
-          />
-        </div>
+        {/* About Section - Image and Text Side by Side */}
+        <div className="flex flex-col md:flex-row gap-6 mb-6">
+          {/* Bagel Image */}
+          <div className="md:w-1/2">
+            <div className="rounded-lg overflow-hidden h-full">
+              <Image
+                src="/bagels.jpg"
+                alt="Fresh sourdough bagels"
+                width={800}
+                height={600}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
 
-        {/* About Section */}
-        <div
-          className="rounded-lg p-6 mb-6"
-          style={{
-            backgroundColor: '#FFFFFF',
-            border: '1px solid #E5E0DB'
-          }}
-        >
-          <h1
-            className="text-3xl mb-4 pb-2 text-center"
+          {/* About Text */}
+          <div
+            className="md:w-1/2 rounded-lg p-6"
             style={{
-              color: '#1A1A1A',
-              borderBottom: '2px solid #004AAD'
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #E5E0DB'
             }}
           >
-            About Paige&apos;s Bagels
-          </h1>
+            <h1
+              className="text-2xl md:text-3xl mb-4 pb-2"
+              style={{
+                color: '#1A1A1A',
+                borderBottom: '2px solid #004AAD'
+              }}
+            >
+              About Paige&apos;s Bagels
+            </h1>
 
-          <div className="space-y-4" style={{ color: '#4A4A4A' }}>
-            <p>
-              Paige&apos;s Bagels started at business school at Kellogg, as a side project fueled by a love of bagels, long runs, and the challenge of finding food that actually felt good to eat.
-            </p>
+            <div className="space-y-3 text-sm md:text-base" style={{ color: '#4A4A4A' }}>
+              <p>
+                Paige&apos;s Bagels started at business school at Kellogg, as a side project fueled by a love of bagels, long runs, and the challenge of finding food that actually felt good to eat.
+              </p>
 
-            <p>
-              As a runner with chronic stomach issues, I spent years avoiding foods I loved - bagels included. That changed when I started baking sourdough and realized how much better it worked for my body. One experiment turned into another, and eventually, sourdough bagels became the thing I couldn&apos;t stop making (or sharing).
-            </p>
+              <p>
+                As a runner with chronic stomach issues, I spent years avoiding foods I loved - bagels included. That changed when I started baking sourdough and realized how much better it worked for my body. One experiment turned into another, and eventually, sourdough bagels became the thing I couldn&apos;t stop making (or sharing).
+              </p>
 
-            <p>
-              The goal is simple: bagels that are worth waking up for - naturally fermented, thoughtfully made, with a crisp crust, soft center, and nothing added that doesn&apos;t need to be there.
-            </p>
+              <p>
+                The goal is simple: bagels that are worth waking up for - naturally fermented, thoughtfully made, with a crisp crust, soft center, and nothing added that doesn&apos;t need to be there.
+              </p>
 
-            <p className="font-semibold" style={{ color: '#004AAD' }}>
-              I&apos;m so excited for you to try them!
-            </p>
+              <p className="font-semibold" style={{ color: '#004AAD' }}>
+                I&apos;m so excited for you to try them!
+              </p>
+            </div>
           </div>
         </div>
 
