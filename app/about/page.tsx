@@ -48,21 +48,8 @@ export default function AboutPage() {
           </Link>
         </nav>
 
-        {/* About Section - Image and Text Side by Side */}
+        {/* About Section - Text and Image Side by Side */}
         <div className="flex flex-col md:flex-row gap-6 mb-6">
-          {/* Bagel Image */}
-          <div className="md:w-1/2">
-            <div className="rounded-lg overflow-hidden h-full">
-              <Image
-                src="/bagels.jpg"
-                alt="Fresh sourdough bagels"
-                width={800}
-                height={600}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
-
           {/* About Text */}
           <div
             className="md:w-1/2 rounded-lg p-6"
@@ -97,6 +84,19 @@ export default function AboutPage() {
               <p className="font-semibold" style={{ color: '#004AAD' }}>
                 I&apos;m so excited for you to try them!
               </p>
+            </div>
+          </div>
+
+          {/* Bagel Image */}
+          <div className="md:w-1/2">
+            <div className="rounded-lg overflow-hidden h-full">
+              <Image
+                src="/bagels.jpg"
+                alt="Fresh sourdough bagels"
+                width={800}
+                height={600}
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
         </div>
