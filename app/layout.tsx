@@ -12,6 +12,27 @@ const arapey = Arapey({
 export const metadata: Metadata = {
   title: "Paige's Bagels - Sourdough Bagels",
   description: "Fresh sourdough bagels made to order. Worth waking up for!",
+  openGraph: {
+    title: "Paige's Bagels",
+    description: "Fresh sourdough bagels made to order. Worth waking up for!",
+    url: "https://paigesbagels.com",
+    siteName: "Paige's Bagels",
+    images: [
+      {
+        url: "https://paigesbagels.com/logo.png",
+        width: 822,
+        height: 452,
+        alt: "Paige's Bagels Logo",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Paige's Bagels",
+    description: "Fresh sourdough bagels made to order. Worth waking up for!",
+    images: ["https://paigesbagels.com/logo.png"],
+  },
 };
 
 export default function RootLayout({
