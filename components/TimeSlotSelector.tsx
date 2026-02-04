@@ -16,20 +16,25 @@ function isPastCutoff(cutoffTime: string | null): boolean {
   return new Date() > new Date(cutoffTime);
 }
 
-// Helper to format cutoff time nicely
+// Helper to format cutoff time nicely (in CST)
 function formatCutoff(cutoffTime: string): string {
   const date = new Date(cutoffTime);
-  const now = new Date();
-  const isToday = date.toDateString() === now.toDateString();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const isTomorrow = date.toDateString() === tomorrow.toDateString();
+  const timeZone = 'America/Chicago';
 
-  const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  const dateStr = date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    timeZone
+  });
+  const timeStr = date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone
+  });
 
-  if (isToday) return `today at ${timeStr}`;
-  if (isTomorrow) return `tomorrow at ${timeStr}`;
-  return `${date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} at ${timeStr}`;
+  return `${dateStr} at ${timeStr} CST`;
 }
 
 export default function TimeSlotSelector({

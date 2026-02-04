@@ -82,22 +82,9 @@ export default function ContactPage() {
               </a>
             </div>
 
-            <div className="text-center">
-              <p className="font-semibold text-lg mb-2" style={{ color: '#1A1A1A' }}>
-                Email
-              </p>
-              <a
-                href="mailto:hello@paigesbagels.com"
-                style={{ color: '#004AAD' }}
-                className="text-lg hover:underline"
-              >
-                hello@paigesbagels.com
-              </a>
-            </div>
-
             <div className="text-center pt-4">
               <p style={{ color: '#6B6B6B' }}>
-                Questions about your order? DM us on Instagram or send us an email!
+                Questions about your order? DM us on Instagram!
               </p>
             </div>
           </div>
