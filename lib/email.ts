@@ -43,6 +43,9 @@ export async function sendConfirmationEmail(
     : '';
 
   const emailHtml = `
+    <div style="text-align:center; margin-bottom:20px;">
+      <img src="https://paigesbagels.com/logo.png" alt="Paige's Bagels" style="max-width:150px; height:auto;" />
+    </div>
     <h1>Your Paige's Bagels Order is Confirmed! 🥯</h1>
     <p>Hi ${order.customer_name},</p>
     <p>Thanks for your order! Your bagels will be ready for pickup on:</p>
@@ -56,6 +59,9 @@ export async function sendConfirmationEmail(
     <p><strong>Total: $${order.total_price.toFixed(2)}</strong></p>
     <p>See you soon!</p>
     <p>Paige's Bagels</p>
+    <p style="text-align:center; margin-top:20px;">
+      <a href="https://instagram.com/paigesbagels" style="color:#004AAD;">Follow us on Instagram @paigesbagels</a>
+    </p>
   `;
 
   await resend.emails.send({
@@ -71,6 +77,9 @@ export async function sendReadyEmail(
   timeSlot: TimeSlot
 ): Promise<void> {
   const emailHtml = `
+    <div style="text-align:center; margin-bottom:20px;">
+      <img src="https://paigesbagels.com/logo.png" alt="Paige's Bagels" style="max-width:150px; height:auto;" />
+    </div>
     <h1>Your Bagels are Ready! 🥯</h1>
     <p>Hi ${order.customer_name},</p>
     <p>Your Paige's Bagels order is ready for pickup!</p>
@@ -78,6 +87,9 @@ export async function sendReadyEmail(
     <p><strong>📍 Location: E2 1510W</strong></p>
     <p>See you soon!</p>
     <p>Paige's Bagels</p>
+    <p style="text-align:center; margin-top:20px;">
+      <a href="https://instagram.com/paigesbagels" style="color:#004AAD;">Follow us on Instagram @paigesbagels</a>
+    </p>
   `;
 
   await resend.emails.send({
