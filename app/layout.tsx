@@ -13,8 +13,8 @@ export const metadata: Metadata = {
   title: "Paige's Bagels - Sourdough Bagels",
   description: "Fresh sourdough bagels made to order. Worth waking up for!",
   icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
+    icon: "/icon.svg",
+    apple: "/icon.svg",
   },
   openGraph: {
     title: "Paige's Bagels",
