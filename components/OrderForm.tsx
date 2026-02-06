@@ -262,7 +262,7 @@ export default function OrderForm() {
                   borderBottom: '2px solid #004AAD'
                 }}
               >
-                Add-Ons
+                Add-Ons <span className="text-lg italic font-normal">(on the side)</span>
               </h2>
               <AddOnSelector
                 addOnTypes={addOnTypes}
