@@ -17,11 +17,11 @@ export async function sendConfirmationEmail(
 
   // Build bagel list from order_items if available, otherwise use old columns
   const bagelList = orderItems && orderItems.length > 0
-    ? orderItems.map(item => `- ${item.quantity} ${item.bagel_type.name} bagels`)
+    ? orderItems.map(item => `${item.quantity} ${item.bagel_type.name} bagels`)
     : [
-        order.plain_count > 0 && `- ${order.plain_count} Plain bagels`,
-        order.everything_count > 0 && `- ${order.everything_count} Everything bagels`,
-        order.sesame_count > 0 && `- ${order.sesame_count} Sesame bagels`,
+        order.plain_count > 0 && `${order.plain_count} Plain bagels`,
+        order.everything_count > 0 && `${order.everything_count} Everything bagels`,
+        order.sesame_count > 0 && `${order.sesame_count} Sesame bagels`,
       ].filter(Boolean);
 
   // Fetch order add-ons
@@ -31,7 +31,7 @@ export async function sendConfirmationEmail(
     .eq('order_id', order.id);
 
   const addOnList = orderAddOns && orderAddOns.length > 0
-    ? orderAddOns.map(item => `- ${item.quantity} ${item.add_on_type.name}`)
+    ? orderAddOns.map(item => `${item.quantity} ${item.add_on_type.name}`)
     : [];
 
   const addOnsHtml = addOnList.length > 0

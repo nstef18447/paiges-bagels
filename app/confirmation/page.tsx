@@ -117,6 +117,9 @@ function ConfirmationContent() {
               <p className="font-semibold text-lg" style={{ color: '#1A1A1A' }}>
                 {formatDate(order.time_slot.date)} at {formatTime(order.time_slot.time)}
               </p>
+              <p className="text-sm mt-1" style={{ color: '#4A4A4A' }}>
+                Pickup in E2. Details located in your confirmation email.
+              </p>
             </div>
 
             <div>
