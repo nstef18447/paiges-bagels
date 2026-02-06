@@ -24,6 +24,24 @@ export async function sendConfirmationEmail(
         order.sesame_count > 0 && `- ${order.sesame_count} Sesame bagels`,
       ].filter(Boolean);
 
+  // Fetch order add-ons
+  const { data: orderAddOns } = await supabase
+    .from('order_add_ons')
+    .select('*, add_on_type:add_on_types(*)')
+    .eq('order_id', order.id);
+
+  const addOnList = orderAddOns && orderAddOns.length > 0
+    ? orderAddOns.map(item => `- ${item.quantity} ${item.add_on_type.name}`)
+    : [];
+
+  const addOnsHtml = addOnList.length > 0
+    ? `
+    <h3>Add-Ons:</h3>
+    <ul>
+      ${addOnList.map(item => `<li>${item}</li>`).join('\n')}
+    </ul>`
+    : '';
+
   const emailHtml = `
     <h1>Your Paige's Bagels Order is Confirmed! 🥯</h1>
     <p>Hi ${order.customer_name},</p>
@@ -34,6 +52,7 @@ export async function sendConfirmationEmail(
     <ul>
       ${bagelList.map(item => `<li>${item}</li>`).join('\n')}
     </ul>
+    ${addOnsHtml}
     <p><strong>Total: $${order.total_price.toFixed(2)}</strong></p>
     <p>See you soon!</p>
     <p>Paige's Bagels</p>

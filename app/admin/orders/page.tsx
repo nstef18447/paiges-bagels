@@ -33,7 +33,8 @@ export default function AdminOrdersPage() {
       .select(`
         *,
         time_slot:time_slots(*),
-        order_items(*, bagel_type:bagel_types(*))
+        order_items(*, bagel_type:bagel_types(*)),
+        order_add_ons(*, add_on_type:add_on_types(*))
       `)
       .order('created_at', { ascending: false });
 
@@ -117,6 +118,7 @@ export default function AdminOrdersPage() {
           <Link href="/admin/orders" className="hover:underline font-semibold" style={{ color: '#004AAD' }}>Orders</Link>
           <Link href="/admin/slots" className="hover:underline" style={{ color: '#004AAD' }}>Time Slots</Link>
           <Link href="/admin/bagel-types" className="hover:underline" style={{ color: '#004AAD' }}>Bagel Types</Link>
+          <Link href="/admin/add-ons" className="hover:underline" style={{ color: '#004AAD' }}>Add-Ons</Link>
           <Link href="/admin/pricing" className="hover:underline" style={{ color: '#004AAD' }}>Pricing</Link>
           <Link href="/admin/costs" className="hover:underline" style={{ color: '#004AAD' }}>Costs</Link>
           <Link href="/admin/financials" className="hover:underline" style={{ color: '#004AAD' }}>Financials</Link>

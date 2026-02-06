@@ -4,21 +4,24 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { BagelCounts, BagelType, TimeSlotWithCapacity, Pricing } from '@/types';
+import { AddOnCounts, AddOnType, BagelCounts, BagelType, TimeSlotWithCapacity, Pricing } from '@/types';
 import { calculateTotal, isValidTotal } from '@/lib/utils';
 import BagelSelector from './BagelSelector';
+import AddOnSelector from './AddOnSelector';
 import TimeSlotSelector from './TimeSlotSelector';
 
 export default function OrderForm() {
   const router = useRouter();
   const [slots, setSlots] = useState<TimeSlotWithCapacity[]>([]);
   const [bagelTypes, setBagelTypes] = useState<BagelType[]>([]);
+  const [addOnTypes, setAddOnTypes] = useState<AddOnType[]>([]);
   const [pricing, setPricing] = useState<Pricing[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   const [selectedSlotId, setSelectedSlotId] = useState('');
   const [bagelCounts, setBagelCounts] = useState<BagelCounts>({});
+  const [addOnCounts, setAddOnCounts] = useState<AddOnCounts>({});
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -30,19 +33,22 @@ export default function OrderForm() {
 
   const fetchData = async () => {
     try {
-      const [slotsResponse, typesResponse, pricingResponse] = await Promise.all([
+      const [slotsResponse, typesResponse, pricingResponse, addOnsResponse] = await Promise.all([
         fetch('/api/slots'),
         fetch('/api/bagel-types'),
         fetch('/api/pricing'),
+        fetch('/api/add-on-types'),
       ]);
 
       const slotsData = await slotsResponse.json();
       const typesData = await typesResponse.json();
       const pricingData = await pricingResponse.json();
+      const addOnsData = await addOnsResponse.json();
 
       setSlots(slotsData);
       setBagelTypes(typesData);
       setPricing(pricingData);
+      setAddOnTypes(Array.isArray(addOnsData) ? addOnsData : []);
     } catch (err) {
       console.error('Failed to fetch data:', err);
     } finally {
@@ -58,7 +64,11 @@ export default function OrderForm() {
     return priceEntry ? priceEntry.price : 0;
   };
 
-  const price = calculatePrice(total);
+  const addOnSubtotal = addOnTypes.reduce((sum, type) => {
+    return sum + (addOnCounts[type.id] || 0) * type.price;
+  }, 0);
+
+  const price = calculatePrice(total) + addOnSubtotal;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,6 +101,7 @@ export default function OrderForm() {
           customerEmail,
           customerPhone,
           bagelCounts,
+          addOnCounts,
         }),
       });
 
@@ -240,6 +251,26 @@ export default function OrderForm() {
               maxTotal={6}
             />
           </section>
+
+          {/* Add-Ons Section */}
+          {addOnTypes.length > 0 && (
+            <section>
+              <h2
+                className="text-2xl mb-4 pb-2"
+                style={{
+                  color: '#1A1A1A',
+                  borderBottom: '2px solid #004AAD'
+                }}
+              >
+                Add-Ons
+              </h2>
+              <AddOnSelector
+                addOnTypes={addOnTypes}
+                counts={addOnCounts}
+                onChange={setAddOnCounts}
+              />
+            </section>
+          )}
 
           {/* Customer Information Section */}
           <section>

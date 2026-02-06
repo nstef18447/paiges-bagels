@@ -24,7 +24,8 @@ function ConfirmationContent() {
         .select(`
           *,
           time_slot:time_slots(*),
-          order_items(*, bagel_type:bagel_types(*))
+          order_items(*, bagel_type:bagel_types(*)),
+          order_add_ons(*, add_on_type:add_on_types(*))
         `)
         .eq('id', orderId)
         .single();
@@ -126,6 +127,17 @@ function ConfirmationContent() {
                 ))}
               </ul>
             </div>
+
+            {order.order_add_ons && order.order_add_ons.length > 0 && (
+              <div>
+                <p className="text-sm uppercase tracking-wide" style={{ color: '#6B6B6B' }}>Add-Ons</p>
+                <ul className="font-semibold text-lg" style={{ color: '#1A1A1A' }}>
+                  {order.order_add_ons.map((addOn, i) => (
+                    <li key={i}>{addOn.quantity} {addOn.add_on_type.name}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <div
               className="pt-4 mt-4"

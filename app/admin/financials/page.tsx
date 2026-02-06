@@ -82,6 +82,7 @@ export default function AdminFinancialsPage() {
           <Link href="/admin/orders" className="hover:underline" style={{ color: '#004AAD' }}>Orders</Link>
           <Link href="/admin/slots" className="hover:underline" style={{ color: '#004AAD' }}>Time Slots</Link>
           <Link href="/admin/bagel-types" className="hover:underline" style={{ color: '#004AAD' }}>Bagel Types</Link>
+          <Link href="/admin/add-ons" className="hover:underline" style={{ color: '#004AAD' }}>Add-Ons</Link>
           <Link href="/admin/pricing" className="hover:underline" style={{ color: '#004AAD' }}>Pricing</Link>
           <Link href="/admin/costs" className="hover:underline" style={{ color: '#004AAD' }}>Costs</Link>
           <Link href="/admin/financials" className="hover:underline font-semibold" style={{ color: '#004AAD' }}>Financials</Link>

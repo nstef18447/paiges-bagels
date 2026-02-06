@@ -51,8 +51,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Calculate add-on total
+    let addOnTotal = 0;
+    const addOnCounts = formData.addOnCounts || {};
+    const addOnEntries = Object.entries(addOnCounts).filter(([_, qty]) => qty > 0);
+
+    if (addOnEntries.length > 0) {
+      const addOnTypeIds = addOnEntries.map(([id]) => id);
+      const { data: addOnTypes, error: addOnError } = await supabase
+        .from('add_on_types')
+        .select('id, price')
+        .in('id', addOnTypeIds);
+
+      if (addOnError) {
+        return NextResponse.json(
+          { error: 'Failed to fetch add-on prices' },
+          { status: 500 }
+        );
+      }
+
+      const addOnPriceMap = new Map(addOnTypes.map((t: { id: string; price: number }) => [t.id, t.price]));
+      for (const [addOnTypeId, quantity] of addOnEntries) {
+        const unitPrice = addOnPriceMap.get(addOnTypeId) || 0;
+        addOnTotal += quantity * unitPrice;
+      }
+    }
+
     // Create order
-    const price = pricingData.price;
+    const price = pricingData.price + addOnTotal;
     const orderData = {
       time_slot_id: formData.timeSlotId,
       customer_name: formData.customerName,
@@ -97,6 +123,23 @@ export async function POST(request: NextRequest) {
       if (itemsError) {
         console.error('Failed to create order items:', itemsError);
         // Note: Order is already created, so we don't fail here
+      }
+    }
+
+    // Create order add-ons for each add-on type
+    const orderAddOns = addOnEntries.map(([addOnTypeId, quantity]) => ({
+      order_id: order.id,
+      add_on_type_id: addOnTypeId,
+      quantity,
+    }));
+
+    if (orderAddOns.length > 0) {
+      const { error: addOnsError } = await supabase
+        .from('order_add_ons')
+        .insert(orderAddOns);
+
+      if (addOnsError) {
+        console.error('Failed to create order add-ons:', addOnsError);
       }
     }
 

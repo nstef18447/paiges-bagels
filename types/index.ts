@@ -48,9 +48,35 @@ export interface Order {
   updated_at: string;
 }
 
+export interface AddOnType {
+  id: string;
+  name: string;
+  price: number;
+  active: boolean;
+  display_order: number;
+  created_at: string;
+}
+
+export interface OrderAddOn {
+  id: string;
+  order_id: string;
+  add_on_type_id: string;
+  quantity: number;
+  created_at: string;
+}
+
+export interface OrderAddOnWithType extends OrderAddOn {
+  add_on_type: AddOnType;
+}
+
+export interface AddOnCounts {
+  [addOnTypeId: string]: number;
+}
+
 export interface OrderWithDetails extends Order {
   time_slot: TimeSlot;
   order_items: OrderItemWithType[];
+  order_add_ons?: OrderAddOnWithType[];
 }
 
 export interface OrderWithSlot extends Order {
@@ -67,6 +93,7 @@ export interface OrderFormData {
   customerEmail: string;
   customerPhone: string;
   bagelCounts: BagelCounts;
+  addOnCounts: AddOnCounts;
 }
 
 export interface Pricing {

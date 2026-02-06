@@ -46,6 +46,17 @@ export default function AdminOrderCard({ order, onConfirm, onMarkReady, onDelete
         </ul>
       </div>
 
+      {order.order_add_ons && order.order_add_ons.length > 0 && (
+        <div className="mb-3">
+          <p className="text-sm font-medium text-gray-700 mb-1">Add-Ons:</p>
+          <ul className="text-sm text-gray-600">
+            {order.order_add_ons.map((addOn, i) => (
+              <li key={i}>{addOn.quantity} {addOn.add_on_type.name}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="mb-3 p-2 bg-gray-50 rounded">
         <p className="text-xs text-gray-600">
           Venmo Note: <code className="bg-white px-2 py-1 rounded">{order.venmo_note}</code>
