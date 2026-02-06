@@ -46,7 +46,7 @@ export async function sendConfirmationEmail(
     <div style="background-color:#f6f4f0; padding:30px 20px; font-family:Georgia,serif;">
       <div style="max-width:600px; margin:0 auto;">
         <div style="text-align:center; margin-bottom:20px;">
-          <img src="https://paigesbagels.com/logo.png" alt="Paige's Bagels" style="max-width:150px; height:auto;" />
+          <img src="https://paigesbagels.com/logo.png" alt="Paige's Bagels" style="max-width:250px; height:auto;" />
         </div>
         <h1>Your Paige's Bagels Order is Confirmed! 🥯</h1>
         <p>Hi ${order.customer_name},</p>
@@ -84,7 +84,7 @@ export async function sendReadyEmail(
     <div style="background-color:#f6f4f0; padding:30px 20px; font-family:Georgia,serif;">
       <div style="max-width:600px; margin:0 auto;">
         <div style="text-align:center; margin-bottom:20px;">
-          <img src="https://paigesbagels.com/logo.png" alt="Paige's Bagels" style="max-width:150px; height:auto;" />
+          <img src="https://paigesbagels.com/logo.png" alt="Paige's Bagels" style="max-width:250px; height:auto;" />
         </div>
         <h1>Your Bagels are Ready! 🥯</h1>
         <p>Hi ${order.customer_name},</p>
