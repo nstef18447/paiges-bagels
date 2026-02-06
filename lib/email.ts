@@ -36,8 +36,8 @@ export async function sendConfirmationEmail(
 
   const addOnsHtml = addOnList.length > 0
     ? `
-    <h3>Add-Ons:</h3>
-    <ul>
+    <p style="margin:0 0 4px 0;"><strong>Add-Ons:</strong></p>
+    <ul style="margin:0; padding-left:20px;">
       ${addOnList.map(item => `<li>${item}</li>`).join('\n')}
     </ul>`
     : '';
@@ -48,8 +48,8 @@ export async function sendConfirmationEmail(
     <p>Thanks for your order! Your bagels will be ready for pickup on:</p>
     <p><strong>📅 ${formatDate(timeSlot.date)} at ${formatTime(timeSlot.time)}</strong></p>
     <p><strong>📍 Pickup Location: E2 1510W</strong></p>
-    <h3>Your order:</h3>
-    <ul>
+    <p style="margin:0 0 4px 0;"><strong>Your order:</strong></p>
+    <ul style="margin:0; padding-left:20px;">
       ${bagelList.map(item => `<li>${item}</li>`).join('\n')}
     </ul>
     ${addOnsHtml}
