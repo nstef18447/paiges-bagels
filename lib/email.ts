@@ -36,7 +36,7 @@ export async function sendConfirmationEmail(
 
   const addOnsHtml = addOnList.length > 0
     ? `
-    <p style="margin:0 0 4px 0;"><strong>Add-Ons:</strong></p>
+    <p style="margin:0 0 4px 0;"><strong>Add-Ons:</strong> <em>(on the side)</em></p>
     <ul style="margin:0; padding-left:20px;">
       ${addOnList.map(item => `<li>${item}</li>`).join('\n')}
     </ul>`

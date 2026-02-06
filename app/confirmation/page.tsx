@@ -133,7 +133,7 @@ function ConfirmationContent() {
 
             {order.order_add_ons && order.order_add_ons.length > 0 && (
               <div>
-                <p className="text-sm uppercase tracking-wide" style={{ color: '#6B6B6B' }}>Add-Ons</p>
+                <p className="text-sm uppercase tracking-wide" style={{ color: '#6B6B6B' }}>Add-Ons <span className="normal-case italic tracking-normal">(on the side)</span></p>
                 <ul className="font-semibold text-lg" style={{ color: '#1A1A1A' }}>
                   {order.order_add_ons.map((addOn, i) => (
                     <li key={i}>{addOn.quantity} {addOn.add_on_type.name}</li>
