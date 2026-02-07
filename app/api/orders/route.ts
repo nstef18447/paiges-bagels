@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { OrderFormData } from '@/types';
-import { calculateTotal, isValidTotal, generateVenmoNote } from '@/lib/utils';
+import { calculateTotal, isValidTotal, calculateBundlePrice, generateVenmoNote } from '@/lib/utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     // Validate total bagels
     if (!isValidTotal(total)) {
       return NextResponse.json(
-        { error: 'Total bagels must be 1, 3, or 6' },
+        { error: 'Total bagels must be between 1 and 6' },
         { status: 400 }
       );
     }
@@ -37,14 +37,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch pricing from database
-    const { data: pricingData, error: pricingError } = await supabase
+    // Fetch all pricing tiers from database
+    const { data: pricingTiers, error: pricingError } = await supabase
       .from('pricing')
-      .select('*')
-      .eq('bagel_quantity', total)
-      .single();
+      .select('*');
 
-    if (pricingError || !pricingData) {
+    if (pricingError || !pricingTiers || pricingTiers.length === 0) {
       return NextResponse.json(
         { error: 'Failed to fetch pricing' },
         { status: 500 }
@@ -78,7 +76,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create order
-    const price = pricingData.price + addOnTotal;
+    const price = calculateBundlePrice(total, pricingTiers) + addOnTotal;
     const orderData = {
       time_slot_id: formData.timeSlotId,
       customer_name: formData.customerName,

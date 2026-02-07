@@ -1,7 +1,7 @@
 'use client';
 
 import { BagelCounts, BagelType } from '@/types';
-import { calculateTotal } from '@/lib/utils';
+import { calculateTotal, isValidTotal } from '@/lib/utils';
 
 interface BagelSelectorProps {
   bagelTypes: BagelType[];
@@ -59,9 +59,9 @@ export default function BagelSelector({ bagelTypes, counts, onChange, maxTotal }
         <p style={{ color: '#4A4A4A' }}>
           Total: <span className="font-bold" style={{ color: '#1A1A1A' }}>{total}</span> bagels
         </p>
-        {total > 0 && total !== 1 && total !== 3 && total !== 6 && (
+        {total > 0 && !isValidTotal(total) && (
           <p className="text-sm mt-1" style={{ color: '#C75050' }}>
-            Please select exactly 1, 3, or 6 bagels
+            Please select between 1 and 6 bagels
           </p>
         )}
       </div>

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { AddOnCounts, AddOnType, BagelCounts, BagelType, TimeSlotWithCapacity, Pricing } from '@/types';
-import { calculateTotal, isValidTotal } from '@/lib/utils';
+import { calculateTotal, isValidTotal, calculateBundlePrice } from '@/lib/utils';
 import BagelSelector from './BagelSelector';
 import AddOnSelector from './AddOnSelector';
 import TimeSlotSelector from './TimeSlotSelector';
@@ -58,10 +58,9 @@ export default function OrderForm() {
 
   const total = calculateTotal(bagelCounts);
 
-  // Calculate price from pricing table
+  // Calculate price using greedy bundle algorithm
   const calculatePrice = (total: number): number => {
-    const priceEntry = pricing.find((p) => p.bagel_quantity === total);
-    return priceEntry ? priceEntry.price : 0;
+    return calculateBundlePrice(total, pricing);
   };
 
   const addOnSubtotal = addOnTypes.reduce((sum, type) => {
@@ -80,7 +79,7 @@ export default function OrderForm() {
     }
 
     if (!isValidTotal(total)) {
-      setError('Please select exactly 1, 3, or 6 bagels');
+      setError('Please select between 1 and 6 bagels');
       return;
     }
 

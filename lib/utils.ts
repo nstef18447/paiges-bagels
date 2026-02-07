@@ -1,18 +1,25 @@
-import { BagelCounts } from '@/types';
+import { BagelCounts, Pricing } from '@/types';
 
 export function calculateTotal(counts: BagelCounts): number {
   return Object.values(counts).reduce((sum, count) => sum + count, 0);
 }
 
-export function calculatePrice(total: number): number {
-  if (total === 1) return 4;
-  if (total === 3) return 10;
-  if (total === 6) return 18;
-  return 0;
+export function calculateBundlePrice(total: number, pricingTiers: Pricing[]): number {
+  if (total <= 0) return 0;
+  const sorted = [...pricingTiers].sort((a, b) => b.bagel_quantity - a.bagel_quantity);
+  let remaining = total;
+  let price = 0;
+  while (remaining > 0) {
+    const tier = sorted.find((t) => t.bagel_quantity <= remaining);
+    if (!tier) break;
+    price += tier.price;
+    remaining -= tier.bagel_quantity;
+  }
+  return price;
 }
 
 export function isValidTotal(total: number): boolean {
-  return total === 1 || total === 3 || total === 6;
+  return total >= 1 && total <= 6;
 }
 
 export function generateVenmoNote(orderId: string): string {

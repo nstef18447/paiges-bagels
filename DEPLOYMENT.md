@@ -62,7 +62,7 @@ NEXT_PUBLIC_VENMO_USERNAME=your-venmo-username
 ### 3. Test Edge Cases
 
 - [ ] Try ordering more bagels than slot capacity
-- [ ] Try ordering invalid quantities (2, 4, 5 bagels)
+- [ ] Try ordering any quantity from 1-6 bagels (all should work)
 - [ ] Verify real-time updates work (open admin in two tabs)
 
 ## Deployment to Vercel

@@ -75,7 +75,7 @@ Visit [http://localhost:3000](http://localhost:3000) to see the customer order f
 
 1. Visit the homepage
 2. Select a pickup date and time slot
-3. Choose bagels (1, 3, or 6 total)
+3. Choose bagels (1-6 total)
 4. Fill in contact information
 5. Submit order
 6. Pay via Venmo using the provided link
