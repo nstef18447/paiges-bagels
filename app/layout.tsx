@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Arapey } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 const arapey = Arapey({
@@ -50,6 +51,7 @@ export default function RootLayout({
         className={`${arapey.variable} antialiased`}
       >
         {children}
+        <Analytics />
       </body>
     </html>
   );
