@@ -82,8 +82,8 @@ export default function AdminOrderCard({ order, onConfirm, onMarkReady, onDelete
       )}
 
       {order.status === 'ready' && (
-        <div className="w-full py-2 px-4 bg-gray-100 text-gray-700 font-semibold rounded-lg text-center">
-          Ready for Pickup
+        <div className="w-full py-2 px-4 bg-green-100 text-green-700 font-semibold rounded-lg text-center">
+          Completed
         </div>
       )}
 

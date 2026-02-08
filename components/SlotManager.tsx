@@ -12,8 +12,9 @@ interface SlotManagerProps {
 export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
   const [showForm, setShowForm] = useState(false);
   const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
-  const [capacity, setCapacity] = useState(12);
+  const [timeEntries, setTimeEntries] = useState<Array<{ time: string; capacity: number }>>([
+    { time: '', capacity: 12 },
+  ]);
   const [cutoffDate, setCutoffDate] = useState('');
   const [cutoffTime, setCutoffTime] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -23,9 +24,37 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
   const [editCapacity, setEditCapacity] = useState(12);
   const [editCutoffDate, setEditCutoffDate] = useState('');
   const [editCutoffTime, setEditCutoffTime] = useState('');
+  const [slotTab, setSlotTab] = useState<'active' | 'past'>('active');
 
   // Get today's date in YYYY-MM-DD format for min date
   const today = new Date().toISOString().split('T')[0];
+
+  const isPastSlot = (slot: TimeSlotWithCapacity) => {
+    return slot.date < today || (slot.total_orders > 0 && slot.active_orders === 0);
+  };
+
+  const activeSlots = slots.filter((slot) => !isPastSlot(slot));
+  const pastSlots = slots.filter((slot) => isPastSlot(slot));
+  const displayedSlots = slotTab === 'active' ? activeSlots : pastSlots;
+
+  const addTimeEntry = () => {
+    setTimeEntries([...timeEntries, { time: '', capacity: 12 }]);
+  };
+
+  const removeTimeEntry = (index: number) => {
+    if (timeEntries.length <= 1) return;
+    setTimeEntries(timeEntries.filter((_, i) => i !== index));
+  };
+
+  const updateTimeEntry = (index: number, field: 'time' | 'capacity', value: string | number) => {
+    const updated = [...timeEntries];
+    if (field === 'time') {
+      updated[index].time = value as string;
+    } else {
+      updated[index].capacity = value as number;
+    }
+    setTimeEntries(updated);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,23 +66,32 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
       : null;
 
     try {
-      const response = await fetch('/api/slots', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date, time, capacity, cutoff_time }),
-      });
+      const results = await Promise.all(
+        timeEntries.map((entry) =>
+          fetch('/api/slots', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              date,
+              time: entry.time,
+              capacity: entry.capacity,
+              cutoff_time,
+            }),
+          })
+        )
+      );
 
-      if (response.ok) {
-        setDate('');
-        setTime('');
-        setCapacity(12);
-        setCutoffDate('');
-        setCutoffTime('');
-        setShowForm(false);
-        onRefresh();
-      } else {
-        alert('Failed to create time slot');
+      const failed = results.filter((r) => !r.ok);
+      if (failed.length > 0) {
+        alert(`${failed.length} of ${results.length} time slots failed to create`);
       }
+
+      setDate('');
+      setTimeEntries([{ time: '', capacity: 12 }]);
+      setCutoffDate('');
+      setCutoffTime('');
+      setShowForm(false);
+      onRefresh();
     } catch (error) {
       alert('An error occurred');
     } finally {
@@ -154,7 +192,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
 
       {showForm && (
         <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-lg p-4">
-          <h3 className="font-semibold mb-4">Create New Time Slot</h3>
+          <h3 className="font-semibold mb-4">Create New Time Slots</h3>
 
           <div className="space-y-4">
             <div>
@@ -173,32 +211,48 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
             </div>
 
             <div>
-              <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-1">
-                Time
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Pickup Times
               </label>
-              <input
-                type="time"
-                id="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="capacity" className="block text-sm font-medium text-gray-700 mb-1">
-                Capacity (bagels)
-              </label>
-              <input
-                type="number"
-                id="capacity"
-                value={capacity}
-                onChange={(e) => setCapacity(parseInt(e.target.value))}
-                min="1"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
-                required
-              />
+              <div className="space-y-2">
+                {timeEntries.map((entry, index) => (
+                  <div key={index} className="flex gap-2 items-center">
+                    <input
+                      type="time"
+                      value={entry.time}
+                      onChange={(e) => updateTimeEntry(index, 'time', e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
+                      required
+                    />
+                    <input
+                      type="number"
+                      value={entry.capacity}
+                      onChange={(e) => updateTimeEntry(index, 'capacity', parseInt(e.target.value))}
+                      min="1"
+                      className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
+                      placeholder="Capacity"
+                      required
+                    />
+                    <span className="text-xs text-gray-500 whitespace-nowrap">bagels</span>
+                    {timeEntries.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeTimeEntry(index)}
+                        className="px-2 py-2 text-red-500 hover:text-red-700 text-sm font-medium"
+                      >
+                        &times;
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={addTimeEntry}
+                className="mt-2 text-sm text-[#004AAD] hover:text-[#003A8C] font-medium"
+              >
+                + Add another time
+              </button>
             </div>
 
             <div className="border-t pt-4 mt-2">
@@ -237,20 +291,47 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
               disabled={submitting}
               className="w-full py-2 px-4 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 disabled:bg-gray-300 transition-colors"
             >
-              {submitting ? 'Creating...' : 'Create Time Slot'}
+              {submitting
+                ? 'Creating...'
+                : timeEntries.length === 1
+                  ? 'Create Time Slot'
+                  : `Create ${timeEntries.length} Time Slots`}
             </button>
           </div>
         </form>
       )}
 
       <div className="space-y-4">
-        <h3 className="font-semibold text-lg">Existing Time Slots</h3>
+        <div className="flex gap-2 border-b border-gray-200">
+          <button
+            onClick={() => setSlotTab('active')}
+            className={`px-4 py-2 font-semibold transition-colors ${
+              slotTab === 'active'
+                ? 'border-b-2 border-[#004AAD] text-[#004AAD]'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Active ({activeSlots.length})
+          </button>
+          <button
+            onClick={() => setSlotTab('past')}
+            className={`px-4 py-2 font-semibold transition-colors ${
+              slotTab === 'past'
+                ? 'border-b-2 border-[#004AAD] text-[#004AAD]'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Past ({pastSlots.length})
+          </button>
+        </div>
 
-        {slots.length === 0 ? (
-          <p className="text-gray-500">No time slots created yet</p>
+        {displayedSlots.length === 0 ? (
+          <p className="text-gray-500">
+            {slotTab === 'active' ? 'No active time slots' : 'No past time slots'}
+          </p>
         ) : (
           <div className="grid gap-3">
-            {slots.map((slot) => (
+            {displayedSlots.map((slot) => (
               <div
                 key={slot.id}
                 className="bg-white border border-gray-200 rounded-lg p-4"
@@ -342,20 +423,22 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
                         {slot.capacity - slot.remaining} sold
                       </p>
                     </div>
-                    <div className="flex gap-2 ml-4">
-                      <button
-                        onClick={() => startEditing(slot)}
-                        className="px-3 py-1 bg-[#004AAD] text-white rounded-lg hover:bg-[#003A8C] text-sm"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(slot.id)}
-                        className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm"
-                      >
-                        Delete
-                      </button>
-                    </div>
+                    {slotTab === 'active' && (
+                      <div className="flex gap-2 ml-4">
+                        <button
+                          onClick={() => startEditing(slot)}
+                          className="px-3 py-1 bg-[#004AAD] text-white rounded-lg hover:bg-[#003A8C] text-sm"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(slot.id)}
+                          className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

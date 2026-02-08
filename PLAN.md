@@ -9,6 +9,7 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 - **Database**: Supabase (PostgreSQL) with RLS policies
 - **Email**: Resend (from `orders@paigesbagels.com`)
 - **Payments**: Venmo (manual — no API, just deep links)
+- **Analytics**: Vercel Web Analytics (`@vercel/analytics` in root layout)
 - **Hosting**: Vercel
 
 ## Brand
@@ -99,7 +100,6 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 
 ## Known Tech Debt
 - Legacy columns on `orders` table (`plain_count`, `everything_count`, `sesame_count`) — kept for backward compat with old orders, new orders use `order_items`
-- Legacy columns on `orders` table still present (see above)
 - Admin nav is duplicated across every admin page (no shared layout component)
 - Default Next.js public assets still present (`file.svg`, `globe.svg`, `next.svg`, `vercel.svg`, `window.svg`)
 - README says "Next.js 14" but package.json has Next.js 16

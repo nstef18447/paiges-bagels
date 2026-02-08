@@ -9,6 +9,8 @@ export interface TimeSlot {
 
 export interface TimeSlotWithCapacity extends TimeSlot {
   remaining: number;
+  total_orders: number;
+  active_orders: number;
 }
 
 export interface BagelType {

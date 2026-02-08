@@ -31,7 +31,25 @@ export async function GET() {
       })
     );
 
-    return NextResponse.json(slotsWithCapacity);
+    // Get order counts per slot
+    const { data: orderData } = await supabase
+      .from('orders')
+      .select('time_slot_id, status');
+
+    const orderInfo: Record<string, { total: number; active: number }> = {};
+    for (const o of orderData || []) {
+      if (!orderInfo[o.time_slot_id]) orderInfo[o.time_slot_id] = { total: 0, active: 0 };
+      orderInfo[o.time_slot_id].total++;
+      if (o.status === 'pending' || o.status === 'confirmed') orderInfo[o.time_slot_id].active++;
+    }
+
+    const slotsWithOrders = slotsWithCapacity.map(slot => ({
+      ...slot,
+      total_orders: orderInfo[slot.id]?.total ?? 0,
+      active_orders: orderInfo[slot.id]?.active ?? 0,
+    }));
+
+    return NextResponse.json(slotsWithOrders);
   } catch (error) {
     console.error('Error fetching slots:', error);
     return NextResponse.json(

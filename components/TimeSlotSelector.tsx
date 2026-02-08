@@ -58,10 +58,11 @@ export default function TimeSlotSelector({
         <p style={{ color: '#6B6B6B' }}>No time slots available</p>
       ) : (
         <div className="space-y-6">
-          {Object.entries(slotsByDate).map(([date, dateSlots]) => {
+          {Object.entries(slotsByDate)
+            .filter(([, dateSlots]) => dateSlots.some(s => !isPastCutoff(s.cutoff_time)))
+            .map(([date, dateSlots]) => {
             // Find the earliest cutoff for this date to show in header
             const cutoffSlot = dateSlots.find(s => s.cutoff_time && !isPastCutoff(s.cutoff_time));
-            const allPastCutoff = dateSlots.every(s => s.cutoff_time && isPastCutoff(s.cutoff_time));
 
             return (
             <div key={date}>
@@ -76,16 +77,12 @@ export default function TimeSlotSelector({
                   Orders close {formatCutoff(cutoffSlot.cutoff_time)}
                 </p>
               )}
-              {allPastCutoff && (
-                <p className="text-sm mb-3 font-semibold" style={{ color: '#DC2626' }}>
-                  Orders closed
-                </p>
-              )}
               <div className="grid grid-cols-2 gap-3">
-                {dateSlots.map((slot) => {
+                {dateSlots
+                  .filter(slot => !isPastCutoff(slot.cutoff_time))
+                  .map((slot) => {
                   const isSoldOut = slot.remaining === 0;
-                  const isCutoffPassed = isPastCutoff(slot.cutoff_time);
-                  const isAvailable = slot.remaining >= requiredCapacity && !isSoldOut && !isCutoffPassed;
+                  const isAvailable = slot.remaining >= requiredCapacity && !isSoldOut;
                   const isSelected = slot.id === selectedSlotId;
 
                   return (
@@ -96,22 +93,22 @@ export default function TimeSlotSelector({
                       disabled={!isAvailable}
                       className="p-4 rounded-lg text-left transition-all relative overflow-hidden"
                       style={{
-                        border: (isSoldOut || isCutoffPassed)
+                        border: isSoldOut
                           ? '2px solid #DC2626'
                           : isSelected
                             ? '2px solid #004AAD'
                             : '1px solid #E5E0DB',
-                        backgroundColor: (isSoldOut || isCutoffPassed)
+                        backgroundColor: isSoldOut
                           ? '#FEF2F2'
                           : isSelected
                             ? '#E8EDF5'
                             : '#FFFFFF',
-                        opacity: isAvailable ? 1 : (isSoldOut || isCutoffPassed) ? 1 : 0.5,
+                        opacity: isAvailable ? 1 : isSoldOut ? 1 : 0.5,
                         cursor: isAvailable ? 'pointer' : 'not-allowed'
                       }}
                     >
-                      {/* X overlay for sold out or cutoff passed */}
-                      {(isSoldOut || isCutoffPassed) && (
+                      {/* X overlay for sold out */}
+                      {isSoldOut && (
                         <>
                           <div
                             className="absolute inset-0 pointer-events-none"
@@ -129,18 +126,11 @@ export default function TimeSlotSelector({
                       )}
                       <div
                         className="font-semibold"
-                        style={{ color: (isSoldOut || isCutoffPassed) ? '#991B1B' : isSelected ? '#004AAD' : '#1A1A1A' }}
+                        style={{ color: isSoldOut ? '#991B1B' : isSelected ? '#004AAD' : '#1A1A1A' }}
                       >
                         {formatTime(slot.time)}
                       </div>
-                      {isCutoffPassed ? (
-                        <div
-                          className="text-sm mt-1 font-bold uppercase tracking-wide"
-                          style={{ color: '#DC2626' }}
-                        >
-                          CLOSED
-                        </div>
-                      ) : isSoldOut ? (
+                      {isSoldOut ? (
                         <div
                           className="text-sm mt-1 font-bold uppercase tracking-wide"
                           style={{ color: '#DC2626' }}

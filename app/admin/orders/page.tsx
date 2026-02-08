@@ -10,7 +10,7 @@ import AdminOrderCard from '@/components/AdminOrderCard';
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<OrderWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'pending' | 'confirmed' | 'ready'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'confirmed' | 'completed'>('pending');
 
   useEffect(() => {
     fetchOrders();
@@ -96,7 +96,9 @@ export default function AdminOrdersPage() {
     }
   };
 
-  const filteredOrders = orders.filter((order) => order.status === activeTab);
+  const filteredOrders = orders.filter((order) =>
+    activeTab === 'completed' ? order.status === 'ready' : order.status === activeTab
+  );
 
   if (loading) {
     return (
@@ -147,20 +149,20 @@ export default function AdminOrdersPage() {
           Confirmed ({orders.filter((o) => o.status === 'confirmed').length})
         </button>
         <button
-          onClick={() => setActiveTab('ready')}
+          onClick={() => setActiveTab('completed')}
           className={`px-4 py-2 font-semibold transition-colors ${
-            activeTab === 'ready'
+            activeTab === 'completed'
               ? 'border-b-2 border-[#004AAD] text-[#004AAD]'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
-          Ready ({orders.filter((o) => o.status === 'ready').length})
+          Completed ({orders.filter((o) => o.status === 'ready').length})
         </button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredOrders.length === 0 ? (
-          <p className="text-gray-500 col-span-full">No {activeTab} orders</p>
+          <p className="text-gray-500 col-span-full">No {activeTab === 'completed' ? 'completed' : activeTab} orders</p>
         ) : (
           filteredOrders.map((order) => (
             <AdminOrderCard
