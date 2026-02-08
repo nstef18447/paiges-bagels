@@ -17,6 +17,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
   ]);
   const [cutoffDate, setCutoffDate] = useState('');
   const [cutoffTime, setCutoffTime] = useState('');
+  const [isHangover, setIsHangover] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDate, setEditDate] = useState('');
@@ -24,6 +25,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
   const [editCapacity, setEditCapacity] = useState(12);
   const [editCutoffDate, setEditCutoffDate] = useState('');
   const [editCutoffTime, setEditCutoffTime] = useState('');
+  const [editIsHangover, setEditIsHangover] = useState(false);
   const [slotTab, setSlotTab] = useState<'active' | 'past'>('active');
 
   // Get today's date in YYYY-MM-DD format for min date
@@ -76,6 +78,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
               time: entry.time,
               capacity: entry.capacity,
               cutoff_time,
+              is_hangover: isHangover,
             }),
           })
         )
@@ -90,6 +93,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
       setTimeEntries([{ time: '', capacity: 12 }]);
       setCutoffDate('');
       setCutoffTime('');
+      setIsHangover(false);
       setShowForm(false);
       onRefresh();
     } catch (error) {
@@ -116,6 +120,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
           time: editTime,
           capacity: editCapacity,
           cutoff_time,
+          is_hangover: editIsHangover,
         }),
       });
 
@@ -159,6 +164,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
     setEditDate(slot.date);
     setEditTime(slot.time);
     setEditCapacity(slot.capacity);
+    setEditIsHangover(slot.is_hangover || false);
     if (slot.cutoff_time) {
       const cutoff = new Date(slot.cutoff_time);
       setEditCutoffDate(cutoff.toISOString().split('T')[0]);
@@ -286,6 +292,21 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
               </div>
             </div>
 
+            <div className="border-t pt-4 mt-2">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isHangover}
+                  onChange={(e) => setIsHangover(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+                />
+                <div>
+                  <span className="text-sm font-medium text-gray-700">Hangover Bagels slot</span>
+                  <p className="text-xs text-gray-500">Shows on /hangover page for same-day impulse orders</p>
+                </div>
+              </label>
+            </div>
+
             <button
               type="submit"
               disabled={submitting}
@@ -388,6 +409,15 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
                         />
                       </div>
                     </div>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={editIsHangover}
+                        onChange={(e) => setEditIsHangover(e.target.checked)}
+                        className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+                      />
+                      <span className="text-sm font-medium text-gray-700">Hangover Bagels slot</span>
+                    </label>
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleEdit(slot.id)}
@@ -407,7 +437,14 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
                 ) : (
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="font-semibold">{formatDate(slot.date)}</p>
+                      <p className="font-semibold">
+                        {formatDate(slot.date)}
+                        {slot.is_hangover && (
+                          <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-700">
+                            Hangover
+                          </span>
+                        )}
+                      </p>
                       <p className="text-sm text-gray-600">{formatTime(slot.time)}</p>
                       {slot.cutoff_time && (
                         <p className="text-xs text-orange-600 mt-1">

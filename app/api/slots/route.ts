@@ -1,13 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, getServiceSupabase } from '@/lib/supabase';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const { data: slots, error } = await supabase
+    const { searchParams } = new URL(request.url);
+    const hangover = searchParams.get('hangover');
+
+    let query = supabase
       .from('time_slots')
       .select('*')
       .order('date', { ascending: true })
       .order('time', { ascending: true });
+
+    if (hangover === 'true') {
+      query = query.eq('is_hangover', true);
+    } else if (hangover === 'false') {
+      query = query.eq('is_hangover', false);
+    }
+
+    const { data: slots, error } = await query;
 
     if (error) {
       return NextResponse.json(
@@ -61,7 +72,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { date, time, capacity, cutoff_time } = await request.json();
+    const { date, time, capacity, cutoff_time, is_hangover } = await request.json();
 
     if (!date || !time || !capacity) {
       return NextResponse.json(
@@ -73,7 +84,7 @@ export async function POST(request: NextRequest) {
     const supabase = getServiceSupabase();
     const { data: slot, error } = await supabase
       .from('time_slots')
-      .insert({ date, time, capacity, cutoff_time })
+      .insert({ date, time, capacity, cutoff_time, is_hangover: is_hangover || false })
       .select()
       .single();
 

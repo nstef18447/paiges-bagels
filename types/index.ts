@@ -4,6 +4,7 @@ export interface TimeSlot {
   time: string;
   capacity: number;
   cutoff_time: string | null;
+  is_hangover: boolean;
   created_at: string;
 }
 
@@ -103,6 +104,7 @@ export interface Pricing {
   bagel_quantity: number;
   price: number;
   label?: string;
+  pricing_type?: string;
   updated_at: string;
 }
 

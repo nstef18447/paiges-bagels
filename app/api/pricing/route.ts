@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, getServiceSupabase } from '@/lib/supabase';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const { data: pricing, error } = await supabase
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type');
+
+    let query = supabase
       .from('pricing')
       .select('*')
       .order('bagel_quantity', { ascending: true });
+
+    if (type) {
+      query = query.eq('pricing_type', type);
+    }
+
+    const { data: pricing, error } = await query;
 
     if (error) {
       console.error('Supabase error:', error);

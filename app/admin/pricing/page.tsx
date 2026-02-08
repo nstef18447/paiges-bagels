@@ -16,6 +16,7 @@ export default function AdminPricingPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editedPricing, setEditedPricing] = useState<{ [id: string]: EditedPricing }>({});
+  const [pricingTab, setPricingTab] = useState<'regular' | 'hangover'>('regular');
 
   useEffect(() => {
     fetchPricing();
@@ -43,6 +44,10 @@ export default function AdminPricingPage() {
       setLoading(false);
     }
   };
+
+  const regularPricing = pricing.filter((p) => !p.pricing_type || p.pricing_type === 'regular');
+  const hangoverPricing = pricing.filter((p) => p.pricing_type === 'hangover');
+  const displayedPricing = pricingTab === 'regular' ? regularPricing : hangoverPricing;
 
   const handleChange = (id: string, field: keyof EditedPricing, value: string) => {
     setEditedPricing((prev) => ({
@@ -114,10 +119,39 @@ export default function AdminPricingPage() {
       </div>
 
       <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl">
-        <h2 className="text-2xl font-semibold mb-6">Manage Pricing</h2>
+        <h2 className="text-2xl font-semibold mb-4">Manage Pricing</h2>
+
+        <div className="flex gap-2 border-b border-gray-200 mb-6">
+          <button
+            onClick={() => setPricingTab('regular')}
+            className={`px-4 py-2 font-semibold transition-colors ${
+              pricingTab === 'regular'
+                ? 'border-b-2 border-[#004AAD] text-[#004AAD]'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Regular ({regularPricing.length})
+          </button>
+          <button
+            onClick={() => setPricingTab('hangover')}
+            className={`px-4 py-2 font-semibold transition-colors ${
+              pricingTab === 'hangover'
+                ? 'border-b-2 border-orange-500 text-orange-600'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Hangover ({hangoverPricing.length})
+          </button>
+        </div>
+
+        {pricingTab === 'hangover' && (
+          <p className="text-sm text-orange-700 bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4">
+            Hangover pricing is shown on the /hangover page for same-day impulse orders. Set prices higher to incentivize advance ordering.
+          </p>
+        )}
 
         <div className="space-y-6">
-          {pricing.map((item) => (
+          {displayedPricing.map((item) => (
             <div key={item.id} className="border border-gray-200 rounded-lg p-4">
               <div className="grid grid-cols-1 gap-4">
                 <div>

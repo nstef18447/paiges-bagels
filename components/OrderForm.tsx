@@ -9,8 +9,13 @@ import { calculateTotal, isValidTotal, calculateBundlePrice } from '@/lib/utils'
 import BagelSelector from './BagelSelector';
 import AddOnSelector from './AddOnSelector';
 import TimeSlotSelector from './TimeSlotSelector';
+import HangoverBanner from './HangoverBanner';
 
-export default function OrderForm() {
+interface OrderFormProps {
+  mode?: 'regular' | 'hangover';
+}
+
+export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
   const router = useRouter();
   const [slots, setSlots] = useState<TimeSlotWithCapacity[]>([]);
   const [bagelTypes, setBagelTypes] = useState<BagelType[]>([]);
@@ -27,16 +32,29 @@ export default function OrderForm() {
   const [customerPhone, setCustomerPhone] = useState('');
   const [error, setError] = useState('');
 
+  const isHangover = mode === 'hangover';
+
+  // Colors by mode
+  const accent = isHangover ? '#F59E0B' : '#004AAD';
+  const accentHover = isHangover ? '#D97706' : '#003A8C';
+  const buttonColor = isHangover ? '#EA580C' : '#004AAD';
+  const buttonHover = isHangover ? '#C2410C' : '#003A8C';
+  const bgColor = isHangover ? '#FFFBF5' : '#f6f4f0';
+  const focusBorder = isHangover ? '#F59E0B' : '#004AAD';
+
   useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = async () => {
     try {
+      const slotsUrl = isHangover ? '/api/slots?hangover=true' : '/api/slots?hangover=false';
+      const pricingUrl = isHangover ? '/api/pricing?type=hangover' : '/api/pricing?type=regular';
+
       const [slotsResponse, typesResponse, pricingResponse, addOnsResponse] = await Promise.all([
-        fetch('/api/slots'),
+        fetch(slotsUrl),
         fetch('/api/bagel-types'),
-        fetch('/api/pricing'),
+        fetch(pricingUrl),
         fetch('/api/add-on-types'),
       ]);
 
@@ -122,55 +140,146 @@ export default function OrderForm() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen" style={{ backgroundColor: '#f6f4f0' }}>
+      <div className="flex justify-center items-center min-h-screen" style={{ backgroundColor: bgColor }}>
         <div className="text-lg" style={{ color: '#4A4A4A' }}>Loading...</div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f6f4f0' }}>
-      <div className="max-w-xl mx-auto px-6 pb-10">
-        {/* Logo Section */}
-        <div className="flex flex-col items-center overflow-hidden" style={{ marginBottom: '-30px' }}>
-          <Link href="/">
-            <Image
-              src="/logo.svg"
-              alt="Paige's Bagels"
-              width={375}
-              height={375}
-              unoptimized
-              className="w-auto h-auto max-w-[450px] cursor-pointer"
-              style={{ marginTop: '-50px', marginBottom: '-70px' }}
-              priority
-            />
-          </Link>
-        </div>
+  // Hangover empty state
+  if (isHangover && slots.length === 0) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ backgroundColor: bgColor }}>
+        <Link href="/">
+          <Image
+            src="/logo.svg"
+            alt="Paige's Bagels"
+            width={200}
+            height={200}
+            unoptimized
+            className="w-auto h-auto max-w-[250px] cursor-pointer mb-4"
+            priority
+          />
+        </Link>
+        <h1
+          className="text-3xl font-bold mb-3 text-center"
+          style={{ color: '#92400E' }}
+        >
+          No Hangover Bagels Right Now
+        </h1>
+        <p
+          className="text-lg text-center mb-8"
+          style={{ color: '#B45309' }}
+        >
+          Check back soon — or order ahead for the next pickup!
+        </p>
+        <Link
+          href="/order"
+          className="px-8 py-3 font-semibold rounded-lg transition-all text-white"
+          style={{ backgroundColor: '#004AAD' }}
+        >
+          Order Ahead
+        </Link>
+      </div>
+    );
+  }
 
-        {/* Navigation */}
-        <nav className="flex justify-center gap-8 mb-10">
-          <Link
-            href="/about"
-            className="font-semibold tracking-widest transition-all hover:scale-105"
-            style={{ color: '#004AAD' }}
-          >
-            ABOUT
-          </Link>
-          <Link
-            href="/order"
-            className="font-semibold tracking-widest transition-all"
-            style={{ color: '#1A1A1A', borderBottom: '2px solid #004AAD' }}
-          >
-            ORDER
-          </Link>
-          <Link
-            href="/contact"
-            className="font-semibold tracking-widest transition-all hover:scale-105"
-            style={{ color: '#004AAD' }}
-          >
-            CONTACT
-          </Link>
-        </nav>
+  return (
+    <div className="min-h-screen" style={{ backgroundColor: bgColor }}>
+      <div className="max-w-xl mx-auto px-6 pb-10">
+        {/* Header — different for each mode */}
+        {isHangover ? (
+          <>
+            {/* Full-width hero banner */}
+            <div
+              className="-mx-6 px-6 py-10 mb-8 text-center"
+              style={{ backgroundColor: '#F59E0B' }}
+            >
+              <Link href="/">
+                <Image
+                  src="/logo.svg"
+                  alt="Paige's Bagels"
+                  width={160}
+                  height={160}
+                  unoptimized
+                  className="w-auto h-auto max-w-[160px] cursor-pointer mx-auto mb-4"
+                  priority
+                />
+              </Link>
+              <h1
+                className="text-6xl font-black tracking-tight text-center mb-3 uppercase"
+                style={{ color: '#FFFFFF', letterSpacing: '-0.02em' }}
+              >
+                HANGOVER BAGELS
+              </h1>
+              <p
+                className="text-xl font-medium text-center mb-1"
+                style={{ color: '#FFFBEB' }}
+              >
+                Need bagels NOW? We got you.
+              </p>
+              <p
+                className="text-base text-center mb-5"
+                style={{ color: '#FEF3C7' }}
+              >
+                Fresh sourdough ready in 1 hour. Order now, thank us later.
+              </p>
+              <Link
+                href="/order"
+                className="text-sm font-medium transition-all hover:underline"
+                style={{ color: '#FFFFFF' }}
+              >
+                or order ahead &rarr;
+              </Link>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Logo Section */}
+            <div className="flex flex-col items-center overflow-hidden" style={{ marginBottom: '-30px' }}>
+              <Link href="/">
+                <Image
+                  src="/logo.svg"
+                  alt="Paige's Bagels"
+                  width={375}
+                  height={375}
+                  unoptimized
+                  className="w-auto h-auto max-w-[450px] cursor-pointer"
+                  style={{ marginTop: '-50px', marginBottom: '-70px' }}
+                  priority
+                />
+              </Link>
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex justify-center gap-8 mb-10">
+              <Link
+                href="/about"
+                className="font-semibold tracking-widest transition-all hover:scale-105"
+                style={{ color: '#004AAD' }}
+              >
+                ABOUT
+              </Link>
+              <Link
+                href="/order"
+                className="font-semibold tracking-widest transition-all"
+                style={{ color: '#1A1A1A', borderBottom: '2px solid #004AAD' }}
+              >
+                ORDER
+              </Link>
+              <Link
+                href="/contact"
+                className="font-semibold tracking-widest transition-all hover:scale-105"
+                style={{ color: '#004AAD' }}
+              >
+                CONTACT
+              </Link>
+            </nav>
+          </>
+        )}
+
+        {/* Hangover Banner — only on regular mode */}
+        {!isHangover && <HangoverBanner />}
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Pickup Time Section */}
@@ -179,7 +288,7 @@ export default function OrderForm() {
               className="text-2xl mb-4 pb-2"
               style={{
                 color: '#1A1A1A',
-                borderBottom: '2px solid #004AAD'
+                borderBottom: `2px solid ${accent}`
               }}
             >
               Select Pickup Time
@@ -197,15 +306,15 @@ export default function OrderForm() {
             <section
               className="rounded-lg p-6"
               style={{
-                backgroundColor: '#E8EDF5',
-                border: '1px solid #D4DCE8'
+                backgroundColor: isHangover ? '#FFF7ED' : '#E8EDF5',
+                border: isHangover ? '1px solid #FED7AA' : '1px solid #D4DCE8'
               }}
             >
               <h2
                 className="text-2xl mb-4 text-center"
                 style={{ color: '#1A1A1A' }}
               >
-                Our Pricing
+                {isHangover ? 'Hangover Pricing' : 'Our Pricing'}
               </h2>
               <div className="grid grid-cols-3 gap-4">
                 {pricing.map((item) => (
@@ -222,13 +331,21 @@ export default function OrderForm() {
                     </div>
                     <div
                       className="text-2xl font-bold"
-                      style={{ color: '#004AAD' }}
+                      style={{ color: accent }}
                     >
                       ${item.price.toFixed(2)}
                     </div>
                   </div>
                 ))}
               </div>
+              {isHangover && (
+                <p
+                  className="text-xs text-center mt-3"
+                  style={{ color: '#92400E' }}
+                >
+                  Convenience pricing — order ahead and save!
+                </p>
+              )}
             </section>
           )}
 
@@ -238,7 +355,7 @@ export default function OrderForm() {
               className="text-2xl mb-4 pb-2"
               style={{
                 color: '#1A1A1A',
-                borderBottom: '2px solid #004AAD'
+                borderBottom: `2px solid ${accent}`
               }}
             >
               Choose Your Bagels
@@ -258,7 +375,7 @@ export default function OrderForm() {
                 className="text-2xl mb-4 pb-2"
                 style={{
                   color: '#1A1A1A',
-                  borderBottom: '2px solid #004AAD'
+                  borderBottom: `2px solid ${accent}`
                 }}
               >
                 Add-Ons <span className="text-lg italic font-normal">(on the side)</span>
@@ -277,7 +394,7 @@ export default function OrderForm() {
               className="text-2xl mb-4 pb-2"
               style={{
                 color: '#1A1A1A',
-                borderBottom: '2px solid #004AAD'
+                borderBottom: `2px solid ${accent}`
               }}
             >
               Your Information
@@ -303,7 +420,7 @@ export default function OrderForm() {
                     backgroundColor: '#FFFFFF',
                     outline: 'none'
                   }}
-                  onFocus={(e) => e.target.style.borderColor = '#004AAD'}
+                  onFocus={(e) => e.target.style.borderColor = focusBorder}
                   onBlur={(e) => e.target.style.borderColor = '#E5E0DB'}
                   required
                 />
@@ -328,7 +445,7 @@ export default function OrderForm() {
                     backgroundColor: '#FFFFFF',
                     outline: 'none'
                   }}
-                  onFocus={(e) => e.target.style.borderColor = '#004AAD'}
+                  onFocus={(e) => e.target.style.borderColor = focusBorder}
                   onBlur={(e) => e.target.style.borderColor = '#E5E0DB'}
                   required
                 />
@@ -353,7 +470,7 @@ export default function OrderForm() {
                     backgroundColor: '#FFFFFF',
                     outline: 'none'
                   }}
-                  onFocus={(e) => e.target.style.borderColor = '#004AAD'}
+                  onFocus={(e) => e.target.style.borderColor = focusBorder}
                   onBlur={(e) => e.target.style.borderColor = '#E5E0DB'}
                   required
                 />
@@ -407,22 +524,26 @@ export default function OrderForm() {
             disabled={submitting || !isValidTotal(total)}
             className="w-full py-4 px-6 font-semibold rounded-lg transition-all"
             style={{
-              backgroundColor: submitting || !isValidTotal(total) ? '#D1D1D1' : '#004AAD',
+              backgroundColor: submitting || !isValidTotal(total) ? '#D1D1D1' : buttonColor,
               color: submitting || !isValidTotal(total) ? '#8A8A8A' : '#FFFFFF',
               cursor: submitting || !isValidTotal(total) ? 'not-allowed' : 'pointer'
             }}
             onMouseOver={(e) => {
               if (!submitting && isValidTotal(total)) {
-                e.currentTarget.style.backgroundColor = '#003A8C';
+                e.currentTarget.style.backgroundColor = buttonHover;
               }
             }}
             onMouseOut={(e) => {
               if (!submitting && isValidTotal(total)) {
-                e.currentTarget.style.backgroundColor = '#004AAD';
+                e.currentTarget.style.backgroundColor = buttonColor;
               }
             }}
           >
-            {submitting ? 'Placing Order...' : 'Place Order'}
+            {submitting
+              ? 'Placing Order...'
+              : isHangover
+                ? 'I Need These Bagels!'
+                : 'Place Order'}
           </button>
 
         </form>
