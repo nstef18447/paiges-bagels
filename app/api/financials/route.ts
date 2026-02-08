@@ -11,7 +11,8 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from('orders')
       .select('id, total_bagels, total_price, status, time_slot_id, time_slots(date)')
-      .in('status', ['confirmed', 'ready']);
+      .in('status', ['confirmed', 'ready'])
+      .eq('is_fake', false);
 
     const { data: orders, error: ordersError } = await query;
 

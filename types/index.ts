@@ -46,6 +46,7 @@ export interface Order {
   total_bagels: number;
   total_price: number;
   status: 'pending' | 'confirmed' | 'ready';
+  is_fake: boolean;
   venmo_note: string;
   created_at: string;
   updated_at: string;

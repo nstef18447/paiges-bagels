@@ -76,6 +76,24 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const handleToggleFake = async (orderId: string, isFake: boolean, currentPrice: number) => {
+    try {
+      const response = await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_fake: isFake, original_price: currentPrice }),
+      });
+
+      if (response.ok) {
+        fetchOrders();
+      } else {
+        alert('Failed to update order');
+      }
+    } catch (error) {
+      alert('An error occurred');
+    }
+  };
+
   const handleDelete = async (orderId: string) => {
     if (!confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
       return;
@@ -171,6 +189,7 @@ export default function AdminOrdersPage() {
               onConfirm={activeTab === 'pending' ? handleConfirm : undefined}
               onMarkReady={activeTab === 'confirmed' ? handleMarkReady : undefined}
               onDelete={handleDelete}
+              onToggleFake={handleToggleFake}
             />
           ))
         )}
