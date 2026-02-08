@@ -137,12 +137,19 @@ export default function TimeSlotSelector({
                         >
                           SOLD OUT
                         </div>
+                      ) : slot.remaining <= 12 ? (
+                        <div
+                          className="text-sm mt-1 font-medium"
+                          style={{ color: '#C75050' }}
+                        >
+                          Only {slot.remaining} bagels left!
+                        </div>
                       ) : (
                         <div
                           className="text-sm mt-1"
                           style={{ color: isAvailable ? '#6B6B6B' : '#C75050' }}
                         >
-                          {slot.remaining} bagels available
+                          Bagels Available!
                         </div>
                       )}
                     </button>
