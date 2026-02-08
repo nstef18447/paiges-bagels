@@ -9,7 +9,7 @@ import { calculateTotal, isValidTotal, calculateBundlePrice } from '@/lib/utils'
 import BagelSelector from './BagelSelector';
 import AddOnSelector from './AddOnSelector';
 import TimeSlotSelector from './TimeSlotSelector';
-import HangoverBanner from './HangoverBanner';
+// import HangoverBanner from './HangoverBanner';
 
 interface OrderFormProps {
   mode?: 'regular' | 'hangover';
@@ -277,9 +277,6 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
             </nav>
           </>
         )}
-
-        {/* Hangover Banner — only on regular mode */}
-        {!isHangover && <HangoverBanner />}
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Pickup Time Section */}
