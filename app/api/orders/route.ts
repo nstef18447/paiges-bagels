@@ -37,10 +37,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch all pricing tiers from database
+    // Determine pricing type from the time slot
+    const { data: slotData, error: slotError } = await supabase
+      .from('time_slots')
+      .select('is_hangover')
+      .eq('id', formData.timeSlotId)
+      .single();
+
+    if (slotError || !slotData) {
+      return NextResponse.json(
+        { error: 'Invalid time slot' },
+        { status: 400 }
+      );
+    }
+
+    const pricingType = slotData.is_hangover ? 'hangover' : 'regular';
+
+    // Fetch pricing tiers for the correct type
     const { data: pricingTiers, error: pricingError } = await supabase
       .from('pricing')
-      .select('*');
+      .select('*')
+      .eq('pricing_type', pricingType);
 
     if (pricingError || !pricingTiers || pricingTiers.length === 0) {
       return NextResponse.json(
