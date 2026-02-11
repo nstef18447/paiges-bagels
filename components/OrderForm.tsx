@@ -186,53 +186,55 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: bgColor }}>
+      {/* Full-width hangover hero banner — outside the max-w container */}
+      {isHangover && (
+        <div
+          className="w-full py-10 text-center"
+          style={{ backgroundColor: '#F59E0B' }}
+        >
+          <Link href="/">
+            <Image
+              src="/logo-transparent.svg"
+              alt="Paige's Bagels"
+              width={350}
+              height={350}
+              unoptimized
+              className="w-auto h-auto max-w-[350px] cursor-pointer mx-auto mb-2"
+              priority
+            />
+          </Link>
+          <h1
+            className="text-6xl font-black tracking-tight text-center mb-3 uppercase"
+            style={{ color: '#FFFFFF', letterSpacing: '-0.02em' }}
+          >
+            HANGOVER BAGELS
+          </h1>
+          <p
+            className="text-xl font-medium text-center mb-1"
+            style={{ color: '#FFFBEB' }}
+          >
+            Need bagels NOW? We got you.
+          </p>
+          <p
+            className="text-base text-center mb-5"
+            style={{ color: '#FEF3C7' }}
+          >
+            Fresh sourdough ready in 1 hour. Order now, thank us later.
+          </p>
+          <Link
+            href="/order"
+            className="text-sm font-medium transition-all hover:underline"
+            style={{ color: '#FFFFFF' }}
+          >
+            or order ahead &rarr;
+          </Link>
+        </div>
+      )}
+
       <div className="max-w-xl mx-auto px-6 pb-10">
         {/* Header — different for each mode */}
         {isHangover ? (
-          <>
-            {/* Full-width hero banner */}
-            <div
-              className="-mx-6 px-6 py-10 mb-8 text-center"
-              style={{ backgroundColor: '#F59E0B' }}
-            >
-              <Link href="/">
-                <Image
-                  src="/logo.svg"
-                  alt="Paige's Bagels"
-                  width={160}
-                  height={160}
-                  unoptimized
-                  className="w-auto h-auto max-w-[160px] cursor-pointer mx-auto mb-4"
-                  priority
-                />
-              </Link>
-              <h1
-                className="text-6xl font-black tracking-tight text-center mb-3 uppercase"
-                style={{ color: '#FFFFFF', letterSpacing: '-0.02em' }}
-              >
-                HANGOVER BAGELS
-              </h1>
-              <p
-                className="text-xl font-medium text-center mb-1"
-                style={{ color: '#FFFBEB' }}
-              >
-                Need bagels NOW? We got you.
-              </p>
-              <p
-                className="text-base text-center mb-5"
-                style={{ color: '#FEF3C7' }}
-              >
-                Fresh sourdough ready in 1 hour. Order now, thank us later.
-              </p>
-              <Link
-                href="/order"
-                className="text-sm font-medium transition-all hover:underline"
-                style={{ color: '#FFFFFF' }}
-              >
-                or order ahead &rarr;
-              </Link>
-            </div>
-          </>
+          <div className="pt-8" />
         ) : (
           <>
             {/* Logo Section */}

@@ -1,7 +1,7 @@
 # Paige's Bagels — Project Plan
 
 ## What This Is
-A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern business school). Customers order online, pay via Venmo, and pick up at E2 1510W. Admin confirms payments and manages everything through a dashboard.
+A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern business school). Customers order online, pay via Venmo, and pick up at 1881 Oak Avenue Apt 1510W, Evanston IL 60201. Admin confirms payments and manages everything through a dashboard.
 
 ## Tech Stack
 - **Framework**: Next.js 16 (App Router) + TypeScript
@@ -70,7 +70,7 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 | Table | Purpose |
 |-------|---------|
 | `time_slots` | Pickup dates/times with capacity limits, optional cutoff time, and `is_hangover` flag |
-| `orders` | Customer orders with status tracking (pending/confirmed/ready) |
+| `orders` | Customer orders with status tracking (pending/confirmed/ready) and `is_fake` flag for artificial scarcity |
 | `bagel_types` | Dynamic bagel flavors (active/inactive, display order) |
 | `order_items` | Junction: order → bagel types with quantities |
 | `add_on_types` | Add-on items with pricing (e.g., schmear) |
@@ -87,6 +87,7 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 6. `migration-cutoff-time.sql` — cutoff_time column on time_slots
 7. `migration-add-ons.sql` — add_on_types + order_add_ons tables
 8. `migration-hangover.sql` — is_hangover flag on time_slots + pricing_type column on pricing
+9. `migration-fake-orders.sql` — is_fake flag on orders for artificial scarcity
 
 ### Key Components
 | Component | Purpose |
@@ -96,10 +97,13 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 | `BagelSelector.tsx` | +/- counters per bagel type, max 6 total |
 | `AddOnSelector.tsx` | +/- counters per add-on type |
 | `TimeSlotSelector.tsx` | Date/time slot picker with scarcity messaging: "Bagels Available!" (13+), "Only X bagels left!" (1-12), "SOLD OUT" (0) |
-| `AdminOrderCard.tsx` | Order card with confirm/ready/delete actions. Ready state shows green "Completed" badge. |
+| `AdminOrderCard.tsx` | Order card with confirm/ready/delete actions. Ready state shows green "Completed" badge. "Mark as Fake" toggle for artificial scarcity ($0 revenue, excluded from financials). |
 | `BagelTypeManager.tsx` | Admin CRUD for bagel types |
 | `AddOnTypeManager.tsx` | Admin CRUD for add-on types |
 | `SlotManager.tsx` | Admin CRUD for time slots. Active/Past tabs, multi-slot creation form. Past tab is read-only. |
+
+## Bugs Fixed
+- **Hangover pricing leak (Feb 2025)** — `/api/orders` POST was fetching ALL pricing tiers (both regular and hangover) without filtering by `pricing_type`. The greedy bundle algorithm could pick the higher hangover tier for regular orders, causing 3 bagels to show a higher price on the confirmation page than what the customer saw on the order form. Fix: API now looks up the time slot's `is_hangover` flag and filters pricing tiers by `pricing_type` accordingly (`app/api/orders/route.ts`).
 
 ## Known Tech Debt
 - Legacy columns on `orders` table (`plain_count`, `everything_count`, `sesame_count`) — kept for backward compat with old orders, new orders use `order_items`

@@ -118,7 +118,7 @@ function ConfirmationContent() {
                 {formatDate(order.time_slot.date)} at {formatTime(order.time_slot.time)}
               </p>
               <p className="text-sm mt-1" style={{ color: '#4A4A4A' }}>
-                Pickup in E2. Details located in your confirmation email.
+                1881 Oak Avenue Apt 1510W, Evanston IL 60201. Bagels will be outside! Please use call box to call Paige Tuchner to be let upstairs if needed.
               </p>
             </div>
 
