@@ -183,76 +183,94 @@ export default function MenuPage() {
               Our Bagels
             </h2>
 
-            <div className="relative flex items-center justify-center">
+            <div className="relative flex items-center">
               {/* Left Arrow */}
               <button
                 onClick={prev}
-                className="absolute left-0 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-white border border-gray-200 shadow-md hover:shadow-lg transition-all hover:scale-110"
+                className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-white border border-gray-200 shadow-md hover:shadow-lg transition-all hover:scale-110 mr-3"
                 style={{ color: '#004AAD' }}
                 aria-label="Previous bagel"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="15 18 9 12 15 6" />
                 </svg>
               </button>
 
-              {/* Active Bagel */}
-              <div className="w-full max-w-sm mx-16">
-                <div className="bg-white rounded-xl overflow-hidden border border-gray-200 transition-all">
-                  {activeBagel?.image_url ? (
-                    <div className="relative w-full h-72 sm:h-80">
-                      <Image
-                        src={`/${activeBagel.image_url}`}
-                        alt={activeBagel.name}
-                        fill
-                        className="object-cover"
-                        sizes="400px"
-                        key={activeBagel.id}
-                      />
-                    </div>
-                  ) : (
-                    <div
-                      className="w-full h-72 sm:h-80 flex items-center justify-center"
-                      style={{ backgroundColor: '#E8F0FE' }}
-                    >
-                      <span className="text-8xl">🥯</span>
-                    </div>
-                  )}
-                  <div className="p-5 text-center">
-                    <h3
-                      className="text-2xl font-bold"
-                      style={{ color: '#004AAD' }}
-                    >
-                      {activeBagel?.name}
-                    </h3>
-                  </div>
-                </div>
-
-                {/* Dots */}
-                <div className="flex justify-center gap-2 mt-4">
-                  {bagelTypes.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setActiveIndex(i)}
-                      className="w-2.5 h-2.5 rounded-full transition-all"
-                      style={{
-                        backgroundColor: i === activeIndex ? '#004AAD' : '#D1D5DB',
-                        transform: i === activeIndex ? 'scale(1.3)' : 'scale(1)',
-                      }}
-                      aria-label={`Go to bagel ${i + 1}`}
-                    />
-                  ))}
+              {/* All Bagels in a Row */}
+              <div className="flex-1 overflow-hidden">
+                <div
+                  className="flex items-end gap-4 transition-transform duration-300 ease-in-out"
+                  style={{
+                    transform: `translateX(calc(50% - ${activeIndex * 220 + 110}px))`,
+                  }}
+                >
+                  {bagelTypes.map((bagel, i) => {
+                    const isActive = i === activeIndex;
+                    return (
+                      <button
+                        key={bagel.id}
+                        onClick={() => setActiveIndex(i)}
+                        className="flex-shrink-0 transition-all duration-300 ease-in-out focus:outline-none"
+                        style={{
+                          width: isActive ? '220px' : '160px',
+                          opacity: isActive ? 1 : 0.5,
+                          transform: isActive ? 'scale(1)' : 'scale(0.9)',
+                        }}
+                      >
+                        <div
+                          className="bg-white rounded-xl overflow-hidden transition-all duration-300"
+                          style={{
+                            border: isActive ? '2px solid #004AAD' : '1px solid #E5E7EB',
+                            boxShadow: isActive ? '0 8px 25px rgba(0, 74, 173, 0.15)' : 'none',
+                          }}
+                        >
+                          {bagel.image_url ? (
+                            <div className="relative" style={{ height: isActive ? '220px' : '160px' }}>
+                              <Image
+                                src={`/${bagel.image_url}`}
+                                alt={bagel.name}
+                                fill
+                                className="object-cover transition-all duration-300"
+                                sizes="220px"
+                              />
+                            </div>
+                          ) : (
+                            <div
+                              className="flex items-center justify-center transition-all duration-300"
+                              style={{
+                                height: isActive ? '220px' : '160px',
+                                backgroundColor: '#E8F0FE',
+                              }}
+                            >
+                              <span className={isActive ? 'text-6xl' : 'text-4xl'}>🥯</span>
+                            </div>
+                          )}
+                          <div className="py-3 text-center">
+                            <h3
+                              className="font-bold transition-all duration-300"
+                              style={{
+                                color: isActive ? '#004AAD' : '#9CA3AF',
+                                fontSize: isActive ? '1.1rem' : '0.85rem',
+                              }}
+                            >
+                              {bagel.name}
+                            </h3>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* Right Arrow */}
               <button
                 onClick={next}
-                className="absolute right-0 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-white border border-gray-200 shadow-md hover:shadow-lg transition-all hover:scale-110"
+                className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-white border border-gray-200 shadow-md hover:shadow-lg transition-all hover:scale-110 ml-3"
                 style={{ color: '#004AAD' }}
                 aria-label="Next bagel"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
               </button>
