@@ -29,7 +29,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, display_order } = await request.json();
+    const { name, display_order, image_url, description, calories, protein_g, carbs_g, fat_g } = await request.json();
 
     if (!name) {
       return NextResponse.json(
@@ -45,6 +45,12 @@ export async function POST(request: NextRequest) {
         name,
         display_order: display_order || 0,
         active: true,
+        image_url: image_url || null,
+        description: description || null,
+        calories: calories ?? null,
+        protein_g: protein_g ?? null,
+        carbs_g: carbs_g ?? null,
+        fat_g: fat_g ?? null,
       })
       .select()
       .single();

@@ -19,6 +19,12 @@ export interface BagelType {
   name: string;
   active: boolean;
   display_order: number;
+  image_url: string | null;
+  description: string | null;
+  calories: number | null;
+  protein_g: number | null;
+  carbs_g: number | null;
+  fat_g: number | null;
   created_at: string;
 }
 

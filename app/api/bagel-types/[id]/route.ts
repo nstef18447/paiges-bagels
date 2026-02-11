@@ -10,10 +10,16 @@ export async function PATCH(
     const body = await request.json();
     const supabase = getServiceSupabase();
 
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (body.name !== undefined) updateData.name = body.name;
     if (body.active !== undefined) updateData.active = body.active;
     if (body.display_order !== undefined) updateData.display_order = body.display_order;
+    if (body.image_url !== undefined) updateData.image_url = body.image_url || null;
+    if (body.description !== undefined) updateData.description = body.description || null;
+    if (body.calories !== undefined) updateData.calories = body.calories ?? null;
+    if (body.protein_g !== undefined) updateData.protein_g = body.protein_g ?? null;
+    if (body.carbs_g !== undefined) updateData.carbs_g = body.carbs_g ?? null;
+    if (body.fat_g !== undefined) updateData.fat_g = body.fat_g ?? null;
 
     const { data: bagelType, error } = await supabase
       .from('bagel_types')

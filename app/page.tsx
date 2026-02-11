@@ -32,6 +32,13 @@ export default function Home() {
           ABOUT
         </Link>
         <Link
+          href="/menu"
+          className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-widest transition-all hover:scale-105"
+          style={{ color: '#004AAD' }}
+        >
+          MENU
+        </Link>
+        <Link
           href="/order"
           className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-widest transition-all hover:scale-105"
           style={{ color: '#004AAD' }}
