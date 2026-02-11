@@ -33,6 +33,13 @@ export default function AboutPage() {
             ABOUT
           </Link>
           <Link
+            href="/menu"
+            className="font-semibold tracking-widest transition-all hover:scale-105"
+            style={{ color: '#004AAD' }}
+          >
+            MENU
+          </Link>
+          <Link
             href="/order"
             className="font-semibold tracking-widest transition-all hover:scale-105"
             style={{ color: '#004AAD' }}
