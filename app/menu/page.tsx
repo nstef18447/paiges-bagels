@@ -201,7 +201,7 @@ export default function MenuPage() {
                 <div
                   className="flex items-end gap-4 transition-transform duration-300 ease-in-out"
                   style={{
-                    transform: `translateX(calc(50% - ${(bagelTypes.length + activeIndex) * (160 + 16) + 110}px))`,
+                    transform: `translateX(calc(50% - ${(bagelTypes.length + activeIndex) * (220 + 16) + 150}px))`,
                   }}
                 >
                   {[...bagelTypes, ...bagelTypes, ...bagelTypes].map((bagel, i) => {
@@ -213,7 +213,7 @@ export default function MenuPage() {
                         onClick={() => setActiveIndex(realIndex)}
                         className="flex-shrink-0 transition-all duration-300 ease-in-out focus:outline-none"
                         style={{
-                          width: isActive ? '220px' : '160px',
+                          width: isActive ? '300px' : '220px',
                           opacity: isActive ? 1 : 0.5,
                           transform: isActive ? 'scale(1)' : 'scale(0.9)',
                         }}
@@ -226,7 +226,7 @@ export default function MenuPage() {
                           }}
                         >
                           {bagel.image_url ? (
-                            <div className="relative" style={{ height: isActive ? '220px' : '160px' }}>
+                            <div className="relative" style={{ height: isActive ? '300px' : '220px' }}>
                               <Image
                                 src={`/${bagel.image_url}`}
                                 alt={bagel.name}
@@ -239,7 +239,7 @@ export default function MenuPage() {
                             <div
                               className="flex items-center justify-center transition-all duration-300"
                               style={{
-                                height: isActive ? '220px' : '160px',
+                                height: isActive ? '300px' : '220px',
                                 backgroundColor: '#E8F0FE',
                               }}
                             >
