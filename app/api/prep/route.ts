@@ -1,0 +1,103 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+
+    // Fetch all non-fake orders with their time slots and order items
+    const { data: orders, error: ordersError } = await supabase
+      .from('orders')
+      .select(`
+        id,
+        total_bagels,
+        status,
+        is_fake,
+        time_slot_id,
+        time_slots(id, date, time, is_hangover),
+        order_items(quantity, bagel_types(name))
+      `)
+      .eq('is_fake', false)
+      .in('status', ['pending', 'confirmed', 'ready']);
+
+    if (ordersError) {
+      console.error('Supabase error:', ordersError);
+      return NextResponse.json(
+        { error: 'Failed to fetch orders', details: ordersError.message },
+        { status: 500 }
+      );
+    }
+
+    // Group by date → slot → bagel type
+    const dateMap: Record<string, Record<string, {
+      time: string;
+      is_hangover: boolean;
+      bagels: Record<string, number>;
+      total_bagels: number;
+    }>> = {};
+
+    for (const order of orders || []) {
+      const timeSlot = order.time_slots as unknown as {
+        id: string;
+        date: string;
+        time: string;
+        is_hangover: boolean;
+      } | null;
+      if (!timeSlot) continue;
+
+      const { date, id: slotId, time, is_hangover } = timeSlot;
+
+      // Apply date filters
+      if (startDate && date < startDate) continue;
+      if (endDate && date > endDate) continue;
+
+      if (!dateMap[date]) dateMap[date] = {};
+      if (!dateMap[date][slotId]) {
+        dateMap[date][slotId] = { time, is_hangover, bagels: {}, total_bagels: 0 };
+      }
+
+      const slot = dateMap[date][slotId];
+      const items = order.order_items as unknown as {
+        quantity: number;
+        bagel_types: { name: string };
+      }[];
+
+      for (const item of items || []) {
+        const name = item.bagel_types?.name || 'Unknown';
+        slot.bagels[name] = (slot.bagels[name] || 0) + item.quantity;
+        slot.total_bagels += item.quantity;
+      }
+    }
+
+    // Convert to sorted array structure
+    const days = Object.entries(dateMap)
+      .sort(([a], [b]) => a.localeCompare(b)) // chronological
+      .map(([date, slots]) => {
+        const slotArray = Object.entries(slots)
+          .sort(([, a], [, b]) => a.time.localeCompare(b.time))
+          .map(([slotId, slot]) => ({
+            id: slotId,
+            time: slot.time,
+            is_hangover: slot.is_hangover,
+            bagels: Object.entries(slot.bagels)
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([name, quantity]) => ({ name, quantity })),
+            total_bagels: slot.total_bagels,
+          }));
+
+        const total_bagels = slotArray.reduce((sum, s) => sum + s.total_bagels, 0);
+
+        return { date, slots: slotArray, total_bagels };
+      });
+
+    return NextResponse.json({ days });
+  } catch (error) {
+    console.error('Error fetching prep data:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
