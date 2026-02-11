@@ -196,20 +196,21 @@ export default function MenuPage() {
                 </svg>
               </button>
 
-              {/* All Bagels in a Row */}
+              {/* All Bagels in a Row — tripled for infinite loop effect */}
               <div className="flex-1 overflow-hidden">
                 <div
                   className="flex items-end gap-4 transition-transform duration-300 ease-in-out"
                   style={{
-                    transform: `translateX(calc(50% - ${activeIndex * 220 + 110}px))`,
+                    transform: `translateX(calc(50% - ${(bagelTypes.length + activeIndex) * (160 + 16) + 110}px))`,
                   }}
                 >
-                  {bagelTypes.map((bagel, i) => {
-                    const isActive = i === activeIndex;
+                  {[...bagelTypes, ...bagelTypes, ...bagelTypes].map((bagel, i) => {
+                    const realIndex = i % bagelTypes.length;
+                    const isActive = i >= bagelTypes.length && i < bagelTypes.length * 2 && realIndex === activeIndex;
                     return (
                       <button
-                        key={bagel.id}
-                        onClick={() => setActiveIndex(i)}
+                        key={`${bagel.id}-${i}`}
+                        onClick={() => setActiveIndex(realIndex)}
                         className="flex-shrink-0 transition-all duration-300 ease-in-out focus:outline-none"
                         style={{
                           width: isActive ? '220px' : '160px',
