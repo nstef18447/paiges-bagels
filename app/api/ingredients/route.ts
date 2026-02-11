@@ -6,6 +6,7 @@ export async function GET() {
     const { data: ingredients, error } = await supabase
       .from('ingredients')
       .select('*')
+      .order('cost_type', { ascending: true })
       .order('name', { ascending: true });
 
     if (error) {
@@ -29,11 +30,11 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, unit, cost_per_unit, units_per_bagel } = body;
+    const { name, unit, cost_per_unit, units_per_bagel, cost_type, add_on_type_id } = body;
 
-    if (!name || !unit) {
+    if (!name) {
       return NextResponse.json(
-        { error: 'Name and unit are required' },
+        { error: 'Name is required' },
         { status: 400 }
       );
     }
@@ -44,9 +45,11 @@ export async function POST(request: NextRequest) {
       .from('ingredients')
       .insert({
         name,
-        unit,
+        unit: unit || '',
         cost_per_unit: cost_per_unit || 0,
         units_per_bagel: units_per_bagel || 0,
+        cost_type: cost_type || 'per_bagel',
+        add_on_type_id: add_on_type_id || null,
       })
       .select()
       .single();
@@ -72,7 +75,7 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, name, unit, cost_per_unit, units_per_bagel } = body;
+    const { id, name, unit, cost_per_unit, units_per_bagel, cost_type, add_on_type_id } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -83,14 +86,17 @@ export async function PATCH(request: NextRequest) {
 
     const serviceSupabase = getServiceSupabase();
 
+    const updateData: Record<string, unknown> = {};
+    if (name !== undefined) updateData.name = name;
+    if (unit !== undefined) updateData.unit = unit;
+    if (cost_per_unit !== undefined) updateData.cost_per_unit = cost_per_unit;
+    if (units_per_bagel !== undefined) updateData.units_per_bagel = units_per_bagel;
+    if (cost_type !== undefined) updateData.cost_type = cost_type;
+    if (add_on_type_id !== undefined) updateData.add_on_type_id = add_on_type_id || null;
+
     const { data, error } = await serviceSupabase
       .from('ingredients')
-      .update({
-        name,
-        unit,
-        cost_per_unit,
-        units_per_bagel,
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();

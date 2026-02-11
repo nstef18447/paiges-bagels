@@ -115,6 +115,8 @@ export interface Ingredient {
   unit: string;
   cost_per_unit: number;
   units_per_bagel: number;
+  cost_type: 'per_bagel' | 'per_addon' | 'fixed';
+  add_on_type_id: string | null;
   created_at: string;
   updated_at: string;
 }

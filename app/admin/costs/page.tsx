@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Ingredient } from '@/types';
+import { Ingredient, AddOnType } from '@/types';
 
 interface EditableIngredient {
   id?: string;
@@ -11,17 +11,20 @@ interface EditableIngredient {
   unit: string;
   cost_per_unit: string;
   units_per_bagel: string;
+  cost_type: 'per_bagel' | 'per_addon' | 'fixed';
+  add_on_type_id: string | null;
   isNew?: boolean;
 }
 
 export default function AdminCostsPage() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [addOnTypes, setAddOnTypes] = useState<AddOnType[]>([]);
   const [edited, setEdited] = useState<{ [key: string]: EditableIngredient }>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetchIngredients();
+    Promise.all([fetchIngredients(), fetchAddOnTypes()]).then(() => setLoading(false));
   }, []);
 
   const fetchIngredients = async () => {
@@ -32,8 +35,16 @@ export default function AdminCostsPage() {
       initEdited(data);
     } catch (error) {
       console.error('Failed to fetch ingredients:', error);
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const fetchAddOnTypes = async () => {
+    try {
+      const response = await fetch('/api/add-on-types');
+      const data = await response.json();
+      setAddOnTypes(data);
+    } catch (error) {
+      console.error('Failed to fetch add-on types:', error);
     }
   };
 
@@ -46,6 +57,8 @@ export default function AdminCostsPage() {
         unit: ing.unit,
         cost_per_unit: ing.cost_per_unit.toString(),
         units_per_bagel: ing.units_per_bagel.toString(),
+        cost_type: ing.cost_type || 'per_bagel',
+        add_on_type_id: ing.add_on_type_id,
       };
     });
     setEdited(map);
@@ -58,15 +71,17 @@ export default function AdminCostsPage() {
     }));
   };
 
-  const addRow = () => {
+  const addRow = (costType: 'per_bagel' | 'per_addon' | 'fixed') => {
     const tempId = `new-${Date.now()}`;
     setEdited((prev) => ({
       ...prev,
       [tempId]: {
         name: '',
-        unit: '',
+        unit: costType === 'per_bagel' ? '' : '',
         cost_per_unit: '0',
         units_per_bagel: '0',
+        cost_type: costType,
+        add_on_type_id: null,
         isNew: true,
       },
     }));
@@ -83,7 +98,7 @@ export default function AdminCostsPage() {
       return;
     }
 
-    if (!confirm('Delete this ingredient?')) return;
+    if (!confirm('Delete this cost entry?')) return;
 
     try {
       const response = await fetch(`/api/ingredients?id=${key}`, { method: 'DELETE' });
@@ -95,10 +110,10 @@ export default function AdminCostsPage() {
         });
         setIngredients((prev) => prev.filter((i) => i.id !== key));
       } else {
-        alert('Failed to delete ingredient');
+        alert('Failed to delete');
       }
     } catch (error) {
-      console.error('Error deleting ingredient:', error);
+      console.error('Error deleting:', error);
       alert('An error occurred while deleting');
     }
   };
@@ -107,14 +122,16 @@ export default function AdminCostsPage() {
     setSaving(true);
     try {
       for (const [key, item] of Object.entries(edited)) {
-        const payload = {
+        const payload: Record<string, unknown> = {
           name: item.name.trim(),
           unit: item.unit.trim(),
           cost_per_unit: parseFloat(item.cost_per_unit) || 0,
           units_per_bagel: parseFloat(item.units_per_bagel) || 0,
+          cost_type: item.cost_type,
+          add_on_type_id: item.add_on_type_id || null,
         };
 
-        if (!payload.name || !payload.unit) continue;
+        if (!payload.name) continue;
 
         if (item.isNew) {
           const res = await fetch('/api/ingredients', {
@@ -123,7 +140,7 @@ export default function AdminCostsPage() {
             body: JSON.stringify(payload),
           });
           if (!res.ok) {
-            alert(`Failed to create ingredient: ${item.name}`);
+            alert(`Failed to create: ${item.name}`);
           }
         } else {
           const res = await fetch('/api/ingredients', {
@@ -132,23 +149,30 @@ export default function AdminCostsPage() {
             body: JSON.stringify({ id: key, ...payload }),
           });
           if (!res.ok) {
-            alert(`Failed to update ingredient: ${item.name}`);
+            alert(`Failed to update: ${item.name}`);
           }
         }
       }
 
       await fetchIngredients();
-      alert('Ingredients saved successfully!');
+      alert('Costs saved successfully!');
     } catch (error) {
-      console.error('Error saving ingredients:', error);
+      console.error('Error saving:', error);
       alert('An error occurred while saving');
     } finally {
       setSaving(false);
     }
   };
 
-  const costPerBagel = Object.values(edited).reduce((sum, item) => {
+  const byType = (type: string) =>
+    Object.entries(edited).filter(([, item]) => item.cost_type === type);
+
+  const costPerBagel = byType('per_bagel').reduce((sum, [, item]) => {
     return sum + (parseFloat(item.cost_per_unit) || 0) * (parseFloat(item.units_per_bagel) || 0);
+  }, 0);
+
+  const totalFixedCosts = byType('fixed').reduce((sum, [, item]) => {
+    return sum + (parseFloat(item.cost_per_unit) || 0);
   }, 0);
 
   if (loading) {
@@ -179,11 +203,15 @@ export default function AdminCostsPage() {
         </nav>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold">Manage Ingredients</h2>
+      {/* ── Bagel Ingredients (per bagel) ── */}
+      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h2 className="text-2xl font-semibold">Bagel Ingredients</h2>
+            <p className="text-sm text-gray-500">Cost per unit of ingredient used per bagel</p>
+          </div>
           <button
-            onClick={addRow}
+            onClick={() => addRow('per_bagel')}
             className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
           >
             + Add Ingredient
@@ -198,12 +226,12 @@ export default function AdminCostsPage() {
                 <th className="py-3 px-2 font-semibold text-sm text-gray-600">Unit</th>
                 <th className="py-3 px-2 font-semibold text-sm text-gray-600">Cost per Unit ($)</th>
                 <th className="py-3 px-2 font-semibold text-sm text-gray-600">Units per Bagel</th>
-                <th className="py-3 px-2 font-semibold text-sm text-gray-600">Cost Contribution</th>
-                <th className="py-3 px-2 font-semibold text-sm text-gray-600"></th>
+                <th className="py-3 px-2 font-semibold text-sm text-gray-600">Cost / Bagel</th>
+                <th className="py-3 px-2"></th>
               </tr>
             </thead>
             <tbody>
-              {Object.entries(edited).map(([key, item]) => {
+              {byType('per_bagel').map(([key, item]) => {
                 const contribution =
                   (parseFloat(item.cost_per_unit) || 0) * (parseFloat(item.units_per_bagel) || 0);
                 return (
@@ -246,24 +274,19 @@ export default function AdminCostsPage() {
                         className="w-28 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
                       />
                     </td>
-                    <td className="py-2 px-2 text-gray-700">
-                      ${contribution.toFixed(4)}
-                    </td>
+                    <td className="py-2 px-2 text-gray-700">${contribution.toFixed(4)}</td>
                     <td className="py-2 px-2">
-                      <button
-                        onClick={() => handleDelete(key)}
-                        className="text-red-500 hover:text-red-700 text-sm"
-                      >
+                      <button onClick={() => handleDelete(key)} className="text-red-500 hover:text-red-700 text-sm">
                         Delete
                       </button>
                     </td>
                   </tr>
                 );
               })}
-              {Object.keys(edited).length === 0 && (
+              {byType('per_bagel').length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-gray-400">
-                    No ingredients yet. Click &quot;Add Ingredient&quot; to get started.
+                  <td colSpan={6} className="py-6 text-center text-gray-400">
+                    No bagel ingredients yet.
                   </td>
                 </tr>
               )}
@@ -271,21 +294,173 @@ export default function AdminCostsPage() {
           </table>
         </div>
 
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex justify-between items-center">
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg inline-block">
+          <span className="text-sm text-blue-800 font-medium">
+            Ingredient Cost per Bagel: <strong>${costPerBagel.toFixed(4)}</strong>
+          </span>
+        </div>
+      </div>
+
+      {/* ── Add-On Costs (per unit sold) ── */}
+      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+        <div className="flex justify-between items-center mb-4">
           <div>
-            <span className="text-lg font-semibold text-blue-900">Cost per Bagel: </span>
-            <span className="text-2xl font-bold text-blue-700">${costPerBagel.toFixed(4)}</span>
+            <h2 className="text-2xl font-semibold">Add-On Costs</h2>
+            <p className="text-sm text-gray-500">Cost per unit of add-on sold (e.g., schmear)</p>
           </div>
+          <button
+            onClick={() => addRow('per_addon')}
+            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+          >
+            + Add Cost
+          </button>
         </div>
 
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="w-full mt-6 py-3 px-6 bg-[#004AAD] text-white font-semibold rounded-lg hover:bg-[#003A8C] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-        >
-          {saving ? 'Saving...' : 'Save All Ingredients'}
-        </button>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="py-3 px-2 font-semibold text-sm text-gray-600">Name</th>
+                <th className="py-3 px-2 font-semibold text-sm text-gray-600">Add-On</th>
+                <th className="py-3 px-2 font-semibold text-sm text-gray-600">Cost per Unit ($)</th>
+                <th className="py-3 px-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {byType('per_addon').map(([key, item]) => (
+                <tr key={key} className="border-b border-gray-100">
+                  <td className="py-2 px-2">
+                    <input
+                      type="text"
+                      value={item.name}
+                      onChange={(e) => handleChange(key, 'name', e.target.value)}
+                      placeholder="e.g., Cream Cheese"
+                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
+                    />
+                  </td>
+                  <td className="py-2 px-2">
+                    <select
+                      value={item.add_on_type_id || ''}
+                      onChange={(e) => handleChange(key, 'add_on_type_id', e.target.value)}
+                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
+                    >
+                      <option value="">Select add-on...</option>
+                      {addOnTypes.map((a) => (
+                        <option key={a.id} value={a.id}>{a.name}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="py-2 px-2">
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={item.cost_per_unit}
+                      onChange={(e) => handleChange(key, 'cost_per_unit', e.target.value)}
+                      className="w-28 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
+                    />
+                  </td>
+                  <td className="py-2 px-2">
+                    <button onClick={() => handleDelete(key)} className="text-red-500 hover:text-red-700 text-sm">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {byType('per_addon').length === 0 && (
+                <tr>
+                  <td colSpan={4} className="py-6 text-center text-gray-400">
+                    No add-on costs yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      {/* ── Fixed Costs (amortized) ── */}
+      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h2 className="text-2xl font-semibold">Fixed Costs</h2>
+            <p className="text-sm text-gray-500">Total amounts amortized across all bagels sold</p>
+          </div>
+          <button
+            onClick={() => addRow('fixed')}
+            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+          >
+            + Add Fixed Cost
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="py-3 px-2 font-semibold text-sm text-gray-600">Name</th>
+                <th className="py-3 px-2 font-semibold text-sm text-gray-600">Total Cost ($)</th>
+                <th className="py-3 px-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {byType('fixed').map(([key, item]) => (
+                <tr key={key} className="border-b border-gray-100">
+                  <td className="py-2 px-2">
+                    <input
+                      type="text"
+                      value={item.name}
+                      onChange={(e) => handleChange(key, 'name', e.target.value)}
+                      placeholder="e.g., Equipment, Packaging"
+                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
+                    />
+                  </td>
+                  <td className="py-2 px-2">
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={item.cost_per_unit}
+                      onChange={(e) => handleChange(key, 'cost_per_unit', e.target.value)}
+                      className="w-36 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
+                    />
+                  </td>
+                  <td className="py-2 px-2">
+                    <button onClick={() => handleDelete(key)} className="text-red-500 hover:text-red-700 text-sm">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {byType('fixed').length === 0 && (
+                <tr>
+                  <td colSpan={3} className="py-6 text-center text-gray-400">
+                    No fixed costs yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {totalFixedCosts > 0 && (
+          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg inline-block">
+            <span className="text-sm text-amber-800 font-medium">
+              Total Fixed Costs: <strong>${totalFixedCosts.toFixed(2)}</strong>
+              <span className="text-amber-600"> — amortized over all bagels sold in financials</span>
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Save button */}
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className="w-full py-3 px-6 bg-[#004AAD] text-white font-semibold rounded-lg hover:bg-[#003A8C] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+      >
+        {saving ? 'Saving...' : 'Save All Costs'}
+      </button>
     </div>
   );
 }
