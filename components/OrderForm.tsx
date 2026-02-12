@@ -322,7 +322,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
               >
                 {isHangover ? 'Hangover Pricing' : 'Our Pricing'}
               </h2>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {pricing.map((item) => (
                   <div
                     key={item.id}
