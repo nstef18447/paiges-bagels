@@ -62,12 +62,12 @@ export default function Home() {
 
         <div className="relative z-10 flex flex-col items-center justify-center py-16">
           {/* Tagline */}
-          <p className="text-white text-lg sm:text-xl lg:text-2xl italic tracking-wide drop-shadow-md mb-8">
+          <p className="text-white text-4xl sm:text-4xl lg:text-5xl italic tracking-wide drop-shadow-md mb-8 text-center px-6">
             Sourdough bagels worth waking up for
           </p>
 
           {/* Navigation Bar */}
-          <nav className="flex flex-col sm:flex-row gap-4 sm:gap-16 lg:gap-20 items-center">
+          <nav className="flex flex-col sm:flex-row gap-4 sm:gap-16 lg:gap-20 items-center mt-8 sm:mt-0">
             <Link
               href="/about"
               className="text-3xl sm:text-3xl lg:text-4xl font-extrabold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
