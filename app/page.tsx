@@ -45,7 +45,7 @@ export default function Home() {
           height={375}
           priority
           unoptimized
-          className="w-auto h-auto max-w-[380px] sm:max-w-[550px] lg:max-w-[700px] -mt-10 sm:-mt-14 lg:-mt-16 -mb-24 sm:-mb-32 lg:-mb-40"
+          className="w-auto h-auto max-w-[380px] sm:max-w-[550px] lg:max-w-[700px] -mt-20 sm:-mt-28 lg:-mt-36 -mb-24 sm:-mb-32 lg:-mb-40"
         />
       </div>
 
