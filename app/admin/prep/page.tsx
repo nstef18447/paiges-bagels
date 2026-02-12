@@ -27,6 +27,7 @@ interface DayPrep {
 export default function AdminPrepPage() {
   const [days, setDays] = useState<DayPrep[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showPast, setShowPast] = useState(false);
 
   useEffect(() => {
     fetchPrep();
@@ -44,6 +45,10 @@ export default function AdminPrepPage() {
       setLoading(false);
     }
   };
+
+  const today = new Date().toISOString().split('T')[0];
+  const upcomingDays = days.filter((d) => d.date >= today);
+  const pastDays = days.filter((d) => d.date < today);
 
   if (loading) {
     return (
@@ -75,13 +80,13 @@ export default function AdminPrepPage() {
 
       <h1 className="text-3xl font-bold mb-6">Baking Prep</h1>
 
-      {days.length === 0 ? (
+      {upcomingDays.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-lg p-8 text-center text-gray-400">
           No upcoming orders to prep for.
         </div>
       ) : (
         <div className="space-y-6">
-          {days.map((day) => (
+          {upcomingDays.map((day) => (
             <div key={day.date} className="bg-white border border-gray-200 rounded-lg p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold">{formatDate(day.date)}</h2>
@@ -121,6 +126,47 @@ export default function AdminPrepPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Past Orders */}
+      {pastDays.length > 0 && (
+        <div className="mt-8">
+          <button
+            onClick={() => setShowPast(!showPast)}
+            className="flex items-center gap-2 text-sm font-medium hover:underline"
+            style={{ color: '#004AAD' }}
+          >
+            <span style={{ transform: showPast ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'inline-block' }}>
+              ▶
+            </span>
+            Past Orders ({pastDays.length} day{pastDays.length !== 1 ? 's' : ''})
+          </button>
+
+          {showPast && (
+            <div className="space-y-3 mt-3">
+              {pastDays.map((day) => (
+                <div key={day.date} className="bg-white border border-gray-200 rounded-lg p-4 italic text-gray-500">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{formatDate(day.date)}</span>
+                    <span className="text-sm">
+                      {day.total_bagels} bagel{day.total_bagels !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <div className="mt-2 space-y-2">
+                    {day.slots.map((slot) => (
+                      <div key={slot.id} className="text-sm flex flex-wrap gap-x-4 gap-y-1">
+                        <span>{formatTime(slot.time)}:</span>
+                        {slot.bagels.map((bagel) => (
+                          <span key={bagel.name}>{bagel.name} x{bagel.quantity}</span>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
