@@ -86,35 +86,32 @@ export default function Home() {
             Sourdough bagels worth waking up for
           </p>
 
-          {/* Navigation Bar */}
-          <nav className="flex flex-col sm:flex-row gap-4 sm:gap-16 lg:gap-20 items-center mt-2 sm:mt-0">
-            <Link
-              href="/about"
-              className="text-3xl sm:text-3xl lg:text-4xl font-extrabold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
-            >
-              ABOUT
-            </Link>
-            <Link
-              href="/menu"
-              className="text-3xl sm:text-3xl lg:text-4xl font-extrabold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
-            >
-              MENU
-            </Link>
-            <Link
-              href="/order"
-              className="text-3xl sm:text-3xl lg:text-4xl font-extrabold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
-            >
-              ORDER NOW
-            </Link>
-            <Link
-              href="/contact"
-              className="text-3xl sm:text-3xl lg:text-4xl font-extrabold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
-            >
-              CONTACT
-            </Link>
-          </nav>
+          {/* Order Now CTA */}
+          <Link
+            href="/order"
+            className="inline-block px-8 py-3 text-white font-bold text-lg rounded-lg transition-all hover:scale-105 border-2 border-white"
+            style={{ backgroundColor: 'rgba(0, 74, 173, 0.85)' }}
+          >
+            Order Now
+          </Link>
         </div>
       </div>
+
+      {/* Navigation Bar */}
+      <nav className="flex overflow-x-auto gap-6 justify-center scrollbar-hide py-4 px-6" style={{ backgroundColor: '#f6f4f0' }}>
+        <Link href="/about" className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105" style={{ color: '#004AAD' }}>
+          ABOUT
+        </Link>
+        <Link href="/menu" className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105" style={{ color: '#004AAD' }}>
+          MENU
+        </Link>
+        <Link href="/order" className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105" style={{ color: '#004AAD' }}>
+          ORDER NOW
+        </Link>
+        <Link href="/contact" className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105" style={{ color: '#004AAD' }}>
+          CONTACT
+        </Link>
+      </nav>
 
       {/* Swipeable Bagel Menu */}
       {bagelTypes.length > 0 && (
