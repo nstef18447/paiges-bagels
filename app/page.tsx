@@ -86,14 +86,6 @@ export default function Home() {
             Sourdough bagels worth waking up for
           </p>
 
-          {/* Order Now CTA */}
-          <Link
-            href="/order"
-            className="inline-block px-8 py-3 text-white font-bold text-lg rounded-lg transition-all hover:scale-105 border-2 border-white"
-            style={{ backgroundColor: 'rgba(0, 74, 173, 0.85)' }}
-          >
-            Order Now
-          </Link>
         </div>
       </div>
 
