@@ -244,7 +244,7 @@ export default function MenuPage() {
                       <button
                         key={`${bagel.id}-${i}`}
                         onClick={() => setPosition(i)}
-                        className="flex-shrink-0 transition-all duration-300 ease-in-out focus:outline-none"
+                        className={`flex-shrink-0 ${skipTransition ? '' : 'transition-all duration-300 ease-in-out'} focus:outline-none`}
                         style={{
                           width: isActive ? `${ACTIVE_W}px` : `${INACTIVE_W}px`,
                           opacity: isActive ? 1 : 0.75,
@@ -254,7 +254,7 @@ export default function MenuPage() {
                         <div>
                           <div className="pb-2 text-center">
                             <h3
-                              className="font-extrabold transition-all duration-300"
+                              className={`font-extrabold ${skipTransition ? '' : 'transition-all duration-300'}`}
                               style={{
                                 color: isActive ? '#004AAD' : '#9CA3AF',
                                 fontSize: isActive ? '1.2rem' : '0.9rem',
@@ -263,7 +263,7 @@ export default function MenuPage() {
                               {bagel.name}
                             </h3>
                           </div>
-                          <div className="rounded-xl overflow-hidden transition-all duration-300">
+                          <div className={`rounded-xl overflow-hidden ${skipTransition ? '' : 'transition-all duration-300'}`}>
                           {bagel.image_url ? (
                             <div className="relative" style={{ height: isActive ? `${ACTIVE_W}px` : `${INACTIVE_W}px` }}>
                               <Image
