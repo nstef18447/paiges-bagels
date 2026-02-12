@@ -78,7 +78,7 @@ export default function Home() {
           className="object-cover object-[50%_65%]"
           priority
         />
-        <div className="absolute inset-0 bg-black/40" />
+        <div className="absolute inset-0 bg-black/25" />
 
         <div className="relative z-10 flex flex-col items-center justify-start pt-6 sm:justify-center sm:pt-0 flex-1">
           {/* Tagline */}
