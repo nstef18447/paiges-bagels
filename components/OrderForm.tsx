@@ -97,7 +97,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
     }
 
     if (!isValidTotal(total)) {
-      setError('Please select between 1 and 6 bagels');
+      setError('Please select between 1 and 13 bagels');
       return;
     }
 
@@ -370,7 +370,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
               bagelTypes={bagelTypes}
               counts={bagelCounts}
               onChange={setBagelCounts}
-              maxTotal={6}
+              maxTotal={13}
             />
           </section>
 

@@ -61,7 +61,7 @@ export default function BagelSelector({ bagelTypes, counts, onChange, maxTotal }
         </p>
         {total > 0 && !isValidTotal(total) && (
           <p className="text-sm mt-1" style={{ color: '#C75050' }}>
-            Please select between 1 and 6 bagels
+            Please select between 1 and 13 bagels
           </p>
         )}
       </div>

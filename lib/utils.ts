@@ -19,7 +19,7 @@ export function calculateBundlePrice(total: number, pricingTiers: Pricing[]): nu
 }
 
 export function isValidTotal(total: number): boolean {
-  return total >= 1 && total <= 6;
+  return total >= 1 && total <= 13;
 }
 
 export function generateVenmoNote(orderId: string): string {

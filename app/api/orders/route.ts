@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     // Validate total bagels
     if (!isValidTotal(total)) {
       return NextResponse.json(
-        { error: 'Total bagels must be between 1 and 6' },
+        { error: 'Total bagels must be between 1 and 13' },
         { status: 400 }
       );
     }
