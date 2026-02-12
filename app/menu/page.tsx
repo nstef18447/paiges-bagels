@@ -5,10 +5,19 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { BagelType } from '@/types';
 
+const COPIES = 5;
+const MID = 2;
+const ACTIVE_W = 420;
+const INACTIVE_W = 280;
+const CAROUSEL_GAP = 16;
+
 export default function MenuPage() {
   const [bagelTypes, setBagelTypes] = useState<BagelType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [position, setPosition] = useState<number | null>(null);
+  const [skipTransition, setSkipTransition] = useState(false);
+
+  const len = bagelTypes.length;
 
   useEffect(() => {
     fetch('/api/bagel-types')
@@ -18,13 +27,35 @@ export default function MenuPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Initialize position to middle copy when data loads
+  useEffect(() => {
+    if (len > 0 && position === null) {
+      setPosition(MID * len);
+    }
+  }, [len, position]);
+
   const prev = useCallback(() => {
-    setActiveIndex((i) => (i > 0 ? i - 1 : bagelTypes.length - 1));
-  }, [bagelTypes.length]);
+    setPosition((p) => (p !== null ? p - 1 : p));
+  }, []);
 
   const next = useCallback(() => {
-    setActiveIndex((i) => (i < bagelTypes.length - 1 ? i + 1 : 0));
-  }, [bagelTypes.length]);
+    setPosition((p) => (p !== null ? p + 1 : p));
+  }, []);
+
+  // After transition completes, silently snap back to middle copy if needed
+  const handleTransitionEnd = useCallback((e: React.TransitionEvent) => {
+    if (e.target !== e.currentTarget) return;
+    if (len === 0 || position === null) return;
+    const midStart = MID * len;
+    const midEnd = (MID + 1) * len;
+    if (position < midStart || position >= midEnd) {
+      setSkipTransition(true);
+      setPosition(midStart + ((position % len + len) % len));
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setSkipTransition(false));
+      });
+    }
+  }, [position, len]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -37,7 +68,6 @@ export default function MenuPage() {
   }, [prev, next]);
 
   const heroData = bagelTypes.find((b) => b.calories != null);
-  const activeBagel = bagelTypes[activeIndex];
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#f6f4f0' }}>
@@ -196,24 +226,27 @@ export default function MenuPage() {
                 </svg>
               </button>
 
-              {/* All Bagels in a Row — tripled for infinite loop effect */}
+              {/* Continuous infinite scroll carousel */}
               <div className="flex-1 overflow-hidden">
                 <div
-                  className="flex items-end gap-4 transition-transform duration-300 ease-in-out"
+                  className={`flex items-end ${skipTransition ? '' : 'transition-transform duration-300 ease-in-out'}`}
                   style={{
-                    transform: `translateX(calc(50% - ${(bagelTypes.length + activeIndex) * (220 + 16) + 150}px))`,
+                    gap: `${CAROUSEL_GAP}px`,
+                    transform: position !== null
+                      ? `translateX(calc(50% - ${position * (INACTIVE_W + CAROUSEL_GAP) + ACTIVE_W / 2}px))`
+                      : 'translateX(0)',
                   }}
+                  onTransitionEnd={handleTransitionEnd}
                 >
-                  {[...bagelTypes, ...bagelTypes, ...bagelTypes].map((bagel, i) => {
-                    const realIndex = i % bagelTypes.length;
-                    const isActive = i >= bagelTypes.length && i < bagelTypes.length * 2 && realIndex === activeIndex;
+                  {Array(COPIES).fill(bagelTypes).flat().map((bagel: BagelType, i: number) => {
+                    const isActive = i === position;
                     return (
                       <button
                         key={`${bagel.id}-${i}`}
-                        onClick={() => setActiveIndex(realIndex)}
+                        onClick={() => setPosition(i)}
                         className="flex-shrink-0 transition-all duration-300 ease-in-out focus:outline-none"
                         style={{
-                          width: isActive ? '300px' : '220px',
+                          width: isActive ? `${ACTIVE_W}px` : `${INACTIVE_W}px`,
                           opacity: isActive ? 1 : 0.5,
                           transform: isActive ? 'scale(1)' : 'scale(0.9)',
                         }}
@@ -226,24 +259,24 @@ export default function MenuPage() {
                           }}
                         >
                           {bagel.image_url ? (
-                            <div className="relative" style={{ height: isActive ? '300px' : '220px' }}>
+                            <div className="relative" style={{ height: isActive ? `${ACTIVE_W}px` : `${INACTIVE_W}px` }}>
                               <Image
                                 src={`/${bagel.image_url}`}
                                 alt={bagel.name}
                                 fill
                                 className="object-cover transition-all duration-300"
-                                sizes="220px"
+                                sizes={`${ACTIVE_W}px`}
                               />
                             </div>
                           ) : (
                             <div
                               className="flex items-center justify-center transition-all duration-300"
                               style={{
-                                height: isActive ? '300px' : '220px',
+                                height: isActive ? `${ACTIVE_W}px` : `${INACTIVE_W}px`,
                                 backgroundColor: '#E8F0FE',
                               }}
                             >
-                              <span className={isActive ? 'text-6xl' : 'text-4xl'}>🥯</span>
+                              <span className={isActive ? 'text-6xl' : 'text-5xl'}>🥯</span>
                             </div>
                           )}
                           <div className="py-3 text-center">
@@ -251,7 +284,7 @@ export default function MenuPage() {
                               className="font-bold transition-all duration-300"
                               style={{
                                 color: isActive ? '#004AAD' : '#9CA3AF',
-                                fontSize: isActive ? '1.1rem' : '0.85rem',
+                                fontSize: isActive ? '1.2rem' : '0.9rem',
                               }}
                             >
                               {bagel.name}
