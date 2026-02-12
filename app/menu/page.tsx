@@ -251,13 +251,19 @@ export default function MenuPage() {
                           transform: isActive ? 'scale(1)' : 'scale(0.9)',
                         }}
                       >
-                        <div
-                          className="bg-white rounded-xl overflow-hidden transition-all duration-300"
-                          style={{
-                            border: isActive ? '2px solid #004AAD' : '1px solid #E5E7EB',
-                            boxShadow: isActive ? '0 8px 25px rgba(0, 74, 173, 0.15)' : 'none',
-                          }}
-                        >
+                        <div>
+                          <div className="pb-2 text-center">
+                            <h3
+                              className="font-bold transition-all duration-300"
+                              style={{
+                                color: isActive ? '#004AAD' : '#9CA3AF',
+                                fontSize: isActive ? '1.2rem' : '0.9rem',
+                              }}
+                            >
+                              {bagel.name}
+                            </h3>
+                          </div>
+                          <div className="rounded-xl overflow-hidden transition-all duration-300">
                           {bagel.image_url ? (
                             <div className="relative" style={{ height: isActive ? `${ACTIVE_W}px` : `${INACTIVE_W}px` }}>
                               <Image
@@ -279,16 +285,6 @@ export default function MenuPage() {
                               <span className={isActive ? 'text-6xl' : 'text-5xl'}>🥯</span>
                             </div>
                           )}
-                          <div className="py-3 text-center">
-                            <h3
-                              className="font-bold transition-all duration-300"
-                              style={{
-                                color: isActive ? '#004AAD' : '#9CA3AF',
-                                fontSize: isActive ? '1.2rem' : '0.9rem',
-                              }}
-                            >
-                              {bagel.name}
-                            </h3>
                           </div>
                         </div>
                       </button>
