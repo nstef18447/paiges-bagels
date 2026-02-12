@@ -55,7 +55,7 @@ export default function Home() {
           src="/hero-bg.jpg"
           alt=""
           fill
-          className="object-cover object-[50%_30%] sm:object-[50%_65%]"
+          className="object-cover object-[50%_15%] sm:object-[50%_65%]"
           priority
         />
         <div className="absolute inset-0 bg-black/40" />
