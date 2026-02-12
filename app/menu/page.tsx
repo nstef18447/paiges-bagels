@@ -247,14 +247,14 @@ export default function MenuPage() {
                         className="flex-shrink-0 transition-all duration-300 ease-in-out focus:outline-none"
                         style={{
                           width: isActive ? `${ACTIVE_W}px` : `${INACTIVE_W}px`,
-                          opacity: isActive ? 1 : 0.5,
+                          opacity: isActive ? 1 : 0.75,
                           transform: isActive ? 'scale(1)' : 'scale(0.9)',
                         }}
                       >
                         <div>
                           <div className="pb-2 text-center">
                             <h3
-                              className="font-bold transition-all duration-300"
+                              className="font-extrabold transition-all duration-300"
                               style={{
                                 color: isActive ? '#004AAD' : '#9CA3AF',
                                 fontSize: isActive ? '1.2rem' : '0.9rem',
