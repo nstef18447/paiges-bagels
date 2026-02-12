@@ -61,6 +61,11 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/40" />
 
         <div className="relative z-10 flex flex-col items-center justify-center py-16">
+          {/* Tagline */}
+          <p className="text-white text-lg sm:text-xl lg:text-2xl italic tracking-wide drop-shadow-md mb-8">
+            Sourdough bagels worth waking up for
+          </p>
+
           {/* Navigation Bar */}
           <nav className="flex flex-col sm:flex-row gap-4 sm:gap-16 lg:gap-20 items-center">
             <Link
