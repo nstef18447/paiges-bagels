@@ -65,25 +65,25 @@ export default function Home() {
           <nav className="flex flex-col sm:flex-row gap-4 sm:gap-16 lg:gap-20 items-center">
             <Link
               href="/about"
-              className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
+              className="text-3xl sm:text-3xl lg:text-4xl font-extrabold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
             >
               ABOUT
             </Link>
             <Link
               href="/menu"
-              className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
+              className="text-3xl sm:text-3xl lg:text-4xl font-extrabold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
             >
               MENU
             </Link>
             <Link
               href="/order"
-              className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
+              className="text-3xl sm:text-3xl lg:text-4xl font-extrabold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
             >
               ORDER
             </Link>
             <Link
               href="/contact"
-              className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
+              className="text-3xl sm:text-3xl lg:text-4xl font-extrabold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
             >
               CONTACT
             </Link>
