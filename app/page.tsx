@@ -52,7 +52,7 @@ export default function Home() {
         {/* Logo - Big and Centered */}
         <div className="overflow-hidden -mb-6 sm:-mb-12 lg:-mb-16">
           <Image
-            src="/logo.svg"
+            src="/logo-transparent.svg"
             alt="Paige's Bagels"
             width={375}
             height={375}
