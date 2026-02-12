@@ -44,7 +44,7 @@ export default function AboutPage() {
             className="font-semibold tracking-widest transition-all hover:scale-105"
             style={{ color: '#004AAD' }}
           >
-            ORDER
+            ORDER NOW
           </Link>
           <Link
             href="/contact"

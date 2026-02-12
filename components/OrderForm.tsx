@@ -274,7 +274,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
                 className="font-semibold tracking-widest transition-all"
                 style={{ color: '#1A1A1A', borderBottom: '2px solid #004AAD' }}
               >
-                ORDER
+                ORDER NOW
               </Link>
               <Link
                 href="/contact"

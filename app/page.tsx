@@ -104,7 +104,7 @@ export default function Home() {
               href="/order"
               className="text-3xl sm:text-3xl lg:text-4xl font-extrabold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
             >
-              ORDER
+              ORDER NOW
             </Link>
             <Link
               href="/contact"
@@ -189,6 +189,17 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Order Button */}
+      <div className="text-center py-6" style={{ backgroundColor: '#f6f4f0' }}>
+        <Link
+          href="/order"
+          className="inline-block px-8 py-3 text-white font-bold text-lg rounded-lg transition-all hover:scale-105"
+          style={{ backgroundColor: '#004AAD' }}
+        >
+          Order Bagels
+        </Link>
+      </div>
 
       {/* Stay In The Know */}
       <div className="py-8 px-6" style={{ backgroundColor: '#f6f4f0' }}>
