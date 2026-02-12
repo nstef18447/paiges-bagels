@@ -144,16 +144,18 @@ export default function MenuPage() {
                 Sourdough Bagels
               </h2>
 
-              {heroData?.description && (
-                <div className="mb-5">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
-                    Ingredients
-                  </p>
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    {heroData.description}
-                  </p>
-                </div>
-              )}
+              <div className="mb-5">
+                <p className="text-sm font-semibold mb-2" style={{ color: '#004AAD' }}>
+                  Only 5 Ingredients
+                </p>
+                <ul className="text-sm text-gray-600 leading-relaxed list-disc list-inside">
+                  <li>Sourdough Starter</li>
+                  <li>Water</li>
+                  <li>Sugar</li>
+                  <li>Salt</li>
+                  <li>Bread Flour</li>
+                </ul>
+              </div>
 
               {heroData?.calories != null && (
                 <div>
