@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { BagelType } from '@/types';
@@ -65,6 +65,23 @@ export default function MenuPage() {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
+  }, [prev, next]);
+
+  // Touch swipe support
+  const touchRef = useRef<{ x: number; y: number } | null>(null);
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }, []);
+
+  const onTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!touchRef.current) return;
+    const dx = e.changedTouches[0].clientX - touchRef.current.x;
+    const dy = e.changedTouches[0].clientY - touchRef.current.y;
+    touchRef.current = null;
+    if (Math.abs(dy) > Math.abs(dx)) return; // vertical scroll — ignore
+    if (dx > 50) prev();
+    else if (dx < -50) next();
   }, [prev, next]);
 
   const heroData = bagelTypes.find((b) => b.calories != null);
@@ -230,7 +247,7 @@ export default function MenuPage() {
               </button>
 
               {/* Continuous infinite scroll carousel */}
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 overflow-hidden" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
                 <div
                   className={`flex items-end ${skipTransition ? '' : 'transition-transform duration-300 ease-in-out'}`}
                   style={{
