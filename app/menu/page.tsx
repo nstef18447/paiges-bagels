@@ -89,31 +89,31 @@ export default function MenuPage() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex justify-center gap-8 mb-8">
+        <nav className="flex overflow-x-auto gap-6 justify-center scrollbar-hide mb-8">
           <Link
             href="/about"
-            className="font-semibold tracking-widest transition-all hover:scale-105"
+            className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105"
             style={{ color: '#004AAD' }}
           >
             ABOUT
           </Link>
           <Link
             href="/menu"
-            className="font-semibold tracking-widest transition-all"
+            className="whitespace-nowrap font-semibold tracking-widest transition-all"
             style={{ color: '#1A1A1A', borderBottom: '2px solid #004AAD' }}
           >
             MENU
           </Link>
           <Link
             href="/order"
-            className="font-semibold tracking-widest transition-all hover:scale-105"
+            className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105"
             style={{ color: '#004AAD' }}
           >
             ORDER NOW
           </Link>
           <Link
             href="/contact"
-            className="font-semibold tracking-widest transition-all hover:scale-105"
+            className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105"
             style={{ color: '#004AAD' }}
           >
             CONTACT
