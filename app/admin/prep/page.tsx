@@ -148,6 +148,45 @@ export default function AdminPrepPage() {
                   </div>
                 ))}
               </div>
+
+              {/* Day Totals */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <span className="text-sm font-semibold uppercase tracking-wide" style={{ color: '#004AAD' }}>Day Totals</span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mt-2">
+                  {Object.entries(
+                    day.slots.reduce<Record<string, number>>((acc, slot) => {
+                      slot.bagels.forEach((b) => { acc[b.name] = (acc[b.name] || 0) + b.quantity; });
+                      return acc;
+                    }, {})
+                  )
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([name, quantity]) => (
+                      <div key={name} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ backgroundColor: '#E8F0FE' }}>
+                        <span className="text-sm font-medium">{name}</span>
+                        <span className="text-sm font-bold ml-2">{quantity}</span>
+                      </div>
+                    ))}
+                </div>
+                {day.slots.some((s) => s.add_ons.length > 0) && (
+                  <div className="mt-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                      {Object.entries(
+                        day.slots.reduce<Record<string, number>>((acc, slot) => {
+                          slot.add_ons.forEach((a) => { acc[a.name] = (acc[a.name] || 0) + a.quantity; });
+                          return acc;
+                        }, {})
+                      )
+                        .sort(([a], [b]) => a.localeCompare(b))
+                        .map(([name, quantity]) => (
+                          <div key={name} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ backgroundColor: '#FEF3C7' }}>
+                            <span className="text-sm font-medium">{name}</span>
+                            <span className="text-sm font-bold ml-2">{quantity}</span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
