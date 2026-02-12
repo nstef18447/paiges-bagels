@@ -36,8 +36,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#f6f4f0' }}>
-      {/* Logo Section — brand background */}
-      <div className="flex justify-center overflow-hidden">
+      {/* Logo Banner — thin strip */}
+      <div className="flex justify-center overflow-hidden py-0">
         <Image
           src="/logo.svg"
           alt="Paige's Bagels"
@@ -45,7 +45,7 @@ export default function Home() {
           height={375}
           priority
           unoptimized
-          className="w-auto h-auto max-w-[380px] sm:max-w-[550px] lg:max-w-[700px] -mb-14 sm:-mb-16 lg:-mb-20"
+          className="w-auto h-auto max-w-[200px] sm:max-w-[280px] lg:max-w-[350px] -mt-8 sm:-mt-10 lg:-mt-12 -mb-10 sm:-mb-12 lg:-mb-14"
         />
       </div>
 
@@ -56,6 +56,7 @@ export default function Home() {
           alt=""
           fill
           className="object-cover"
+          style={{ objectPosition: '50% 35%' }}
           priority
         />
         <div className="absolute inset-0 bg-black/40" />
