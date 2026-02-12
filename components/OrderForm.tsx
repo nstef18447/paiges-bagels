@@ -322,7 +322,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
               >
                 {isHangover ? 'Hangover Pricing' : 'Our Pricing'}
               </h2>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-4 gap-3">
                 {pricing.map((item) => (
                   <div
                     key={item.id}
@@ -333,7 +333,14 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
                       className="font-semibold text-sm mb-1"
                       style={{ color: '#4A4A4A' }}
                     >
-                      {item.label || `${item.bagel_quantity} ${item.bagel_quantity === 1 ? 'Bagel' : 'Bagels'}`}
+                      {(() => {
+                        const label = item.label || `${item.bagel_quantity} ${item.bagel_quantity === 1 ? 'Bagel' : 'Bagels'}`;
+                        const match = label.match(/^(.+?)\s*(\(.+\))$/);
+                        if (match) {
+                          return <>{match[1]}<br /><span className="text-xs font-normal">{match[2]}</span></>;
+                        }
+                        return label;
+                      })()}
                     </div>
                     <div
                       className="text-2xl font-bold"
