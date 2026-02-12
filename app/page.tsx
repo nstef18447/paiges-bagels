@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { BagelType } from '@/types';
@@ -10,6 +10,17 @@ export default function Home() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [bagelTypes, setBagelTypes] = useState<BagelType[]>([]);
+  const [activeBagel, setActiveBagel] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el || bagelTypes.length === 0) return;
+    const scrollLeft = el.scrollLeft;
+    const cardWidth = el.scrollWidth / bagelTypes.length;
+    const index = Math.round(scrollLeft / cardWidth);
+    setActiveBagel(Math.min(index, bagelTypes.length - 1));
+  }, [bagelTypes.length]);
 
   useEffect(() => {
     fetch('/api/bagel-types')
@@ -115,6 +126,8 @@ export default function Home() {
             Our Bagels
           </h2>
           <div
+            ref={scrollRef}
+            onScroll={handleScroll}
             className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide px-4"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
@@ -151,6 +164,27 @@ export default function Home() {
                   )}
                 </div>
               </Link>
+            ))}
+          </div>
+          {/* Dot indicators */}
+          <div className="flex justify-center gap-2 mt-4">
+            {bagelTypes.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  const el = scrollRef.current;
+                  if (!el) return;
+                  const cardWidth = el.scrollWidth / bagelTypes.length;
+                  el.scrollTo({ left: cardWidth * i, behavior: 'smooth' });
+                }}
+                className="rounded-full transition-all"
+                style={{
+                  width: i === activeBagel ? '24px' : '8px',
+                  height: '8px',
+                  backgroundColor: i === activeBagel ? '#004AAD' : '#C8D6E5',
+                }}
+                aria-label={`Go to bagel ${i + 1}`}
+              />
             ))}
           </div>
         </div>
