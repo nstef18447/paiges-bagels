@@ -1,9 +1,38 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
 export default function ContactPage() {
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [message, setMessage] = useState('');
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    setStatus('loading');
+    try {
+      const res = await fetch('/api/subscribers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setStatus('success');
+        setMessage(data.message);
+        setEmail('');
+      } else {
+        setStatus('error');
+        setMessage(data.error || 'Something went wrong');
+      }
+    } catch {
+      setStatus('error');
+      setMessage('Something went wrong');
+    }
+  };
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#f6f4f0' }}>
       <div className="max-w-xl mx-auto px-6 pb-10">
@@ -95,6 +124,50 @@ export default function ContactPage() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* In The Know */}
+        <div
+          className="rounded-lg p-6 mb-6"
+          style={{
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #E5E0DB'
+          }}
+        >
+          <h2
+            className="text-xl font-semibold mb-4 text-center"
+            style={{ color: '#004AAD' }}
+          >
+            Stay In The Know
+          </h2>
+          <p className="text-center text-sm mb-4" style={{ color: '#6B6B6B' }}>
+            Get notified when new pickup slots drop and new flavors launch.
+          </p>
+          {status === 'success' ? (
+            <p className="text-center text-sm font-semibold" style={{ color: '#004AAD' }}>{message}</p>
+          ) : (
+            <form onSubmit={handleSubscribe} className="flex gap-2">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:border-blue-500"
+              />
+              <button
+                type="submit"
+                disabled={status === 'loading'}
+                className="px-5 py-2.5 rounded-lg text-white font-semibold text-sm transition-all hover:scale-105"
+                style={{ backgroundColor: '#004AAD' }}
+              >
+                {status === 'loading' ? '...' : 'Join'}
+              </button>
+            </form>
+          )}
+          {status === 'error' && (
+            <p className="text-center text-sm text-red-500 mt-2">{message}</p>
+          )}
         </div>
 
         {/* Order Button */}
