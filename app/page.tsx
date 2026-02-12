@@ -87,7 +87,7 @@ export default function Home() {
           </p>
 
           {/* Navigation Bar */}
-          <nav className="flex flex-col sm:flex-row gap-4 sm:gap-16 lg:gap-20 items-center mt-8 sm:mt-0">
+          <nav className="flex flex-col sm:flex-row gap-4 sm:gap-16 lg:gap-20 items-center mt-2 sm:mt-0">
             <Link
               href="/about"
               className="text-3xl sm:text-3xl lg:text-4xl font-extrabold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
