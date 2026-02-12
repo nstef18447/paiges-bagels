@@ -115,41 +115,41 @@ export default function Home() {
             Our Bagels
           </h2>
           <div
-            className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
+            className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide px-4"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
             {bagelTypes.map((bagel) => (
               <Link
                 key={bagel.id}
                 href="/order"
-                className="flex-shrink-0 snap-center w-[200px] sm:w-[240px]"
+                className="flex-shrink-0 snap-center w-[85vw] sm:w-[300px]"
               >
+                <p
+                  className="text-center font-extrabold text-xl mb-2"
+                  style={{ color: '#004AAD' }}
+                >
+                  {bagel.name}
+                </p>
                 <div className="rounded-xl overflow-hidden">
                   {bagel.image_url ? (
-                    <div className="relative h-[200px] sm:h-[240px]">
+                    <div className="relative h-[85vw] sm:h-[300px]">
                       <Image
                         src={`/${bagel.image_url}`}
                         alt={bagel.name}
                         fill
                         className="object-cover"
-                        sizes="240px"
+                        sizes="85vw"
                       />
                     </div>
                   ) : (
                     <div
-                      className="flex items-center justify-center h-[200px] sm:h-[240px]"
+                      className="flex items-center justify-center h-[85vw] sm:h-[300px]"
                       style={{ backgroundColor: '#E8F0FE' }}
                     >
-                      <span className="text-5xl">🥯</span>
+                      <span className="text-6xl">🥯</span>
                     </div>
                   )}
                 </div>
-                <p
-                  className="text-center font-extrabold mt-2 text-lg"
-                  style={{ color: '#004AAD' }}
-                >
-                  {bagel.name}
-                </p>
               </Link>
             ))}
           </div>
