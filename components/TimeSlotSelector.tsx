@@ -81,7 +81,7 @@ export default function TimeSlotSelector({
                 {dateSlots
                   .filter(slot => !isPastCutoff(slot.cutoff_time))
                   .map((slot) => {
-                  const isSoldOut = slot.remaining === 0;
+                  const isSoldOut = slot.remaining <= 0;
                   const isAvailable = slot.remaining >= requiredCapacity && !isSoldOut;
                   const isSelected = slot.id === selectedSlotId;
 
