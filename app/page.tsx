@@ -58,8 +58,8 @@ export default function Home() {
         />
       </div>
 
-      {/* Hero Image Section — nav + subscribe overlaid */}
-      <div className="relative flex-1 flex flex-col items-center justify-center">
+      {/* Hero Image Section — tagline + nav only, fixed height */}
+      <div className="relative h-[50vh] sm:h-[60vh] flex flex-col items-center">
         <Image
           src="/hero-bg.jpg"
           alt=""
@@ -69,7 +69,7 @@ export default function Home() {
         />
         <div className="absolute inset-0 bg-black/40" />
 
-        <div className="relative z-10 flex flex-col items-center justify-start pt-6 pb-16 sm:justify-center sm:py-16">
+        <div className="relative z-10 flex flex-col items-center justify-start pt-6 sm:justify-center sm:pt-0 flex-1">
           {/* Tagline */}
           <p className="text-white text-4xl sm:text-4xl lg:text-5xl italic tracking-wide drop-shadow-md mb-8 text-center px-6">
             Sourdough bagels worth waking up for
@@ -102,39 +102,6 @@ export default function Home() {
               CONTACT
             </Link>
           </nav>
-
-          {/* In The Know */}
-          <div className="mt-10 sm:mt-14 w-full max-w-md px-6">
-            <p className="text-center font-semibold tracking-wide mb-3 text-white drop-shadow-md">
-              Stay In The Know
-            </p>
-            {status === 'success' ? (
-              <p className="text-center text-sm text-white drop-shadow-md">{message}</p>
-            ) : (
-              <form onSubmit={handleSubscribe} className="flex gap-2">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="flex-1 px-4 py-2.5 rounded-lg border border-white/30 text-sm focus:outline-none focus:border-white text-white placeholder-white/60"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(4px)' }}
-                />
-                <button
-                  type="submit"
-                  disabled={status === 'loading'}
-                  className="px-5 py-2.5 rounded-lg text-white font-semibold text-sm transition-all hover:scale-105"
-                  style={{ backgroundColor: '#004AAD' }}
-                >
-                  {status === 'loading' ? '...' : 'Join'}
-                </button>
-              </form>
-            )}
-            {status === 'error' && (
-              <p className="text-center text-sm text-red-300 mt-2">{message}</p>
-            )}
-          </div>
         </div>
       </div>
 
@@ -188,6 +155,44 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Stay In The Know */}
+      <div className="py-8 px-6" style={{ backgroundColor: '#f6f4f0' }}>
+        <div className="max-w-md mx-auto">
+          <p
+            className="text-center font-semibold tracking-wide mb-3"
+            style={{ color: '#004AAD' }}
+          >
+            Stay In The Know
+          </p>
+          {status === 'success' ? (
+            <p className="text-center text-sm" style={{ color: '#004AAD' }}>{message}</p>
+          ) : (
+            <form onSubmit={handleSubscribe} className="flex gap-2">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:border-blue-500"
+                style={{ backgroundColor: '#FFFFFF' }}
+              />
+              <button
+                type="submit"
+                disabled={status === 'loading'}
+                className="px-5 py-2.5 rounded-lg text-white font-semibold text-sm transition-all hover:scale-105"
+                style={{ backgroundColor: '#004AAD' }}
+              >
+                {status === 'loading' ? '...' : 'Join'}
+              </button>
+            </form>
+          )}
+          {status === 'error' && (
+            <p className="text-center text-sm text-red-500 mt-2">{message}</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
