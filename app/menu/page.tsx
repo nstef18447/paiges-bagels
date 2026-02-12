@@ -210,7 +210,7 @@ export default function MenuPage() {
         {!loading && bagelTypes.length > 0 && (
           <div className="mt-12">
             <h2
-              className="text-2xl font-bold mb-8 text-center"
+              className="text-3xl font-extrabold mb-8 text-center underline underline-offset-4"
               style={{ color: '#004AAD' }}
             >
               Our Bagels
@@ -260,7 +260,7 @@ export default function MenuPage() {
                               className={`font-extrabold ${skipTransition ? '' : 'transition-all duration-300'}`}
                               style={{
                                 color: isActive ? '#004AAD' : '#9CA3AF',
-                                fontSize: isActive ? '1.2rem' : '0.9rem',
+                                fontSize: isActive ? '1.5rem' : '1.1rem',
                               }}
                             >
                               {bagel.name}
