@@ -35,92 +35,92 @@ export default function Home() {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center">
-      {/* Background Image */}
-      <Image
-        src="/hero-bg.jpg"
-        alt=""
-        fill
-        className="object-cover"
-        priority
-      />
-      {/* Dark overlay for readability */}
-      <div className="absolute inset-0 bg-black/40" />
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#f6f4f0' }}>
+      {/* Logo Section — brand background */}
+      <div className="flex justify-center overflow-hidden">
+        <Image
+          src="/logo.svg"
+          alt="Paige's Bagels"
+          width={375}
+          height={375}
+          priority
+          unoptimized
+          className="w-auto h-auto max-w-[380px] sm:max-w-[550px] lg:max-w-[700px] -mt-10 sm:-mt-14 lg:-mt-16 -mb-14 sm:-mb-16 lg:-mb-20"
+        />
+      </div>
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center">
-        {/* Logo - Big and Centered */}
-        <div className="overflow-hidden -mb-6 sm:-mb-12 lg:-mb-16">
-          <Image
-            src="/logo-home.svg"
-            alt="Paige's Bagels"
-            width={375}
-            height={375}
-            priority
-            unoptimized
-            className="w-auto h-auto max-w-[380px] sm:max-w-[550px] lg:max-w-[700px] -mt-10 sm:-mt-14 lg:-mt-16 -mb-14 sm:-mb-16 lg:-mb-20 drop-shadow-lg"
-          />
-        </div>
+      {/* Hero Image Section — nav + subscribe overlaid */}
+      <div className="relative flex-1 flex flex-col items-center justify-center">
+        <Image
+          src="/hero-bg.jpg"
+          alt=""
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-black/40" />
 
-        {/* Navigation Bar */}
-        <nav className="flex flex-col sm:flex-row gap-4 sm:gap-16 lg:gap-20 items-center">
-          <Link
-            href="/about"
-            className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
-          >
-            ABOUT
-          </Link>
-          <Link
-            href="/menu"
-            className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
-          >
-            MENU
-          </Link>
-          <Link
-            href="/order"
-            className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
-          >
-            ORDER
-          </Link>
-          <Link
-            href="/contact"
-            className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
-          >
-            CONTACT
-          </Link>
-        </nav>
+        <div className="relative z-10 flex flex-col items-center justify-center py-16">
+          {/* Navigation Bar */}
+          <nav className="flex flex-col sm:flex-row gap-4 sm:gap-16 lg:gap-20 items-center">
+            <Link
+              href="/about"
+              className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
+            >
+              ABOUT
+            </Link>
+            <Link
+              href="/menu"
+              className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
+            >
+              MENU
+            </Link>
+            <Link
+              href="/order"
+              className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
+            >
+              ORDER
+            </Link>
+            <Link
+              href="/contact"
+              className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-widest transition-all hover:scale-105 text-white drop-shadow-md"
+            >
+              CONTACT
+            </Link>
+          </nav>
 
-        {/* In The Know */}
-        <div className="mt-10 sm:mt-14 w-full max-w-md px-6">
-          <p className="text-center font-semibold tracking-wide mb-3 text-white drop-shadow-md">
-            Stay In The Know
-          </p>
-          {status === 'success' ? (
-            <p className="text-center text-sm text-white drop-shadow-md">{message}</p>
-          ) : (
-            <form onSubmit={handleSubscribe} className="flex gap-2">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="flex-1 px-4 py-2.5 rounded-lg border border-white/30 text-sm focus:outline-none focus:border-white text-white placeholder-white/60"
-                style={{ backgroundColor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(4px)' }}
-              />
-              <button
-                type="submit"
-                disabled={status === 'loading'}
-                className="px-5 py-2.5 rounded-lg text-white font-semibold text-sm transition-all hover:scale-105"
-                style={{ backgroundColor: '#004AAD' }}
-              >
-                {status === 'loading' ? '...' : 'Join'}
-              </button>
-            </form>
-          )}
-          {status === 'error' && (
-            <p className="text-center text-sm text-red-300 mt-2">{message}</p>
-          )}
+          {/* In The Know */}
+          <div className="mt-10 sm:mt-14 w-full max-w-md px-6">
+            <p className="text-center font-semibold tracking-wide mb-3 text-white drop-shadow-md">
+              Stay In The Know
+            </p>
+            {status === 'success' ? (
+              <p className="text-center text-sm text-white drop-shadow-md">{message}</p>
+            ) : (
+              <form onSubmit={handleSubscribe} className="flex gap-2">
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="flex-1 px-4 py-2.5 rounded-lg border border-white/30 text-sm focus:outline-none focus:border-white text-white placeholder-white/60"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(4px)' }}
+                />
+                <button
+                  type="submit"
+                  disabled={status === 'loading'}
+                  className="px-5 py-2.5 rounded-lg text-white font-semibold text-sm transition-all hover:scale-105"
+                  style={{ backgroundColor: '#004AAD' }}
+                >
+                  {status === 'loading' ? '...' : 'Join'}
+                </button>
+              </form>
+            )}
+            {status === 'error' && (
+              <p className="text-center text-sm text-red-300 mt-2">{message}</p>
+            )}
+          </div>
         </div>
       </div>
     </div>
