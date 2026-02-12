@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
       }
       console.error('Failed to create order:', insertError);
       return NextResponse.json(
-        { error: 'Failed to create order' },
+        { error: `Failed to create order: ${insertError.message}` },
         { status: 500 }
       );
     }
