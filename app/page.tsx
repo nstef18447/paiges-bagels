@@ -69,7 +69,7 @@ export default function Home() {
         />
         <div className="absolute inset-0 bg-black/40" />
 
-        <div className="relative z-10 flex flex-col items-center justify-center py-16">
+        <div className="relative z-10 flex flex-col items-center justify-start pt-6 pb-16 sm:justify-center sm:py-16">
           {/* Tagline */}
           <p className="text-white text-4xl sm:text-4xl lg:text-5xl italic tracking-wide drop-shadow-md mb-8 text-center px-6">
             Sourdough bagels worth waking up for
