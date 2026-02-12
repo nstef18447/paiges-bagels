@@ -10,11 +10,17 @@ interface BagelCount {
   quantity: number;
 }
 
+interface AddOnCount {
+  name: string;
+  quantity: number;
+}
+
 interface SlotPrep {
   id: string;
   time: string;
   is_hangover: boolean;
   bagels: BagelCount[];
+  add_ons: AddOnCount[];
   total_bagels: number;
 }
 
@@ -121,6 +127,24 @@ export default function AdminPrepPage() {
                         </div>
                       ))}
                     </div>
+
+                    {slot.add_ons.length > 0 && (
+                      <div className="mt-3">
+                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Add-ons</span>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mt-1">
+                          {slot.add_ons.map((addOn) => (
+                            <div
+                              key={addOn.name}
+                              className="flex items-center justify-between rounded-lg px-3 py-2"
+                              style={{ backgroundColor: '#FEF3C7' }}
+                            >
+                              <span className="text-sm">{addOn.name}</span>
+                              <span className="text-sm font-bold ml-2">{addOn.quantity}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

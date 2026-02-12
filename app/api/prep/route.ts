@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
         is_fake,
         time_slot_id,
         time_slots(id, date, time, is_hangover),
-        order_items(quantity, bagel_types(name))
+        order_items(quantity, bagel_types(name)),
+        order_add_ons(quantity, add_on_types(name))
       `)
       .eq('is_fake', false)
       .in('status', ['pending', 'confirmed', 'ready']);
@@ -30,12 +31,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Group by date → slot → bagel type
+    // Group by date → slot → bagel type + add-ons
     const dateMap: Record<string, Record<string, {
       time: string;
       is_hangover: boolean;
       bagels: Record<string, number>;
       total_bagels: number;
+      add_ons: Record<string, number>;
     }>> = {};
 
     for (const order of orders || []) {
@@ -55,7 +57,7 @@ export async function GET(request: NextRequest) {
 
       if (!dateMap[date]) dateMap[date] = {};
       if (!dateMap[date][slotId]) {
-        dateMap[date][slotId] = { time, is_hangover, bagels: {}, total_bagels: 0 };
+        dateMap[date][slotId] = { time, is_hangover, bagels: {}, total_bagels: 0, add_ons: {} };
       }
 
       const slot = dateMap[date][slotId];
@@ -68,6 +70,16 @@ export async function GET(request: NextRequest) {
         const name = item.bagel_types?.name || 'Unknown';
         slot.bagels[name] = (slot.bagels[name] || 0) + item.quantity;
         slot.total_bagels += item.quantity;
+      }
+
+      const addOns = order.order_add_ons as unknown as {
+        quantity: number;
+        add_on_types: { name: string };
+      }[];
+
+      for (const addOn of addOns || []) {
+        const name = addOn.add_on_types?.name || 'Unknown';
+        slot.add_ons[name] = (slot.add_ons[name] || 0) + addOn.quantity;
       }
     }
 
@@ -82,6 +94,9 @@ export async function GET(request: NextRequest) {
             time: slot.time,
             is_hangover: slot.is_hangover,
             bagels: Object.entries(slot.bagels)
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([name, quantity]) => ({ name, quantity })),
+            add_ons: Object.entries(slot.add_ons)
               .sort(([a], [b]) => a.localeCompare(b))
               .map(([name, quantity]) => ({ name, quantity })),
             total_bagels: slot.total_bagels,
