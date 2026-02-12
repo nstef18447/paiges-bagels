@@ -1,7 +1,7 @@
 # Paige's Bagels — Project Plan
 
 ## What This Is
-A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern business school). Customers order online, pay via Venmo, and pick up at 1881 Oak Avenue Apt 1510W, Evanston IL 60201. Admin confirms payments and manages everything through a dashboard.
+A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern business school). Customers order online, pay via Venmo, and pick up at 1881 Oak Avenue Apt 1510W, Evanston IL 60201. Bagels will be outside; customers use call box to call Paige Tuchner to be let upstairs if needed. Admin confirms payments and manages everything through a dashboard.
 
 ## Tech Stack
 - **Framework**: Next.js 16 (App Router) + TypeScript
@@ -24,23 +24,25 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 ### Customer-Facing Pages
 | Route | Purpose |
 |-------|---------|
-| `/` | Landing page with logo + nav (About, Order, Contact) |
+| `/` | Landing page with logo + nav (About, Menu, Order, Contact) |
 | `/about` | Paige's story, sourdough benefits, bagel photo |
+| `/menu` | Menu page with inside bagel hero (ingredients + macros) and infinite-scroll carousel of each bagel type with photos |
 | `/order` | Full order form: time slot → bagels → add-ons → info → submit |
 | `/hangover` | Hangover Bagels — same-day impulse ordering with warm amber branding and higher pricing |
 | `/contact` | Instagram link + DM prompt |
-| `/confirmation` | Order summary, Venmo pay button, next-steps instructions |
+| `/confirmation` | Order summary with full pickup address + callbox instructions, Venmo pay button, next-steps |
 
 ### Admin Dashboard (`/admin/*`)
 | Route | Purpose |
 |-------|---------|
 | `/admin/orders` | View/manage orders by status (pending → confirmed → completed). "Completed" is UI label; DB status remains `ready`. Email still sends on mark-complete. |
 | `/admin/slots` | Create and manage pickup time slots. Active/Past tabs (past = date passed or all orders done). Multi-slot creation: multiple pickup times per date in one form. |
-| `/admin/bagel-types` | Add/edit/deactivate bagel types (dynamic, not hardcoded) |
+| `/admin/bagel-types` | Add/edit/deactivate bagel types with image filename, ingredients text, and macros (calories, protein, carbs, fat) |
 | `/admin/add-ons` | Manage add-on items (e.g., schmear) with pricing |
 | `/admin/pricing` | Set pricing tiers with custom labels (e.g. 1/$4, 3/$10, 6/$18) — any quantity 1-6 uses greedy bundle pricing |
-| `/admin/costs` | Track ingredient costs and cost-per-bagel |
-| `/admin/financials` | Revenue, COGS, profit, margin — daily breakdown with date filters |
+| `/admin/costs` | Three-section cost tracking: Bagel Ingredients (per bagel), Add-On Costs (per unit sold, linked to add-on type), Fixed Costs (amortized over all bagels sold) |
+| `/admin/financials` | Revenue, COGS, profit, margin — daily breakdown with date filters. COGS includes per-bagel ingredients, per-addon costs, and amortized fixed costs. |
+| `/admin/prep` | Baking prep view: bagel counts grouped by day and time slot showing how many of each type to bake |
 
 ### API Routes
 | Endpoint | Methods | Purpose |
@@ -51,13 +53,14 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 | `/api/orders/[id]/ready` | POST | Mark as ready + send pickup email |
 | `/api/slots` | GET, POST | List/create time slots. GET includes `total_orders` and `active_orders` per slot. Supports `?hangover=true` filter. POST accepts `is_hangover` field. |
 | `/api/slots/[id]` | PATCH, DELETE | Update/delete time slot |
-| `/api/bagel-types` | GET, POST | List/create bagel types |
+| `/api/bagel-types` | GET, POST | List/create bagel types (includes image_url, description, macro fields) |
 | `/api/bagel-types/[id]` | PATCH, DELETE | Update/delete bagel type |
 | `/api/add-on-types` | GET, POST | List/create add-on types |
 | `/api/add-on-types/[id]` | PATCH, DELETE | Update/delete add-on type |
 | `/api/pricing` | GET, PATCH | Get/update pricing tiers. Supports `?type=regular\|hangover` filter. |
-| `/api/ingredients` | GET, POST, PATCH, DELETE | CRUD for ingredient costs |
-| `/api/financials` | GET | Financial summary with optional date range |
+| `/api/ingredients` | GET, POST, PATCH, DELETE | CRUD for ingredient costs. Supports `cost_type`: per_bagel, per_addon, fixed. |
+| `/api/financials` | GET | Financial summary with optional date range. COGS from all three cost types. |
+| `/api/prep` | GET | Baking prep data: orders grouped by date → slot → bagel type with counts |
 | `/api/capacity` | GET | Check remaining capacity for a slot |
 | `/api/admin/login` | POST | Admin auth (password → cookie) |
 
@@ -71,12 +74,12 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 |-------|---------|
 | `time_slots` | Pickup dates/times with capacity limits, optional cutoff time, and `is_hangover` flag |
 | `orders` | Customer orders with status tracking (pending/confirmed/ready) and `is_fake` flag for artificial scarcity |
-| `bagel_types` | Dynamic bagel flavors (active/inactive, display order) |
+| `bagel_types` | Dynamic bagel flavors (active/inactive, display order, image_url, description, calories, protein_g, carbs_g, fat_g) |
 | `order_items` | Junction: order → bagel types with quantities |
 | `add_on_types` | Add-on items with pricing (e.g., schmear) |
 | `order_add_ons` | Junction: order → add-ons with quantities |
 | `pricing` | Pricing tiers (quantity → price, with display labels and `pricing_type`: regular/hangover) |
-| `ingredients` | Ingredient cost tracking (unit cost × units per bagel) |
+| `ingredients` | Cost tracking with `cost_type` (per_bagel/per_addon/fixed), optional `add_on_type_id` FK for per-addon costs |
 
 ### Migrations Applied
 1. `schema.sql` — Base tables (time_slots, orders)
@@ -88,19 +91,31 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 7. `migration-add-ons.sql` — add_on_types + order_add_ons tables
 8. `migration-hangover.sql` — is_hangover flag on time_slots + pricing_type column on pricing
 9. `migration-fake-orders.sql` — is_fake flag on orders for artificial scarcity
+10. `migration-cost-types.sql` — cost_type + add_on_type_id columns on ingredients for per-addon and fixed costs
+11. `migration-menu.sql` — image_url, description, calories, protein_g, carbs_g, fat_g columns on bagel_types
 
 ### Key Components
 | Component | Purpose |
 |-----------|---------|
-| `OrderForm.tsx` | Main customer order flow. Supports `mode` prop: `regular` (default) or `hangover` (amber branding, higher pricing, different copy). |
+| `OrderForm.tsx` | Main customer order flow. Supports `mode` prop: `regular` (default) or `hangover` (amber branding, higher pricing, different copy). Nav includes MENU link. |
 | `HangoverBanner.tsx` | Cross-promo banner on regular order page linking to /hangover when hangover slots are available |
 | `BagelSelector.tsx` | +/- counters per bagel type, max 6 total |
 | `AddOnSelector.tsx` | +/- counters per add-on type |
 | `TimeSlotSelector.tsx` | Date/time slot picker with scarcity messaging: "Bagels Available!" (13+), "Only X bagels left!" (1-12), "SOLD OUT" (0) |
 | `AdminOrderCard.tsx` | Order card with confirm/ready/delete actions. Ready state shows green "Completed" badge. "Mark as Fake" toggle for artificial scarcity ($0 revenue, excluded from financials). |
-| `BagelTypeManager.tsx` | Admin CRUD for bagel types |
+| `BagelTypeManager.tsx` | Admin CRUD for bagel types with image filename, ingredients text, and macro inputs (calories, protein, carbs, fat) |
 | `AddOnTypeManager.tsx` | Admin CRUD for add-on types |
 | `SlotManager.tsx` | Admin CRUD for time slots. Active/Past tabs, multi-slot creation form. Past tab is read-only. |
+
+### Bagel Photos
+Photos stored in `/public/`:
+- `inside.jpg` — cross-section hero photo used on menu page
+- `plain.jpg` — Plain bagel
+- `sesame.jpg` — Sesame bagel
+- `poppy.jpg` — Poppy Seed bagel
+- `logo.svg` — Customer-facing logo
+- `logo.png` — Admin + email logo
+- `logo-transparent.svg` — Transparent logo for hangover banner
 
 ## Bugs Fixed
 - **Hangover pricing leak (Feb 2025)** — `/api/orders` POST was fetching ALL pricing tiers (both regular and hangover) without filtering by `pricing_type`. The greedy bundle algorithm could pick the higher hangover tier for regular orders, causing 3 bagels to show a higher price on the confirmation page than what the customer saw on the order form. Fix: API now looks up the time slot's `is_hangover` flag and filters pricing tiers by `pricing_type` accordingly (`app/api/orders/route.ts`).
@@ -129,8 +144,14 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 - [x] **Flexible quantity validation** — Customers can order any quantity 1-6, pricing uses greedy bundle algorithm
 - [x] **Scarcity messaging** — Show "Only X bagels left!" when ≤12 remain, "Bagels Available!" when plentiful, "SOLD OUT" at 0
 
+### Completed This Session
+- [x] **Pickup location update** — Changed to 1881 Oak Avenue Apt 1510W with callbox instructions
+- [x] **Baking prep page** — `/admin/prep` shows bagel counts by day/slot for baking planning
+- [x] **COGS cost types** — Per-bagel ingredients, per-addon costs (schmear), and fixed costs (amortized)
+- [x] **Menu page** — `/menu` with inside bagel hero, ingredients, macros, and infinite-scroll carousel
+- [x] **Bagel photos** — Admin-editable image filenames, ingredients, and macros per bagel type
+
 ### Low Priority / Nice to Have
-- [ ] **Image uploads for bagel types** — Show photos on the order form
 - [ ] **Promo codes / discounts** — Apply percentage or flat discounts
 - [ ] **Catering orders** — Larger quantity tiers for events
 - [ ] **Email templates** — Move HTML email templates to separate files or use React Email

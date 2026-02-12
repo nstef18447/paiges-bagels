@@ -17,26 +17,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check remaining capacity
-    const { data: capacityData, error: capacityError } = await supabase.rpc(
-      'get_slot_capacity',
-      { slot_id: formData.timeSlotId }
-    );
-
-    if (capacityError) {
-      return NextResponse.json(
-        { error: 'Failed to check capacity' },
-        { status: 500 }
-      );
-    }
-
-    if (capacityData.remaining < total) {
-      return NextResponse.json(
-        { error: 'Not enough capacity remaining for this time slot' },
-        { status: 400 }
-      );
-    }
-
     // Determine pricing type from the time slot
     const { data: slotData, error: slotError } = await supabase
       .from('time_slots')
@@ -92,40 +72,49 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create order
+    // Calculate price
     const price = calculateBundlePrice(total, pricingTiers) + addOnTotal;
-    const orderData = {
-      time_slot_id: formData.timeSlotId,
-      customer_name: formData.customerName,
-      customer_email: formData.customerEmail,
-      customer_phone: formData.customerPhone,
-      plain_count: 0,
-      everything_count: 0,
-      sesame_count: 0,
-      total_bagels: total,
-      total_price: price,
-      status: 'pending',
-      venmo_note: '', // Will be updated after insert
-    };
 
-    const { data: order, error: insertError } = await supabase
-      .from('orders')
-      .insert(orderData)
-      .select()
-      .single();
+    // Atomic order creation — locks the slot, checks capacity, and inserts in one transaction
+    const { data: orderId, error: insertError } = await supabase.rpc(
+      'create_order_atomic',
+      {
+        p_time_slot_id: formData.timeSlotId,
+        p_customer_name: formData.customerName,
+        p_customer_email: formData.customerEmail,
+        p_customer_phone: formData.customerPhone,
+        p_total_bagels: total,
+        p_total_price: price,
+      }
+    );
 
     if (insertError) {
+      // The RPC raises an exception if capacity is exceeded
+      if (insertError.message?.includes('Not enough capacity')) {
+        return NextResponse.json(
+          { error: 'Not enough capacity remaining for this time slot' },
+          { status: 400 }
+        );
+      }
+      console.error('Failed to create order:', insertError);
       return NextResponse.json(
         { error: 'Failed to create order' },
         { status: 500 }
       );
     }
 
+    // Update venmo_note with order ID
+    const venmoNote = generateVenmoNote(orderId);
+    await supabase
+      .from('orders')
+      .update({ venmo_note: venmoNote })
+      .eq('id', orderId);
+
     // Create order items for each bagel type
     const orderItems = Object.entries(formData.bagelCounts)
       .filter(([_, quantity]) => quantity > 0)
       .map(([bagelTypeId, quantity]) => ({
-        order_id: order.id,
+        order_id: orderId,
         bagel_type_id: bagelTypeId,
         quantity,
       }));
@@ -137,13 +126,12 @@ export async function POST(request: NextRequest) {
 
       if (itemsError) {
         console.error('Failed to create order items:', itemsError);
-        // Note: Order is already created, so we don't fail here
       }
     }
 
     // Create order add-ons for each add-on type
     const orderAddOns = addOnEntries.map(([addOnTypeId, quantity]) => ({
-      order_id: order.id,
+      order_id: orderId,
       add_on_type_id: addOnTypeId,
       quantity,
     }));
@@ -158,18 +146,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update venmo_note with order ID
-    const venmoNote = generateVenmoNote(order.id);
-    const { error: updateError } = await supabase
+    // Fetch full order + time slot for response
+    const { data: order } = await supabase
       .from('orders')
-      .update({ venmo_note: venmoNote })
-      .eq('id', order.id);
+      .select('*')
+      .eq('id', orderId)
+      .single();
 
-    if (updateError) {
-      console.error('Failed to update venmo_note:', updateError);
-    }
-
-    // Fetch time slot info for response
     const { data: timeSlot } = await supabase
       .from('time_slots')
       .select('*')
