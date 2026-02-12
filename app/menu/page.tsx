@@ -128,7 +128,8 @@ export default function MenuPage() {
                 src="/inside.jpg"
                 alt="Inside a Paige's Bagel"
                 fill
-                className="object-cover object-top"
+                className="object-cover"
+                style={{ objectPosition: '50% 60%' }}
                 sizes="(max-width: 768px) 100vw, 50vw"
                 priority
               />
