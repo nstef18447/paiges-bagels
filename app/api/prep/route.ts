@@ -15,6 +15,8 @@ export async function GET(request: NextRequest) {
         total_bagels,
         status,
         is_fake,
+        customer_name,
+        total_price,
         time_slot_id,
         time_slots(id, date, time, is_hangover),
         order_items(quantity, bagel_types(name)),
@@ -38,6 +40,13 @@ export async function GET(request: NextRequest) {
       bagels: Record<string, number>;
       total_bagels: number;
       add_ons: Record<string, number>;
+      orders: {
+        customer_name: string;
+        total_price: number;
+        bagels: { name: string; quantity: number }[];
+        add_ons: { name: string; quantity: number }[];
+        total_bagels: number;
+      }[];
     }>> = {};
 
     for (const order of orders || []) {
@@ -57,7 +66,7 @@ export async function GET(request: NextRequest) {
 
       if (!dateMap[date]) dateMap[date] = {};
       if (!dateMap[date][slotId]) {
-        dateMap[date][slotId] = { time, is_hangover, bagels: {}, total_bagels: 0, add_ons: {} };
+        dateMap[date][slotId] = { time, is_hangover, bagels: {}, total_bagels: 0, add_ons: {}, orders: [] };
       }
 
       const slot = dateMap[date][slotId];
@@ -81,6 +90,25 @@ export async function GET(request: NextRequest) {
         const name = addOn.add_on_types?.name || 'Unknown';
         slot.add_ons[name] = (slot.add_ons[name] || 0) + addOn.quantity;
       }
+
+      // Collect individual confirmed/ready orders for bag packing
+      if (order.status === 'confirmed' || order.status === 'ready') {
+        const orderBagels = (items || []).map((item) => ({
+          name: item.bagel_types?.name || 'Unknown',
+          quantity: item.quantity,
+        }));
+        const orderAddOns = (addOns || []).map((addOn) => ({
+          name: addOn.add_on_types?.name || 'Unknown',
+          quantity: addOn.quantity,
+        }));
+        slot.orders.push({
+          customer_name: (order as any).customer_name || 'Unknown',
+          total_price: (order as any).total_price || 0,
+          bagels: orderBagels.sort((a, b) => a.name.localeCompare(b.name)),
+          add_ons: orderAddOns.sort((a, b) => a.name.localeCompare(b.name)),
+          total_bagels: order.total_bagels || orderBagels.reduce((sum, b) => sum + b.quantity, 0),
+        });
+      }
     }
 
     // Convert to sorted array structure
@@ -100,6 +128,7 @@ export async function GET(request: NextRequest) {
               .sort(([a], [b]) => a.localeCompare(b))
               .map(([name, quantity]) => ({ name, quantity })),
             total_bagels: slot.total_bagels,
+            orders: slot.orders.sort((a, b) => a.customer_name.localeCompare(b.customer_name)),
           }));
 
         const total_bagels = slotArray.reduce((sum, s) => sum + s.total_bagels, 0);

@@ -15,6 +15,14 @@ interface AddOnCount {
   quantity: number;
 }
 
+interface PrepOrder {
+  customer_name: string;
+  total_price: number;
+  bagels: BagelCount[];
+  add_ons: AddOnCount[];
+  total_bagels: number;
+}
+
 interface SlotPrep {
   id: string;
   time: string;
@@ -22,6 +30,7 @@ interface SlotPrep {
   bagels: BagelCount[];
   add_ons: AddOnCount[];
   total_bagels: number;
+  orders: PrepOrder[];
 }
 
 interface DayPrep {
@@ -34,6 +43,7 @@ export default function AdminPrepPage() {
   const [days, setDays] = useState<DayPrep[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPast, setShowPast] = useState(false);
+  const [expandedSlots, setExpandedSlots] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchPrep();
@@ -143,6 +153,55 @@ export default function AdminPrepPage() {
                             </div>
                           ))}
                         </div>
+                      </div>
+                    )}
+
+                    {slot.orders && slot.orders.length > 0 && (
+                      <div className="mt-3">
+                        <button
+                          onClick={() => {
+                            setExpandedSlots((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(slot.id)) {
+                                next.delete(slot.id);
+                              } else {
+                                next.add(slot.id);
+                              }
+                              return next;
+                            });
+                          }}
+                          className="flex items-center gap-2 text-sm font-medium hover:underline"
+                          style={{ color: '#004AAD' }}
+                        >
+                          <span style={{ transform: expandedSlots.has(slot.id) ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'inline-block' }}>
+                            ▶
+                          </span>
+                          Orders ({slot.orders.length})
+                        </button>
+
+                        {expandedSlots.has(slot.id) && (
+                          <div className="mt-2 space-y-2">
+                            {slot.orders.map((order, idx) => (
+                              <div key={idx} className="bg-gray-50 rounded-lg px-3 py-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-bold">{order.customer_name}</span>
+                                  <span className="text-sm text-gray-600">
+                                    {order.total_bagels} bagel{order.total_bagels !== 1 ? 's' : ''} &middot; ${order.total_price.toFixed(2)}
+                                  </span>
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {order.bagels.map((b) => `${b.quantity} ${b.name}`).join(', ')}
+                                  {order.add_ons.length > 0 && (
+                                    <span style={{ color: '#92400E' }}>
+                                      {' + '}
+                                      {order.add_ons.map((a) => `${a.quantity} ${a.name}`).join(', ')}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

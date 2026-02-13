@@ -119,6 +119,7 @@ Photos stored in `/public/`:
 
 ## Bugs Fixed
 - **Hangover pricing leak (Feb 2025)** — `/api/orders` POST was fetching ALL pricing tiers (both regular and hangover) without filtering by `pricing_type`. The greedy bundle algorithm could pick the higher hangover tier for regular orders, causing 3 bagels to show a higher price on the confirmation page than what the customer saw on the order form. Fix: API now looks up the time slot's `is_hangover` flag and filters pricing tiers by `pricing_type` accordingly (`app/api/orders/route.ts`).
+- **Order creation "Time slot not found" (Feb 2025)** — `create_order_atomic` RPC lacked `SECURITY DEFINER`, so the anon role couldn't execute `SELECT ... FOR UPDATE` on `time_slots` due to RLS. Fix: recreated function with `SECURITY DEFINER` in Supabase SQL editor. Local migration file should be updated if migrations are re-run.
 
 ## Known Tech Debt
 - Legacy columns on `orders` table (`plain_count`, `everything_count`, `sesame_count`) — kept for backward compat with old orders, new orders use `order_items`
@@ -145,6 +146,12 @@ Photos stored in `/public/`:
 - [x] **Scarcity messaging** — Show "Only X bagels left!" when ≤12 remain, "Bagels Available!" when plentiful, "SOLD OUT" at 0
 
 ### Completed This Session
+- [x] **Homepage hero redesign** — Removed stacked nav links from hero, added horizontal scrollable nav bar below hero, hero now shows only tagline. Lightened overlay from 40% to 25% for better image visibility.
+- [x] **Prep page add-on counts** — API and UI now show add-on counts (yellow chips) per time slot alongside bagel counts
+- [x] **Prep page day totals** — Summed bagel type and add-on counts across all time slots displayed at bottom of each day card
+- [x] **Order creation bug fix** — `create_order_atomic` RPC needed `SECURITY DEFINER` to bypass RLS for `SELECT ... FOR UPDATE` on `time_slots`. Applied manually in Supabase SQL editor. Also surfaced actual Supabase error messages in API response.
+
+### Completed Previously
 - [x] **Pickup location update** — Changed to 1881 Oak Avenue Apt 1510W with callbox instructions
 - [x] **Baking prep page** — `/admin/prep` shows bagel counts by day/slot for baking planning
 - [x] **COGS cost types** — Per-bagel ingredients, per-addon costs (schmear), and fixed costs (amortized)
