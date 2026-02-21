@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
       orders: {
         customer_name: string;
         total_price: number;
+        status: string;
         bagels: { name: string; quantity: number }[];
         add_ons: { name: string; quantity: number }[];
         total_bagels: number;
@@ -104,6 +105,7 @@ export async function GET(request: NextRequest) {
         slot.orders.push({
           customer_name: (order as any).customer_name || 'Unknown',
           total_price: (order as any).total_price || 0,
+          status: order.status,
           bagels: orderBagels.sort((a, b) => a.name.localeCompare(b.name)),
           add_ons: orderAddOns.sort((a, b) => a.name.localeCompare(b.name)),
           total_bagels: order.total_bagels || orderBagels.reduce((sum, b) => sum + b.quantity, 0),

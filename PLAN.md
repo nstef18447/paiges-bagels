@@ -42,7 +42,7 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 | `/admin/pricing` | Set pricing tiers with custom labels (e.g. 1/$4, 3/$10, 6/$18) — any quantity 1-6 uses greedy bundle pricing |
 | `/admin/costs` | Three-section cost tracking: Bagel Ingredients (per bagel), Add-On Costs (per unit sold, linked to add-on type), Fixed Costs (amortized over all bagels sold) |
 | `/admin/financials` | Revenue, COGS, profit, margin — daily breakdown with date filters. COGS includes per-bagel ingredients, per-addon costs, and amortized fixed costs. |
-| `/admin/prep` | Baking prep view: bagel counts grouped by day and time slot showing how many of each type to bake |
+| `/admin/prep` | Baking prep view: bagel counts grouped by day and time slot, plus collapsible individual orders per slot for bag packing |
 
 ### API Routes
 | Endpoint | Methods | Purpose |
@@ -60,7 +60,7 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 | `/api/pricing` | GET, PATCH | Get/update pricing tiers. Supports `?type=regular\|hangover` filter. |
 | `/api/ingredients` | GET, POST, PATCH, DELETE | CRUD for ingredient costs. Supports `cost_type`: per_bagel, per_addon, fixed. |
 | `/api/financials` | GET | Financial summary with optional date range. COGS from all three cost types. |
-| `/api/prep` | GET | Baking prep data: orders grouped by date → slot → bagel type with counts |
+| `/api/prep` | GET | Baking prep data: aggregated counts by date → slot → bagel type, plus individual confirmed/ready orders per slot |
 | `/api/capacity` | GET | Check remaining capacity for a slot |
 | `/api/admin/login` | POST | Admin auth (password → cookie) |
 
@@ -146,6 +146,9 @@ Photos stored in `/public/`:
 - [x] **Scarcity messaging** — Show "Only X bagels left!" when ≤12 remain, "Bagels Available!" when plentiful, "SOLD OUT" at 0
 
 ### Completed This Session
+- [x] **Prep page individual orders** — Collapsible "Orders (N)" section under each time slot showing confirmed/ready orders with customer name, bagel breakdown, add-ons, and price for bag packing. Pending/fake orders excluded from list but still count toward baking totals.
+
+### Completed Previously (Feb 2025 Session 2)
 - [x] **Homepage hero redesign** — Removed stacked nav links from hero, added horizontal scrollable nav bar below hero, hero now shows only tagline. Lightened overlay from 40% to 25% for better image visibility.
 - [x] **Prep page add-on counts** — API and UI now show add-on counts (yellow chips) per time slot alongside bagel counts
 - [x] **Prep page day totals** — Summed bagel type and add-on counts across all time slots displayed at bottom of each day card

@@ -18,6 +18,7 @@ interface AddOnCount {
 interface PrepOrder {
   customer_name: string;
   total_price: number;
+  status: string;
   bagels: BagelCount[];
   add_ons: AddOnCount[];
   total_bagels: number;
@@ -44,6 +45,7 @@ export default function AdminPrepPage() {
   const [loading, setLoading] = useState(true);
   const [showPast, setShowPast] = useState(false);
   const [expandedSlots, setExpandedSlots] = useState<Set<string>>(new Set());
+  const [markingReady, setMarkingReady] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchPrep();
@@ -59,6 +61,25 @@ export default function AdminPrepPage() {
       console.error('Failed to fetch prep data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const markAllReady = async (slotId: string) => {
+    setMarkingReady((prev) => new Set(prev).add(slotId));
+    try {
+      const response = await fetch(`/api/slots/${slotId}/mark-ready`, { method: 'POST' });
+      const result = await response.json();
+      if (result.success) {
+        await fetchPrep();
+      }
+    } catch (error) {
+      console.error('Failed to mark all ready:', error);
+    } finally {
+      setMarkingReady((prev) => {
+        const next = new Set(prev);
+        next.delete(slotId);
+        return next;
+      });
     }
   };
 
@@ -156,28 +177,42 @@ export default function AdminPrepPage() {
                       </div>
                     )}
 
-                    {slot.orders && slot.orders.length > 0 && (
+                    {slot.orders && slot.orders.length > 0 && (() => {
+                      const confirmedCount = slot.orders.filter((o) => o.status === 'confirmed').length;
+                      return (
                       <div className="mt-3">
-                        <button
-                          onClick={() => {
-                            setExpandedSlots((prev) => {
-                              const next = new Set(prev);
-                              if (next.has(slot.id)) {
-                                next.delete(slot.id);
-                              } else {
-                                next.add(slot.id);
-                              }
-                              return next;
-                            });
-                          }}
-                          className="flex items-center gap-2 text-sm font-medium hover:underline"
-                          style={{ color: '#004AAD' }}
-                        >
-                          <span style={{ transform: expandedSlots.has(slot.id) ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'inline-block' }}>
-                            ▶
-                          </span>
-                          Orders ({slot.orders.length})
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => {
+                              setExpandedSlots((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(slot.id)) {
+                                  next.delete(slot.id);
+                                } else {
+                                  next.add(slot.id);
+                                }
+                                return next;
+                              });
+                            }}
+                            className="flex items-center gap-2 text-sm font-medium hover:underline"
+                            style={{ color: '#004AAD' }}
+                          >
+                            <span style={{ transform: expandedSlots.has(slot.id) ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'inline-block' }}>
+                              ▶
+                            </span>
+                            Orders ({slot.orders.length})
+                          </button>
+                          {confirmedCount > 0 && (
+                            <button
+                              onClick={() => markAllReady(slot.id)}
+                              disabled={markingReady.has(slot.id)}
+                              className="text-xs font-medium px-3 py-1 rounded-full text-white disabled:opacity-50"
+                              style={{ backgroundColor: '#004AAD' }}
+                            >
+                              {markingReady.has(slot.id) ? 'Marking...' : `Mark All Ready (${confirmedCount})`}
+                            </button>
+                          )}
+                        </div>
 
                         {expandedSlots.has(slot.id) && (
                           <div className="mt-2 space-y-2">
@@ -203,7 +238,8 @@ export default function AdminPrepPage() {
                           </div>
                         )}
                       </div>
-                    )}
+                      );
+                    })()}
                   </div>
                 ))}
               </div>
