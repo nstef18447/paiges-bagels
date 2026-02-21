@@ -162,10 +162,10 @@ export default function MenuPage() {
               </h2>
 
               <div className="mb-5">
-                <p className="text-sm font-semibold mb-2" style={{ color: '#004AAD' }}>
+                <p className="text-base font-semibold mb-3" style={{ color: '#004AAD' }}>
                   Only 5 Ingredients
                 </p>
-                <ul className="text-sm text-gray-600 leading-relaxed list-disc list-inside">
+                <ul className="text-lg text-gray-600 leading-loose list-disc list-inside">
                   <li>Sourdough Starter</li>
                   <li>Water</li>
                   <li>Sugar</li>
@@ -214,11 +214,6 @@ export default function MenuPage() {
                 </div>
               )}
 
-              {!heroData?.description && !heroData?.calories && (
-                <p className="text-gray-400 text-sm">
-                  Ingredients and nutrition info coming soon!
-                </p>
-              )}
             </div>
           </div>
         </div>
