@@ -118,9 +118,22 @@ export default function ContactPage() {
               </a>
             </div>
 
+            <div className="text-center">
+              <p className="font-semibold text-xl md:text-2xl mb-2" style={{ color: '#1A1A1A' }}>
+                Email
+              </p>
+              <a
+                href="mailto:paige@paigesbagels.com"
+                style={{ color: '#004AAD' }}
+                className="text-xl md:text-2xl hover:underline"
+              >
+                paige@paigesbagels.com
+              </a>
+            </div>
+
             <div className="text-center pt-4">
               <p className="text-lg md:text-xl" style={{ color: '#6B6B6B' }}>
-                Questions about your order? DM us on Instagram!
+                Questions about your order? DM us on Instagram or shoot us an email!
               </p>
             </div>
           </div>
