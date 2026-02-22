@@ -142,7 +142,7 @@ export default function Home() {
                         src={`/${bagel.image_url}`}
                         alt={bagel.name}
                         fill
-                        className="object-cover"
+                        className="object-contain"
                         sizes="70vw"
                       />
                     </div>
