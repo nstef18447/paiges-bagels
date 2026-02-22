@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { AddOnCounts, AddOnType, BagelCounts, BagelType, TimeSlotWithCapacity, Pricing } from '@/types';
+import NavBar from './NavBar';
 import { calculateTotal, isValidTotal, calculateBundlePrice } from '@/lib/utils';
 import BagelSelector from './BagelSelector';
 import AddOnSelector from './AddOnSelector';
@@ -237,60 +238,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
           <div className="pt-8" />
         ) : (
           <>
-            {/* Logo Section */}
-            <div className="flex flex-col items-center overflow-hidden" style={{ marginBottom: '-30px' }}>
-              <Link href="/">
-                <Image
-                  src="/logo.svg"
-                  alt="Paige's Bagels"
-                  width={375}
-                  height={375}
-                  unoptimized
-                  className="w-auto h-auto max-w-[450px] cursor-pointer"
-                  style={{ marginTop: '-50px', marginBottom: '-70px' }}
-                  priority
-                />
-              </Link>
-            </div>
-
-            {/* Navigation */}
-            <nav className="flex overflow-x-auto gap-6 justify-center scrollbar-hide mb-10">
-              <Link
-                href="/about"
-                className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105"
-                style={{ color: '#004AAD' }}
-              >
-                ABOUT
-              </Link>
-              <Link
-                href="/menu"
-                className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105"
-                style={{ color: '#004AAD' }}
-              >
-                MENU
-              </Link>
-              <Link
-                href="/order"
-                className="whitespace-nowrap font-semibold tracking-widest transition-all"
-                style={{ color: '#1A1A1A', borderBottom: '2px solid #004AAD' }}
-              >
-                ORDER NOW
-              </Link>
-              <Link
-                href="/merch"
-                className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105"
-                style={{ color: '#004AAD' }}
-              >
-                MERCH
-              </Link>
-              <Link
-                href="/contact"
-                className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105"
-                style={{ color: '#004AAD' }}
-              >
-                CONTACT
-              </Link>
-            </nav>
+            <NavBar />
           </>
         )}
 

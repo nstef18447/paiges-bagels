@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { BagelType } from '@/types';
+import NavBar from '@/components/NavBar';
 
 export default function MenuPage() {
   const [bagelTypes, setBagelTypes] = useState<BagelType[]>([]);
@@ -33,60 +34,7 @@ export default function MenuPage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#f6f4f0' }}>
       <div className="max-w-5xl mx-auto px-6 pb-16">
-        {/* Logo Section */}
-        <div className="flex flex-col items-center overflow-hidden" style={{ marginBottom: '-30px' }}>
-          <Link href="/">
-            <Image
-              src="/logo.svg"
-              alt="Paige's Bagels"
-              width={375}
-              height={375}
-              unoptimized
-              className="w-auto h-auto max-w-[450px] cursor-pointer"
-              style={{ marginTop: '-50px', marginBottom: '-70px' }}
-              priority
-            />
-          </Link>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex overflow-x-auto gap-6 justify-center scrollbar-hide mb-8">
-          <Link
-            href="/about"
-            className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105"
-            style={{ color: '#004AAD' }}
-          >
-            ABOUT
-          </Link>
-          <Link
-            href="/menu"
-            className="whitespace-nowrap font-semibold tracking-widest transition-all"
-            style={{ color: '#1A1A1A', borderBottom: '2px solid #004AAD' }}
-          >
-            MENU
-          </Link>
-          <Link
-            href="/order"
-            className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105"
-            style={{ color: '#004AAD' }}
-          >
-            ORDER NOW
-          </Link>
-          <Link
-            href="/merch"
-            className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105"
-            style={{ color: '#004AAD' }}
-          >
-            MERCH
-          </Link>
-          <Link
-            href="/contact"
-            className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105"
-            style={{ color: '#004AAD' }}
-          >
-            CONTACT
-          </Link>
-        </nav>
+        <NavBar />
         {/* Hero: Inside photo + Ingredients & Macros */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mt-8">
           <div className="grid grid-cols-1 md:grid-cols-2">

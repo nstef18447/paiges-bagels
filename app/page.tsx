@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { BagelType } from '@/types';
+import NavBar from '@/components/NavBar';
 
 export default function Home() {
   const [email, setEmail] = useState('');
@@ -56,67 +57,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#f6f4f0' }}>
-      {/* Logo Banner — thin strip */}
-      <div className="flex justify-center overflow-hidden">
-        <Image
-          src="/logo.svg"
-          alt="Paige's Bagels"
-          width={375}
-          height={375}
-          priority
-          unoptimized
-          className="w-auto h-auto max-w-[380px] sm:max-w-[550px] lg:max-w-[700px] -mt-20 sm:-mt-24 lg:-mt-28 -mb-24 sm:-mb-32 lg:-mb-40"
-        />
-      </div>
-
-      {/* Hero Image Section — tagline + nav only, fixed height */}
-      <div className="relative h-[50vh] sm:h-[60vh] flex flex-col items-center">
-        <Image
-          src="/hero-bg.jpg"
-          alt=""
-          fill
-          className="object-cover object-[50%_65%]"
-          priority
-        />
-        <div className="absolute inset-0 bg-black/25" />
-
-        <div className="relative z-10 flex flex-col items-center justify-start pt-6 sm:justify-center sm:pt-0 flex-1">
-          {/* Tagline */}
-          <p className="text-white text-4xl sm:text-4xl lg:text-5xl italic tracking-wide drop-shadow-md mb-8 text-center px-6">
-            Sourdough bagels worth waking up for
-          </p>
-
-        </div>
-      </div>
-
-      {/* Navigation Bar */}
-      <nav className="flex overflow-x-auto gap-6 justify-center scrollbar-hide py-4 px-6" style={{ backgroundColor: '#f6f4f0' }}>
-        <Link href="/about" className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105" style={{ color: '#004AAD' }}>
-          ABOUT
-        </Link>
-        <Link href="/menu" className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105" style={{ color: '#004AAD' }}>
-          MENU
-        </Link>
-        <Link href="/order" className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105" style={{ color: '#004AAD' }}>
-          ORDER NOW
-        </Link>
-        <Link href="/merch" className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105" style={{ color: '#004AAD' }}>
-          MERCH
-        </Link>
-        <Link href="/contact" className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105" style={{ color: '#004AAD' }}>
-          CONTACT
-        </Link>
-      </nav>
+      <NavBar />
 
       {/* Swipeable Bagel Menu */}
       {bagelTypes.length > 0 && (
-        <div className="py-8 px-4" style={{ backgroundColor: '#f6f4f0' }}>
-          <h2
-            className="text-2xl font-extrabold text-center mb-6 underline underline-offset-4"
-            style={{ color: '#004AAD' }}
-          >
-            Our Bagels
-          </h2>
+        <div className="py-6 sm:py-8 px-4" style={{ backgroundColor: '#f6f4f0' }}>
           <div
             ref={scrollRef}
             onScroll={handleScroll}
@@ -131,7 +76,7 @@ export default function Home() {
               >
                 <p
                   className="text-center font-extrabold text-xl mb-2"
-                  style={{ color: '#004AAD' }}
+                  style={{ color: '#7a4900' }}
                 >
                   {bagel.name}
                 </p>
