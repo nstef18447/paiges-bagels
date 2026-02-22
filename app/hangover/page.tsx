@@ -4,8 +4,9 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import NavBar from '@/components/NavBar';
+import TimeSlotSelector from '@/components/TimeSlotSelector';
 import { BagelCounts, BagelType, Pricing, TimeSlotWithCapacity } from '@/types';
-import { calculateTotal, calculateBundlePrice, isValidTotal, formatDate, formatTime } from '@/lib/utils';
+import { calculateTotal, calculateBundlePrice, isValidTotal } from '@/lib/utils';
 
 // export const metadata kept as static export won't work in client component —
 // move to layout or use generateMetadata if needed later
@@ -58,6 +59,7 @@ function HangoverContent() {
   const [loading, setLoading] = useState(true);
 
   // Form state
+  const [selectedSlotId, setSelectedSlotId] = useState('');
   const [bagelCounts, setBagelCounts] = useState<BagelCounts>({});
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
@@ -81,7 +83,10 @@ function HangoverContent() {
   }, []);
 
   const availableSlot = getAvailableSlot(slots);
+  const hasAnySlots = availableSlot !== null;
   const { timeLeft, expired } = useCountdown(availableSlot?.cutoff_time ?? null);
+
+  const selectedSlot = slots.find((s) => s.id === selectedSlotId) ?? null;
 
   const total = calculateTotal(bagelCounts);
   const price = calculateBundlePrice(total, pricing);
@@ -99,13 +104,16 @@ function HangoverContent() {
   };
 
   const handleSubmit = async () => {
-    if (!availableSlot) return;
-    if (!customerName.trim() || !customerEmail.trim() || !customerPhone.trim()) {
-      setError('Please fill in all fields');
+    if (!selectedSlotId) {
+      setError('Please select a pickup time');
       return;
     }
     if (!validTotal || total === 0) {
       setError('Please select at least 1 bagel');
+      return;
+    }
+    if (!customerName.trim() || !customerEmail.trim() || !customerPhone.trim()) {
+      setError('Please fill in all fields');
       return;
     }
 
@@ -117,7 +125,7 @@ function HangoverContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          timeSlotId: availableSlot.id,
+          timeSlotId: selectedSlotId,
           customerName,
           customerEmail,
           customerPhone,
@@ -155,7 +163,7 @@ function HangoverContent() {
   }
 
   // ── Empty state: no hangover slots ──
-  if (!availableSlot || expired) {
+  if (!hasAnySlots || expired) {
     return (
       <>
         <NavBar />
@@ -281,24 +289,21 @@ function HangoverContent() {
         </div>
       </section>
 
-      {/* ── Section 3: Availability Banner ── */}
+      {/* ── Section 3: Pick a Time Slot ── */}
       <section className="px-5 mb-8">
-        <div
-          className="max-w-2xl mx-auto flex items-center gap-3 px-5 py-4 rounded-lg"
-          style={{ backgroundColor: 'var(--green-bg)', border: '1px solid rgba(21,128,61,0.2)' }}
-        >
-          <span className="relative flex h-3 w-3 flex-shrink-0">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: 'var(--green)' }} />
-            <span className="relative inline-flex rounded-full h-3 w-3" style={{ backgroundColor: 'var(--green)' }} />
-          </span>
-          <div>
-            <p className="font-bold text-sm" style={{ color: 'var(--green)' }}>
-              Hangover Window Open
-            </p>
-            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-              {formatDate(availableSlot.date)} &middot; Pickup at {formatTime(availableSlot.time)}
-            </p>
-          </div>
+        <div className="max-w-2xl mx-auto">
+          <h2
+            className="text-2xl font-bold mb-6"
+            style={{ fontFamily: 'var(--font-playfair)', color: 'var(--blue)' }}
+          >
+            Pick a Time
+          </h2>
+          <TimeSlotSelector
+            slots={slots}
+            selectedSlotId={selectedSlotId}
+            onChange={setSelectedSlotId}
+            requiredCapacity={total}
+          />
         </div>
       </section>
 
@@ -339,11 +344,6 @@ function HangoverContent() {
                     >
                       {bt.name}
                     </p>
-                    {pricing.length > 0 && (
-                      <p className="text-sm" style={{ color: 'var(--brown)' }}>
-                        from ${pricing[pricing.length - 1]?.price?.toFixed(2)}/ea
-                      </p>
-                    )}
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <button
@@ -485,12 +485,12 @@ function HangoverContent() {
           </span>
           <button
             onClick={handleSubmit}
-            disabled={total === 0 || submitting}
+            disabled={total === 0 || !selectedSlotId || submitting}
             className="px-8 py-3 font-semibold text-sm uppercase tracking-wider transition-colors"
             style={{
-              backgroundColor: total === 0 || submitting ? 'var(--border)' : 'var(--blue)',
-              color: total === 0 || submitting ? 'var(--text-secondary)' : '#fff',
-              cursor: total === 0 || submitting ? 'not-allowed' : 'pointer',
+              backgroundColor: total === 0 || !selectedSlotId || submitting ? 'var(--border)' : 'var(--blue)',
+              color: total === 0 || !selectedSlotId || submitting ? 'var(--text-secondary)' : '#fff',
+              cursor: total === 0 || !selectedSlotId || submitting ? 'not-allowed' : 'pointer',
               border: 'none',
               borderRadius: 4,
             }}
