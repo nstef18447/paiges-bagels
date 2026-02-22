@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -14,6 +15,7 @@ const NAV_ITEMS = [
 
 export default function NavBar() {
   const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div style={{ backgroundColor: '#f6f4f0' }}>
@@ -32,15 +34,15 @@ export default function NavBar() {
         </Link>
       </div>
 
-      {/* Nav */}
-      <nav className="flex overflow-x-auto gap-5 sm:gap-8 justify-center scrollbar-hide py-2 sm:py-3 px-4">
+      {/* Desktop Nav */}
+      <nav className="hidden md:flex gap-8 justify-center py-3 px-4">
         {NAV_ITEMS.map(({ href, label }) => {
           const isActive = pathname === href;
           return (
             <Link
               key={href}
               href={href}
-              className={`whitespace-nowrap font-bold text-lg sm:text-xl lg:text-2xl tracking-widest transition-all ${isActive ? '' : 'hover:scale-105'}`}
+              className={`whitespace-nowrap font-bold text-xl lg:text-2xl tracking-widest transition-all ${isActive ? '' : 'hover:scale-105'}`}
               style={isActive
                 ? { color: '#1A1A1A', borderBottom: '2px solid #004AAD' }
                 : { color: '#004AAD' }
@@ -51,6 +53,62 @@ export default function NavBar() {
           );
         })}
       </nav>
+
+      {/* Mobile Hamburger */}
+      <div className="md:hidden flex justify-center py-2">
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="p-2 cursor-pointer"
+          aria-label="Toggle menu"
+        >
+          <div className="space-y-1.5">
+            <span
+              className="block w-7 h-0.5 transition-all"
+              style={{
+                backgroundColor: '#004AAD',
+                transform: menuOpen ? 'rotate(45deg) translate(4px, 4px)' : 'none',
+              }}
+            />
+            <span
+              className="block w-7 h-0.5 transition-all"
+              style={{
+                backgroundColor: '#004AAD',
+                opacity: menuOpen ? 0 : 1,
+              }}
+            />
+            <span
+              className="block w-7 h-0.5 transition-all"
+              style={{
+                backgroundColor: '#004AAD',
+                transform: menuOpen ? 'rotate(-45deg) translate(4px, -4px)' : 'none',
+              }}
+            />
+          </div>
+        </button>
+      </div>
+
+      {/* Mobile Menu Dropdown */}
+      {menuOpen && (
+        <nav className="md:hidden flex flex-col items-center gap-4 pb-4">
+          {NAV_ITEMS.map(({ href, label }) => {
+            const isActive = pathname === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setMenuOpen(false)}
+                className="font-bold text-lg tracking-widest transition-all"
+                style={isActive
+                  ? { color: '#1A1A1A', borderBottom: '2px solid #004AAD' }
+                  : { color: '#004AAD' }
+                }
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+      )}
     </div>
   );
 }
