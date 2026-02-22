@@ -6,11 +6,13 @@ import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { OrderWithDetails } from '@/types';
 import AdminOrderCard from '@/components/AdminOrderCard';
+import { formatDate, formatTime } from '@/lib/utils';
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<OrderWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'pending' | 'confirmed' | 'completed'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'confirmed' | 'completed' | 'history'>('pending');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchOrders();
@@ -143,6 +145,7 @@ export default function AdminOrdersPage() {
           <Link href="/admin/costs" className="hover:underline" style={{ color: '#004AAD' }}>Costs</Link>
           <Link href="/admin/financials" className="hover:underline" style={{ color: '#004AAD' }}>Financials</Link>
           <Link href="/admin/prep" className="hover:underline" style={{ color: '#004AAD' }}>Prep</Link>
+          <Link href="/admin/merch" className="hover:underline" style={{ color: '#004AAD' }}>Merch</Link>
         </nav>
       </div>
 
@@ -177,24 +180,94 @@ export default function AdminOrdersPage() {
         >
           Completed ({orders.filter((o) => o.status === 'ready').length})
         </button>
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`px-4 py-2 font-semibold transition-colors ${
+            activeTab === 'history'
+              ? 'border-b-2 border-[#004AAD] text-[#004AAD]'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          History ({orders.length})
+        </button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredOrders.length === 0 ? (
-          <p className="text-gray-500 col-span-full">No {activeTab === 'completed' ? 'completed' : activeTab} orders</p>
-        ) : (
-          filteredOrders.map((order) => (
-            <AdminOrderCard
-              key={order.id}
-              order={order}
-              onConfirm={activeTab === 'pending' ? handleConfirm : undefined}
-              onMarkReady={activeTab === 'confirmed' ? handleMarkReady : undefined}
-              onDelete={handleDelete}
-              onToggleFake={handleToggleFake}
-            />
-          ))
-        )}
-      </div>
+      {activeTab === 'history' ? (
+        <div>
+          <input
+            type="text"
+            placeholder="Search by customer name or email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full mb-4 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
+          />
+          {(() => {
+            const query = searchQuery.toLowerCase();
+            const historyOrders = orders.filter(
+              (o) =>
+                !query ||
+                o.customer_name.toLowerCase().includes(query) ||
+                o.customer_email.toLowerCase().includes(query)
+            );
+            return historyOrders.length === 0 ? (
+              <p className="text-gray-500">No orders found</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="border-b-2 border-gray-200 text-left">
+                      <th className="py-2 pr-4">Date</th>
+                      <th className="py-2 pr-4">Time</th>
+                      <th className="py-2 pr-4">Customer</th>
+                      <th className="py-2 pr-4">Bagels</th>
+                      <th className="py-2 pr-4">Add-Ons</th>
+                      <th className="py-2 pr-4 text-right">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {historyOrders.map((order) => (
+                      <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-2 pr-4 whitespace-nowrap">{formatDate(order.time_slot.date)}</td>
+                        <td className="py-2 pr-4 whitespace-nowrap">{formatTime(order.time_slot.time)}</td>
+                        <td className="py-2 pr-4">
+                          <div>{order.customer_name}</div>
+                          <div className="text-gray-400 text-xs">{order.customer_email}</div>
+                        </td>
+                        <td className="py-2 pr-4">
+                          {order.order_items.map((item) => `${item.quantity} ${item.bagel_type.name}`).join(', ')}
+                        </td>
+                        <td className="py-2 pr-4">
+                          {order.order_add_ons && order.order_add_ons.length > 0
+                            ? order.order_add_ons.map((a) => `${a.quantity} ${a.add_on_type.name}`).join(', ')
+                            : '—'}
+                        </td>
+                        <td className="py-2 pr-4 text-right whitespace-nowrap">${order.total_price.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()}
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredOrders.length === 0 ? (
+            <p className="text-gray-500 col-span-full">No {activeTab === 'completed' ? 'completed' : activeTab} orders</p>
+          ) : (
+            filteredOrders.map((order) => (
+              <AdminOrderCard
+                key={order.id}
+                order={order}
+                onConfirm={activeTab === 'pending' ? handleConfirm : undefined}
+                onMarkReady={activeTab === 'confirmed' ? handleMarkReady : undefined}
+                onDelete={handleDelete}
+                onToggleFake={handleToggleFake}
+              />
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }

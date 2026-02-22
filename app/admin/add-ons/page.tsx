@@ -51,6 +51,7 @@ export default function AdminAddOnsPage() {
           <Link href="/admin/costs" className="hover:underline" style={{ color: '#004AAD' }}>Costs</Link>
           <Link href="/admin/financials" className="hover:underline" style={{ color: '#004AAD' }}>Financials</Link>
           <Link href="/admin/prep" className="hover:underline" style={{ color: '#004AAD' }}>Prep</Link>
+          <Link href="/admin/merch" className="hover:underline" style={{ color: '#004AAD' }}>Merch</Link>
         </nav>
       </div>
 

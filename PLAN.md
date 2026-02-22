@@ -8,7 +8,7 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 - **Styling**: Tailwind CSS v4 (inline styles used heavily for brand colors)
 - **Database**: Supabase (PostgreSQL) with RLS policies
 - **Email**: Resend (from `orders@paigesbagels.com`)
-- **Payments**: Venmo (manual — no API, just deep links)
+- **Payments**: Venmo (manual — bagel orders) + Stripe Checkout (merch orders)
 - **Analytics**: Vercel Web Analytics (`@vercel/analytics` in root layout)
 - **Hosting**: Vercel
 
@@ -31,6 +31,8 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 | `/hangover` | Hangover Bagels — same-day impulse ordering with warm amber branding and higher pricing |
 | `/contact` | Instagram link + DM prompt |
 | `/confirmation` | Order summary with full pickup address + callbox instructions, Venmo pay button, next-steps |
+| `/merch` | Merch store — item cards with size/qty selectors, shipping form, Stripe Checkout redirect |
+| `/merch/confirmation` | Post-payment confirmation with order summary, polls for webhook completion |
 
 ### Admin Dashboard (`/admin/*`)
 | Route | Purpose |
@@ -43,6 +45,7 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 | `/admin/costs` | Three-section cost tracking: Bagel Ingredients (per bagel), Add-On Costs (per unit sold, linked to add-on type), Fixed Costs (amortized over all bagels sold) |
 | `/admin/financials` | Revenue, COGS, profit, margin — daily breakdown with date filters. COGS includes per-bagel ingredients, per-addon costs, and amortized fixed costs. |
 | `/admin/prep` | Baking prep view: bagel counts grouped by day and time slot, plus collapsible individual orders per slot for bag packing |
+| `/admin/merch` | Merch management — shipping cost, item CRUD (price/stock/sizes/active), order list with "Mark Shipped" |
 
 ### API Routes
 | Endpoint | Methods | Purpose |
@@ -62,6 +65,13 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 | `/api/financials` | GET | Financial summary with optional date range. COGS from all three cost types. |
 | `/api/prep` | GET | Baking prep data: aggregated counts by date → slot → bagel type, plus individual confirmed/ready orders per slot |
 | `/api/capacity` | GET | Check remaining capacity for a slot |
+| `/api/merch/items` | GET, POST | List active merch items, create new item |
+| `/api/merch/items/[id]` | PATCH, DELETE | Update/delete merch item |
+| `/api/merch/settings` | GET, PATCH | Get/update flat shipping cost |
+| `/api/merch/checkout` | POST | Validate cart against DB prices, decrement stock, create order + Stripe Checkout Session |
+| `/api/merch/webhook` | POST | Stripe webhook — handles checkout.session.completed (mark paid + email) and checkout.session.expired (restore stock + cancel) |
+| `/api/merch/orders` | GET | List all merch orders (admin) |
+| `/api/merch/orders/[id]` | PATCH | Update merch order status (mark shipped) |
 | `/api/admin/login` | POST | Admin auth (password → cookie) |
 
 ### Auth
@@ -80,6 +90,9 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 | `order_add_ons` | Junction: order → add-ons with quantities |
 | `pricing` | Pricing tiers (quantity → price, with display labels and `pricing_type`: regular/hangover) |
 | `ingredients` | Cost tracking with `cost_type` (per_bagel/per_addon/fixed), optional `add_on_type_id` FK for per-addon costs |
+| `merch_items` | Merch products (name, price, stock, sizes, active flag, display order) |
+| `merch_settings` | Single-row config for flat shipping cost (default $5.00) |
+| `merch_orders` | Merch orders with JSONB line items, shipping info, Stripe session/payment intent IDs, status (pending_payment/paid/shipped/cancelled) |
 
 ### Migrations Applied
 1. `schema.sql` — Base tables (time_slots, orders)
@@ -93,6 +106,7 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 9. `migration-fake-orders.sql` — is_fake flag on orders for artificial scarcity
 10. `migration-cost-types.sql` — cost_type + add_on_type_id columns on ingredients for per-addon and fixed costs
 11. `migration-menu.sql` — image_url, description, calories, protein_g, carbs_g, fat_g columns on bagel_types
+12. `migration-merch.sql` — merch_items, merch_settings, merch_orders tables with RLS + seed data
 
 ### Key Components
 | Component | Purpose |
@@ -146,6 +160,9 @@ Photos stored in `/public/`:
 - [x] **Scarcity messaging** — Show "Only X bagels left!" when ≤12 remain, "Bagels Available!" when plentiful, "SOLD OUT" at 0
 
 ### Completed This Session
+- [x] **Merch page with Stripe Checkout** — Full merch store (`/merch`) with DB-driven items, size/qty selectors, shipping form, Stripe Checkout redirect, webhook handler (payment confirmation + stock restore on expiry), confirmation page with polling, admin management (`/admin/merch`) for items/shipping/orders. MERCH nav link added to all customer and admin pages.
+
+### Completed Previously (Feb 2025 Session 3)
 - [x] **Prep page individual orders** — Collapsible "Orders (N)" section under each time slot showing confirmed/ready orders with customer name, bagel breakdown, add-ons, and price for bag packing. Pending/fake orders excluded from list but still count toward baking totals.
 
 ### Completed Previously (Feb 2025 Session 2)
@@ -177,4 +194,7 @@ SUPABASE_SERVICE_KEY
 RESEND_API_KEY
 ADMIN_PASSWORD
 NEXT_PUBLIC_VENMO_USERNAME
+STRIPE_SECRET_KEY
+STRIPE_WEBHOOK_SECRET
+NEXT_PUBLIC_SITE_URL (optional, defaults to localhost:3000)
 ```

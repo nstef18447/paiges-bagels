@@ -136,3 +136,51 @@ export interface DailyFinancials {
   profit: number;
   profit_margin: number;
 }
+
+// Merch types
+export interface MerchItem {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  stock: number | null;
+  image_url: string | null;
+  needs_size: boolean;
+  sizes: string[];
+  active: boolean;
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MerchSettings {
+  id: string;
+  shipping_cost: number;
+  updated_at: string;
+}
+
+export interface MerchOrderItem {
+  id: string;
+  name: string;
+  size: string | null;
+  quantity: number;
+  unit_price: number;
+}
+
+export interface MerchOrder {
+  id: string;
+  customer_name: string;
+  customer_email: string;
+  shipping_address: string;
+  shipping_city: string;
+  shipping_state: string;
+  shipping_zip: string;
+  items: MerchOrderItem[];
+  shipping_cost: number;
+  total_price: number;
+  status: 'pending_payment' | 'paid' | 'shipped' | 'cancelled';
+  stripe_session_id: string | null;
+  stripe_payment_intent_id: string | null;
+  created_at: string;
+  updated_at: string;
+}

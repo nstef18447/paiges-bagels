@@ -100,6 +100,9 @@ export default function Home() {
         <Link href="/order" className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105" style={{ color: '#004AAD' }}>
           ORDER NOW
         </Link>
+        <Link href="/merch" className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105" style={{ color: '#004AAD' }}>
+          MERCH
+        </Link>
         <Link href="/contact" className="whitespace-nowrap font-semibold tracking-widest transition-all hover:scale-105" style={{ color: '#004AAD' }}>
           CONTACT
         </Link>

@@ -146,6 +146,23 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Auto-add customer as subscriber (fire-and-forget)
+    supabase
+      .from('subscribers')
+      .upsert(
+        {
+          email: formData.customerEmail.toLowerCase().trim(),
+          customer_name: formData.customerName,
+          customer_phone: formData.customerPhone,
+          source: 'order',
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'email' }
+      )
+      .then(({ error: subError }) => {
+        if (subError) console.error('Failed to upsert subscriber:', subError);
+      });
+
     // Fetch full order + time slot for response
     const { data: order } = await supabase
       .from('orders')

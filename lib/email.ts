@@ -1,5 +1,5 @@
 import { Resend } from 'resend';
-import { Order, OrderWithDetails, TimeSlot } from '@/types';
+import { Order, OrderWithDetails, TimeSlot, MerchOrder } from '@/types';
 import { formatDate, formatTime } from './utils';
 import { supabase } from './supabase';
 
@@ -106,6 +106,46 @@ export async function sendReadyEmail(
     from: 'Paige\'s Bagels <orders@paigesbagels.com>',
     to: order.customer_email,
     subject: 'Your Bagels are Ready! 🥯',
+    html: emailHtml,
+  });
+}
+
+export async function sendMerchConfirmationEmail(
+  order: MerchOrder
+): Promise<void> {
+  const itemsList = order.items
+    .map(item => `${item.quantity}x ${item.name}${item.size ? ` (${item.size})` : ''} — $${(item.unit_price * item.quantity).toFixed(2)}`)
+    .join('</li><li>');
+
+  const emailHtml = `
+    <div style="background-color:#f6f4f0; padding:30px 20px; font-family:Georgia,serif;">
+      <div style="max-width:600px; margin:0 auto;">
+        <div style="text-align:center; margin-bottom:20px;">
+          <img src="https://paigesbagels.com/logo.png" alt="Paige's Bagels" style="max-width:250px; height:auto;" />
+        </div>
+        <h1>Your Merch Order is Confirmed! 🎉</h1>
+        <p>Hi ${order.customer_name},</p>
+        <p>Thanks for your order! Here's what you got:</p>
+        <ul style="margin:0; padding-left:20px;">
+          <li>${itemsList}</li>
+        </ul>
+        <p style="margin-top:12px;"><strong>Shipping to:</strong></p>
+        <p>${order.shipping_address}<br/>${order.shipping_city}, ${order.shipping_state} ${order.shipping_zip}</p>
+        <p><strong>Shipping: $${order.shipping_cost.toFixed(2)}</strong></p>
+        <p><strong>Total: $${order.total_price.toFixed(2)}</strong></p>
+        <p>We'll ship your merch soon!</p>
+        <p>Paige's Bagels</p>
+        <p style="text-align:center; margin-top:20px;">
+          <a href="https://instagram.com/paigesbagels" style="color:#004AAD;">Follow us on Instagram @paigesbagels</a>
+        </p>
+      </div>
+    </div>
+  `;
+
+  await resend.emails.send({
+    from: 'Paige\'s Bagels <orders@paigesbagels.com>',
+    to: order.customer_email,
+    subject: 'Your Merch Order is Confirmed! 🎉',
     html: emailHtml,
   });
 }
