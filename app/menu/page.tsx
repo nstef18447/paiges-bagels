@@ -5,19 +5,20 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { BagelType } from '@/types';
 
-const COPIES = 5;
-const MID = 2;
-const ACTIVE_W = 340;
-const INACTIVE_W = 230;
-const CAROUSEL_GAP = 16;
-
 export default function MenuPage() {
   const [bagelTypes, setBagelTypes] = useState<BagelType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [position, setPosition] = useState<number | null>(null);
-  const [skipTransition, setSkipTransition] = useState(false);
+  const [activeBagel, setActiveBagel] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const len = bagelTypes.length;
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el || bagelTypes.length === 0) return;
+    const scrollLeft = el.scrollLeft;
+    const cardWidth = el.scrollWidth / bagelTypes.length;
+    const index = Math.round(scrollLeft / cardWidth);
+    setActiveBagel(Math.min(index, bagelTypes.length - 1));
+  }, [bagelTypes.length]);
 
   useEffect(() => {
     fetch('/api/bagel-types')
@@ -26,63 +27,6 @@ export default function MenuPage() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
-
-  // Initialize position to middle copy when data loads
-  useEffect(() => {
-    if (len > 0 && position === null) {
-      setPosition(MID * len);
-    }
-  }, [len, position]);
-
-  const prev = useCallback(() => {
-    setPosition((p) => (p !== null ? p - 1 : p));
-  }, []);
-
-  const next = useCallback(() => {
-    setPosition((p) => (p !== null ? p + 1 : p));
-  }, []);
-
-  // After transition completes, silently snap back to middle copy if needed
-  const handleTransitionEnd = useCallback((e: React.TransitionEvent) => {
-    if (e.target !== e.currentTarget) return;
-    if (len === 0 || position === null) return;
-    const midStart = MID * len;
-    const midEnd = (MID + 1) * len;
-    if (position < midStart || position >= midEnd) {
-      setSkipTransition(true);
-      setPosition(midStart + ((position % len + len) % len));
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => setSkipTransition(false));
-      });
-    }
-  }, [position, len]);
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') prev();
-      if (e.key === 'ArrowRight') next();
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [prev, next]);
-
-  // Touch swipe support
-  const touchRef = useRef<{ x: number; y: number } | null>(null);
-
-  const onTouchStart = useCallback((e: React.TouchEvent) => {
-    touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-  }, []);
-
-  const onTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (!touchRef.current) return;
-    const dx = e.changedTouches[0].clientX - touchRef.current.x;
-    const dy = e.changedTouches[0].clientY - touchRef.current.y;
-    touchRef.current = null;
-    if (Math.abs(dy) > Math.abs(dx)) return; // vertical scroll — ignore
-    if (dx > 50) prev();
-    else if (dx < -50) next();
-  }, [prev, next]);
 
   const heroData = bagelTypes.find((b) => b.calories != null);
 
@@ -225,107 +169,76 @@ export default function MenuPage() {
           </div>
         </div>
 
-        {/* Bagel Carousel */}
+        {/* Swipeable Bagel Menu */}
         {!loading && bagelTypes.length > 0 && (
-          <div className="mt-12">
+          <div className="py-8 px-4 mt-4">
             <h2
-              className="text-3xl font-extrabold mb-8 text-center underline underline-offset-4"
+              className="text-2xl font-extrabold text-center mb-6 underline underline-offset-4"
               style={{ color: '#004AAD' }}
             >
               Our Bagels
             </h2>
-
-            <div className="relative flex items-center">
-              {/* Left Arrow */}
-              <button
-                onClick={prev}
-                className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-white border border-gray-200 shadow-md hover:shadow-lg transition-all hover:scale-110 mr-3"
-                style={{ color: '#004AAD' }}
-                aria-label="Previous bagel"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="15 18 9 12 15 6" />
-                </svg>
-              </button>
-
-              {/* Continuous infinite scroll carousel */}
-              <div className="flex-1 overflow-hidden" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-                <div
-                  className={`flex items-end ${skipTransition ? '' : 'transition-transform duration-300 ease-in-out'}`}
-                  style={{
-                    gap: `${CAROUSEL_GAP}px`,
-                    transform: position !== null
-                      ? `translateX(calc(50% - ${position * (INACTIVE_W + CAROUSEL_GAP) + ACTIVE_W / 2}px))`
-                      : 'translateX(0)',
-                  }}
-                  onTransitionEnd={handleTransitionEnd}
+            <div
+              ref={scrollRef}
+              onScroll={handleScroll}
+              className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide px-4"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
+              {bagelTypes.map((bagel) => (
+                <Link
+                  key={bagel.id}
+                  href="/order"
+                  className="flex-shrink-0 snap-center w-[70vw] sm:w-[250px]"
                 >
-                  {Array(COPIES).fill(bagelTypes).flat().map((bagel: BagelType, i: number) => {
-                    const isActive = i === position;
-                    return (
-                      <button
-                        key={`${bagel.id}-${i}`}
-                        onClick={() => setPosition(i)}
-                        className={`flex-shrink-0 ${skipTransition ? '' : 'transition-all duration-300 ease-in-out'} focus:outline-none`}
-                        style={{
-                          width: isActive ? `${ACTIVE_W}px` : `${INACTIVE_W}px`,
-                          opacity: isActive ? 1 : 0.75,
-                          transform: isActive ? 'scale(1)' : 'scale(0.9)',
-                        }}
+                  <p
+                    className="text-center font-extrabold text-xl mb-2"
+                    style={{ color: '#004AAD' }}
+                  >
+                    {bagel.name}
+                  </p>
+                  <div className="rounded-xl overflow-hidden">
+                    {bagel.image_url ? (
+                      <div className="relative h-[70vw] sm:h-[250px]">
+                        <Image
+                          src={`/${bagel.image_url}`}
+                          alt={bagel.name}
+                          fill
+                          className="object-contain"
+                          sizes="70vw"
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className="flex items-center justify-center h-[70vw] sm:h-[250px]"
+                        style={{ backgroundColor: '#E8F0FE' }}
                       >
-                        <div>
-                          <div className="pb-2 text-center">
-                            <h3
-                              className={`font-extrabold ${skipTransition ? '' : 'transition-all duration-300'}`}
-                              style={{
-                                color: isActive ? '#004AAD' : '#9CA3AF',
-                                fontSize: isActive ? '1.5rem' : '1.1rem',
-                              }}
-                            >
-                              {bagel.name}
-                            </h3>
-                          </div>
-                          <div className={`rounded-xl overflow-hidden ${skipTransition ? '' : 'transition-all duration-300'}`}>
-                          {bagel.image_url ? (
-                            <div className="relative" style={{ height: isActive ? `${ACTIVE_W}px` : `${INACTIVE_W}px` }}>
-                              <Image
-                                src={`/${bagel.image_url}`}
-                                alt={bagel.name}
-                                fill
-                                className="object-contain transition-all duration-300"
-                                sizes={`${ACTIVE_W}px`}
-                              />
-                            </div>
-                          ) : (
-                            <div
-                              className="flex items-center justify-center transition-all duration-300"
-                              style={{
-                                height: isActive ? `${ACTIVE_W}px` : `${INACTIVE_W}px`,
-                                backgroundColor: '#E8F0FE',
-                              }}
-                            >
-                              <span className={isActive ? 'text-6xl' : 'text-5xl'}>🥯</span>
-                            </div>
-                          )}
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Right Arrow */}
-              <button
-                onClick={next}
-                className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-white border border-gray-200 shadow-md hover:shadow-lg transition-all hover:scale-110 ml-3"
-                style={{ color: '#004AAD' }}
-                aria-label="Next bagel"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              </button>
+                        <span className="text-6xl">🥯</span>
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+            {/* Dot indicators */}
+            <div className="flex justify-center gap-2 mt-4">
+              {bagelTypes.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    const el = scrollRef.current;
+                    if (!el) return;
+                    const cardWidth = el.scrollWidth / bagelTypes.length;
+                    el.scrollTo({ left: cardWidth * i, behavior: 'smooth' });
+                  }}
+                  className="rounded-full transition-all"
+                  style={{
+                    width: i === activeBagel ? '24px' : '8px',
+                    height: '8px',
+                    backgroundColor: i === activeBagel ? '#004AAD' : '#C8D6E5',
+                  }}
+                  aria-label={`Go to bagel ${i + 1}`}
+                />
+              ))}
             </div>
           </div>
         )}
