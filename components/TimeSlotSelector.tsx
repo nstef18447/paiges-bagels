@@ -15,6 +15,11 @@ function isPastCutoff(cutoffTime: string | null): boolean {
   return new Date() > new Date(cutoffTime);
 }
 
+function isDatePast(date: string): boolean {
+  const today = new Date().toISOString().split('T')[0];
+  return date < today;
+}
+
 function formatCutoff(cutoffTime: string): string {
   const date = new Date(cutoffTime);
   const timeZone = 'America/Chicago';
@@ -53,7 +58,7 @@ export default function TimeSlotSelector({
   }, {} as Record<string, TimeSlotWithCapacity[]>);
 
   const filteredDates = Object.entries(slotsByDate)
-    .filter(([, dateSlots]) => dateSlots.some(s => !isPastCutoff(s.cutoff_time)));
+    .filter(([date, dateSlots]) => !isDatePast(date) && dateSlots.some(s => !isPastCutoff(s.cutoff_time)));
 
   if (filteredDates.length === 0) {
     return <p className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>No time slots available</p>;

@@ -460,22 +460,20 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
                         {slot.capacity - slot.remaining} sold
                       </p>
                     </div>
-                    {slotTab === 'active' && (
-                      <div className="flex gap-2 ml-4">
-                        <button
-                          onClick={() => startEditing(slot)}
-                          className="px-3 py-1 bg-[#004AAD] text-white rounded-lg hover:bg-[#003A8C] text-sm"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(slot.id)}
-                          className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
+                    <div className="flex gap-2 ml-4">
+                      <button
+                        onClick={() => startEditing(slot)}
+                        className="px-3 py-1 bg-[#004AAD] text-white rounded-lg hover:bg-[#003A8C] text-sm"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(slot.id)}
+                        className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
