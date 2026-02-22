@@ -127,7 +127,7 @@ export default function Home() {
               <Link
                 key={bagel.id}
                 href="/order"
-                className="flex-shrink-0 snap-center w-[85vw] sm:w-[300px]"
+                className="flex-shrink-0 snap-center w-[70vw] sm:w-[250px]"
               >
                 <p
                   className="text-center font-extrabold text-xl mb-2"
@@ -137,18 +137,18 @@ export default function Home() {
                 </p>
                 <div className="rounded-xl overflow-hidden">
                   {bagel.image_url ? (
-                    <div className="relative h-[85vw] sm:h-[300px]">
+                    <div className="relative h-[70vw] sm:h-[250px]">
                       <Image
                         src={`/${bagel.image_url}`}
                         alt={bagel.name}
                         fill
                         className="object-cover"
-                        sizes="85vw"
+                        sizes="70vw"
                       />
                     </div>
                   ) : (
                     <div
-                      className="flex items-center justify-center h-[85vw] sm:h-[300px]"
+                      className="flex items-center justify-center h-[70vw] sm:h-[250px]"
                       style={{ backgroundColor: '#E8F0FE' }}
                     >
                       <span className="text-6xl">🥯</span>

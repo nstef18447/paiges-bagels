@@ -7,8 +7,8 @@ import { BagelType } from '@/types';
 
 const COPIES = 5;
 const MID = 2;
-const ACTIVE_W = 420;
-const INACTIVE_W = 280;
+const ACTIVE_W = 340;
+const INACTIVE_W = 230;
 const CAROUSEL_GAP = 16;
 
 export default function MenuPage() {
