@@ -8,12 +8,13 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 - **Styling**: Tailwind CSS v4 (inline styles used heavily for brand colors)
 - **Database**: Supabase (PostgreSQL) with RLS policies
 - **Email**: Resend (from `orders@paigesbagels.com`)
-- **Payments**: Venmo (manual — bagel orders) + Stripe Checkout (merch orders)
+- **Payments**: Venmo (manual — bagel orders) + Stripe Checkout (merch orders + bagel credit card option)
 - **Analytics**: Vercel Web Analytics (`@vercel/analytics` in root layout)
 - **Hosting**: Vercel
 
 ## Brand
 - Primary color: `#004AAD` (blue)
+- Secondary color: `#7a4900` (brown, from logo — used for bagel type names)
 - Background: `#f6f4f0` (warm off-white)
 - Font: Georgia serif (emails), system fonts (site)
 - Logo: `/public/logo.svg` (customer pages) and `/public/logo.png` (admin + emails)
@@ -24,15 +25,29 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 ### Customer-Facing Pages
 | Route | Purpose |
 |-------|---------|
-| `/` | Landing page with logo + nav (About, Menu, Order, Contact) |
+| `/` | Landing page with shared NavBar + swipeable bagel carousel + order button + email signup |
 | `/about` | Paige's story, sourdough benefits, bagel photo |
 | `/menu` | Menu page with inside bagel hero (ingredients + macros) and infinite-scroll carousel of each bagel type with photos |
 | `/order` | Full order form: time slot → bagels → add-ons → info → submit |
 | `/hangover` | Hangover Bagels — same-day impulse ordering with warm amber branding and higher pricing |
 | `/contact` | Instagram link + DM prompt |
-| `/confirmation` | Order summary with full pickup address + callbox instructions, Venmo pay button, next-steps |
+| `/confirmation` | Order summary with Venmo pay button + "Pay with Credit Card" option (3% fee), paid state on return from Stripe |
 | `/merch` | Merch store — item cards with size/qty selectors, shipping form, Stripe Checkout redirect |
 | `/merch/confirmation` | Post-payment confirmation with order summary, polls for webhook completion |
+
+### Shared Components
+| Component | Purpose |
+|-----------|---------|
+| `NavBar.tsx` | Shared logo + navigation bar used on all customer pages. Active page underlined. Uses `usePathname()` for automatic highlighting. |
+| `OrderForm.tsx` | Main customer order flow. Supports `mode` prop: `regular` (default) or `hangover` (amber branding, higher pricing, different copy). |
+| `HangoverBanner.tsx` | Cross-promo banner on regular order page linking to /hangover when hangover slots are available |
+| `BagelSelector.tsx` | +/- counters per bagel type, max 6 total |
+| `AddOnSelector.tsx` | +/- counters per add-on type |
+| `TimeSlotSelector.tsx` | Date/time slot picker with scarcity messaging: "Bagels Available!" (13+), "Only X bagels left!" (1-12), "SOLD OUT" (0) |
+| `AdminOrderCard.tsx` | Order card with confirm/ready/delete actions. Ready state shows green "Completed" badge. "Mark as Fake" toggle for artificial scarcity ($0 revenue, excluded from financials). |
+| `BagelTypeManager.tsx` | Admin CRUD for bagel types with image filename, ingredients text, and macro inputs (calories, protein, carbs, fat) |
+| `AddOnTypeManager.tsx` | Admin CRUD for add-on types |
+| `SlotManager.tsx` | Admin CRUD for time slots. Active/Past tabs, multi-slot creation form. Past tab is read-only. |
 
 ### Admin Dashboard (`/admin/*`)
 | Route | Purpose |
@@ -54,6 +69,8 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 | `/api/orders/[id]` | GET, DELETE | Get/delete single order |
 | `/api/orders/[id]/confirm` | POST | Mark as confirmed + send confirmation email |
 | `/api/orders/[id]/ready` | POST | Mark as ready + send pickup email |
+| `/api/orders/[id]/checkout` | POST | Create Stripe Checkout Session for bagel order with 3% CC fee |
+| `/api/orders/webhook` | POST | Stripe webhook for bagel payments — auto-confirms order + sends email |
 | `/api/slots` | GET, POST | List/create time slots. GET includes `total_orders` and `active_orders` per slot. Supports `?hangover=true` filter. POST accepts `is_hangover` field. |
 | `/api/slots/[id]` | PATCH, DELETE | Update/delete time slot |
 | `/api/bagel-types` | GET, POST | List/create bagel types (includes image_url, description, macro fields) |
@@ -83,7 +100,7 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 | Table | Purpose |
 |-------|---------|
 | `time_slots` | Pickup dates/times with capacity limits, optional cutoff time, and `is_hangover` flag |
-| `orders` | Customer orders with status tracking (pending/confirmed/ready) and `is_fake` flag for artificial scarcity |
+| `orders` | Customer orders with status tracking (pending/confirmed/ready), `is_fake` flag, and `stripe_session_id` for CC payments |
 | `bagel_types` | Dynamic bagel flavors (active/inactive, display order, image_url, description, calories, protein_g, carbs_g, fat_g) |
 | `order_items` | Junction: order → bagel types with quantities |
 | `add_on_types` | Add-on items with pricing (e.g., schmear) |
@@ -107,26 +124,16 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 10. `migration-cost-types.sql` — cost_type + add_on_type_id columns on ingredients for per-addon and fixed costs
 11. `migration-menu.sql` — image_url, description, calories, protein_g, carbs_g, fat_g columns on bagel_types
 12. `migration-merch.sql` — merch_items, merch_settings, merch_orders tables with RLS + seed data
-
-### Key Components
-| Component | Purpose |
-|-----------|---------|
-| `OrderForm.tsx` | Main customer order flow. Supports `mode` prop: `regular` (default) or `hangover` (amber branding, higher pricing, different copy). Nav includes MENU link. |
-| `HangoverBanner.tsx` | Cross-promo banner on regular order page linking to /hangover when hangover slots are available |
-| `BagelSelector.tsx` | +/- counters per bagel type, max 6 total |
-| `AddOnSelector.tsx` | +/- counters per add-on type |
-| `TimeSlotSelector.tsx` | Date/time slot picker with scarcity messaging: "Bagels Available!" (13+), "Only X bagels left!" (1-12), "SOLD OUT" (0) |
-| `AdminOrderCard.tsx` | Order card with confirm/ready/delete actions. Ready state shows green "Completed" badge. "Mark as Fake" toggle for artificial scarcity ($0 revenue, excluded from financials). |
-| `BagelTypeManager.tsx` | Admin CRUD for bagel types with image filename, ingredients text, and macro inputs (calories, protein, carbs, fat) |
-| `AddOnTypeManager.tsx` | Admin CRUD for add-on types |
-| `SlotManager.tsx` | Admin CRUD for time slots. Active/Past tabs, multi-slot creation form. Past tab is read-only. |
+13. `ALTER TABLE orders ADD COLUMN stripe_session_id text` + index on stripe_session_id (run manually in Supabase)
 
 ### Bagel Photos
 Photos stored in `/public/`:
 - `inside.jpg` — cross-section hero photo used on menu page
-- `plain.jpg` — Plain bagel
-- `sesame.jpg` — Sesame bagel
-- `poppy.jpg` — Poppy Seed bagel
+- `plaintrans.png` — Plain bagel
+- `sesametrans.png` — Sesame bagel
+- `everythingtrans.png` — Everything bagel
+- `salttrans.png` — Salt bagel
+- `poppytrans.png` — Poppy bagel
 - `logo.svg` — Customer-facing logo
 - `logo.png` — Admin + email logo
 - `logo-transparent.svg` — Transparent logo for hangover banner
@@ -141,6 +148,13 @@ Photos stored in `/public/`:
 - Default Next.js public assets still present (`file.svg`, `globe.svg`, `next.svg`, `vercel.svg`, `window.svg`)
 - README says "Next.js 14" but package.json has Next.js 16
 - Real-time subscriptions only on orders page — could extend to other admin pages
+
+## Stripe Go-Live Checklist (Bagel Payments)
+- [ ] Add `STRIPE_SECRET_KEY` (live key `sk_live_...`) to Vercel environment variables
+- [ ] Add `STRIPE_ORDERS_WEBHOOK_SECRET` to Vercel environment variables
+- [ ] Add `NEXT_PUBLIC_SITE_URL=https://paigesbagels.com` to Vercel environment variables
+- [ ] In Stripe Dashboard: add webhook endpoint `https://paigesbagels.com/api/orders/webhook` for events `checkout.session.completed` and `checkout.session.expired`
+- [ ] Copy signing secret from Stripe → set as `STRIPE_ORDERS_WEBHOOK_SECRET` in Vercel
 
 ## Feature Roadmap
 
@@ -159,7 +173,13 @@ Photos stored in `/public/`:
 - [x] **Flexible quantity validation** — Customers can order any quantity 1-6, pricing uses greedy bundle algorithm
 - [x] **Scarcity messaging** — Show "Only X bagels left!" when ≤12 remain, "Bagels Available!" when plentiful, "SOLD OUT" at 0
 
-### Completed This Session
+### Completed This Session (Feb 2025 Session 5)
+- [x] **Stripe credit card payments for bagel orders** — "Pay with Credit Card" button on confirmation page with 3% fee, Stripe Checkout flow, webhook auto-confirms + sends email, "Payment Received!" state on return
+- [x] **Shared NavBar component** — Extracted `components/NavBar.tsx` used on all customer pages (home, about, menu, order, contact, merch) with consistent sizing, active page underline
+- [x] **Homepage redesign** — Removed hero image, moved bagel carousel to top, brown bagel type names (`#7a4900`)
+- [x] **Poppy bagel image** — Added `poppytrans.png`
+
+### Completed Previously (Feb 2025 Session 4)
 - [x] **Merch page with Stripe Checkout** — Full merch store (`/merch`) with DB-driven items, size/qty selectors, shipping form, Stripe Checkout redirect, webhook handler (payment confirmation + stock restore on expiry), confirmation page with polling, admin management (`/admin/merch`) for items/shipping/orders. MERCH nav link added to all customer and admin pages.
 
 ### Completed Previously (Feb 2025 Session 3)
@@ -186,6 +206,9 @@ Photos stored in `/public/`:
 - [ ] **PWA support** — Installable app for mobile ordering
 - [ ] **Clean up legacy columns** — Remove `plain_count`/`everything_count`/`sesame_count` after confirming no old orders remain
 
+### Open Questions
+- Whether to keep or remove the `/menu` page (has ingredients + nutrition info not on homepage)
+
 ## Environment Variables
 ```
 NEXT_PUBLIC_SUPABASE_URL
@@ -195,6 +218,7 @@ RESEND_API_KEY
 ADMIN_PASSWORD
 NEXT_PUBLIC_VENMO_USERNAME
 STRIPE_SECRET_KEY
-STRIPE_WEBHOOK_SECRET
+STRIPE_WEBHOOK_SECRET           # merch webhook
+STRIPE_ORDERS_WEBHOOK_SECRET    # bagel orders webhook
 NEXT_PUBLIC_SITE_URL (optional, defaults to localhost:3000)
 ```

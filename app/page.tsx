@@ -59,6 +59,65 @@ export default function Home() {
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#f6f4f0' }}>
       <NavBar />
 
+      {/* Hero — full-bleed photo with gradient overlay */}
+      <div
+        className="relative flex items-start pt-40 md:items-center md:pt-0 md:justify-center overflow-hidden"
+        style={{ height: '100svh', minHeight: '600px' }}
+      >
+        {/* Background image */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/background-photo.jpeg"
+            alt=""
+            fill
+            className="object-cover"
+            style={{ objectPosition: 'center 30%' }}
+            priority
+          />
+          {/* Gradient overlay */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(to bottom, rgba(0,12,35,0.78) 0%, rgba(0,15,40,0.45) 35%, rgba(0,15,40,0.1) 65%, rgba(0,15,40,0.05) 100%)',
+            }}
+          />
+        </div>
+
+        {/* Hero content */}
+        <div className="relative z-10 w-full text-center px-6 md:pb-0 md:max-w-[700px]">
+          <p className="animate-fade-up animate-fade-up-1 text-xs sm:text-sm font-semibold uppercase tracking-[0.28em] mb-3 sm:mb-4 text-white/70">
+            Paige&apos;s Bagels
+          </p>
+          <h1
+            className="animate-fade-up animate-fade-up-2 text-[3.2rem] sm:text-[4.5rem] lg:text-[5.5rem] font-black text-white mb-8 sm:mb-10"
+            style={{ lineHeight: 1.05, letterSpacing: '-0.02em' }}
+          >
+            Seriously<br />
+            <em className="font-bold block" style={{ fontSize: '112%' }}>Sourdough.</em>
+          </h1>
+          <div className="animate-fade-up animate-fade-up-3 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+            <Link
+              href="/order"
+              className="w-full sm:w-auto px-11 py-4 font-semibold text-sm uppercase tracking-[0.08em] transition-all hover:-translate-y-0.5 hover:shadow-lg min-h-[44px] flex items-center justify-center"
+              style={{
+                backgroundColor: '#fff',
+                color: 'var(--blue)',
+                maxWidth: '320px',
+              }}
+            >
+              Place Your Order
+            </Link>
+            <Link
+              href="/menu"
+              className="w-full sm:w-auto px-11 py-4 font-medium text-sm uppercase tracking-[0.08em] text-white transition-all hover:bg-white/10 border border-white/35 min-h-[44px] flex items-center justify-center"
+              style={{ maxWidth: '320px' }}
+            >
+              View Menu
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Swipeable Bagel Menu */}
       {bagelTypes.length > 0 && (
         <div className="py-6 sm:py-8 px-4" style={{ backgroundColor: '#f6f4f0' }}>
@@ -126,17 +185,6 @@ export default function Home() {
           </div>
         </div>
       )}
-
-      {/* Order Button */}
-      <div className="text-center py-6" style={{ backgroundColor: '#f6f4f0' }}>
-        <Link
-          href="/order"
-          className="inline-block px-8 py-3 text-white font-bold text-lg rounded-lg transition-all hover:scale-105"
-          style={{ backgroundColor: '#004AAD' }}
-        >
-          Order Bagels
-        </Link>
-      </div>
 
       {/* Stay In The Know */}
       <div className="py-8 px-6" style={{ backgroundColor: '#f6f4f0' }}>

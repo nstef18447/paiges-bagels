@@ -10,17 +10,14 @@ interface TimeSlotSelectorProps {
   requiredCapacity: number;
 }
 
-// Helper to check if cutoff has passed
 function isPastCutoff(cutoffTime: string | null): boolean {
   if (!cutoffTime) return false;
   return new Date() > new Date(cutoffTime);
 }
 
-// Helper to format cutoff time nicely (in CST)
 function formatCutoff(cutoffTime: string): string {
   const date = new Date(cutoffTime);
   const timeZone = 'America/Chicago';
-
   const dateStr = date.toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
@@ -33,8 +30,14 @@ function formatCutoff(cutoffTime: string): string {
     hour12: true,
     timeZone
   });
-
   return `${dateStr} at ${timeStr}`;
+}
+
+function getSlotStatus(slot: TimeSlotWithCapacity, requiredCapacity: number) {
+  if (slot.remaining <= 0) return 'sold-out';
+  if (slot.remaining < requiredCapacity) return 'sold-out';
+  if (slot.remaining <= 12) return 'low';
+  return 'available';
 }
 
 export default function TimeSlotSelector({
@@ -43,124 +46,118 @@ export default function TimeSlotSelector({
   onChange,
   requiredCapacity,
 }: TimeSlotSelectorProps) {
-  // Group slots by date
   const slotsByDate = slots.reduce((acc, slot) => {
-    if (!acc[slot.date]) {
-      acc[slot.date] = [];
-    }
+    if (!acc[slot.date]) acc[slot.date] = [];
     acc[slot.date].push(slot);
     return acc;
   }, {} as Record<string, TimeSlotWithCapacity[]>);
 
-  return (
-    <div className="space-y-4">
-      {Object.entries(slotsByDate).length === 0 ? (
-        <p style={{ color: '#6B6B6B' }}>No time slots available</p>
-      ) : (
-        <div className="space-y-6">
-          {Object.entries(slotsByDate)
-            .filter(([, dateSlots]) => dateSlots.some(s => !isPastCutoff(s.cutoff_time)))
-            .map(([date, dateSlots]) => {
-            // Find the earliest cutoff for this date to show in header
-            const cutoffSlot = dateSlots.find(s => s.cutoff_time && !isPastCutoff(s.cutoff_time));
+  const filteredDates = Object.entries(slotsByDate)
+    .filter(([, dateSlots]) => dateSlots.some(s => !isPastCutoff(s.cutoff_time)));
 
-            return (
-            <div key={date}>
-              <h4
-                className="font-medium mb-1"
-                style={{ color: '#4A4A4A' }}
+  if (filteredDates.length === 0) {
+    return <p className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>No time slots available</p>;
+  }
+
+  return (
+    <div className="space-y-8">
+      {filteredDates.map(([date, dateSlots]) => {
+        const cutoffSlot = dateSlots.find(s => s.cutoff_time && !isPastCutoff(s.cutoff_time));
+
+        return (
+          <div key={date}>
+            {/* Date header */}
+            <div className="flex items-baseline justify-between mb-3 flex-wrap gap-1">
+              <h2
+                className="text-lg font-bold"
+                style={{ color: 'var(--blue)', fontFamily: 'var(--font-playfair)' }}
               >
                 {formatDate(date)}
-              </h4>
-              {cutoffSlot && cutoffSlot.cutoff_time && (
-                <p className="text-sm mb-3" style={{ color: '#B45309' }}>
-                  Orders close {formatCutoff(cutoffSlot.cutoff_time)}
-                </p>
+              </h2>
+              {cutoffSlot?.cutoff_time && (
+                <span className="text-[0.78rem] font-medium flex items-center gap-1" style={{ color: 'var(--brown)' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--brown)">
+                    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z"/>
+                  </svg>
+                  Order by {formatCutoff(cutoffSlot.cutoff_time)}
+                </span>
               )}
-              <div className="grid grid-cols-2 gap-3">
-                {dateSlots
-                  .filter(slot => !isPastCutoff(slot.cutoff_time))
-                  .map((slot) => {
-                  const isSoldOut = slot.remaining <= 0;
-                  const isAvailable = slot.remaining >= requiredCapacity && !isSoldOut;
+            </div>
+
+            {/* Slot grid */}
+            <div className="grid grid-cols-2 gap-2.5 md:gap-3">
+              {dateSlots
+                .filter(slot => !isPastCutoff(slot.cutoff_time))
+                .map((slot) => {
+                  const status = getSlotStatus(slot, requiredCapacity);
                   const isSelected = slot.id === selectedSlotId;
+                  const isDisabled = status === 'sold-out';
 
                   return (
                     <button
                       key={slot.id}
                       type="button"
-                      onClick={() => isAvailable && onChange(slot.id)}
-                      disabled={!isAvailable}
-                      className="p-4 rounded-lg text-left transition-all relative overflow-hidden"
+                      onClick={() => !isDisabled && onChange(slot.id)}
+                      disabled={isDisabled}
+                      className="relative rounded-[10px] p-4 md:p-5 text-left transition-all duration-200 cursor-pointer active:scale-[0.98]"
                       style={{
-                        border: isSoldOut
-                          ? '2px solid #DC2626'
-                          : isSelected
-                            ? '2px solid #004AAD'
-                            : '1px solid #E5E0DB',
-                        backgroundColor: isSoldOut
-                          ? '#FEF2F2'
-                          : isSelected
-                            ? '#E8EDF5'
-                            : '#FFFFFF',
-                        opacity: isAvailable ? 1 : isSoldOut ? 1 : 0.5,
-                        cursor: isAvailable ? 'pointer' : 'not-allowed'
+                        background: isSelected ? 'var(--blue-light)' : 'var(--bg-card)',
+                        border: isSelected
+                          ? '1.5px solid var(--blue)'
+                          : '1.5px solid var(--border)',
+                        boxShadow: isSelected ? '0 0 0 3px rgba(0, 74, 173, 0.12)' : 'none',
+                        opacity: isDisabled ? 0.45 : 1,
+                        cursor: isDisabled ? 'not-allowed' : 'pointer',
                       }}
                     >
-                      {/* X overlay for sold out */}
-                      {isSoldOut && (
-                        <>
-                          <div
-                            className="absolute inset-0 pointer-events-none"
-                            style={{
-                              background: 'linear-gradient(to top right, transparent calc(50% - 1px), #DC2626 calc(50% - 1px), #DC2626 calc(50% + 1px), transparent calc(50% + 1px))'
-                            }}
-                          />
-                          <div
-                            className="absolute inset-0 pointer-events-none"
-                            style={{
-                              background: 'linear-gradient(to bottom right, transparent calc(50% - 1px), #DC2626 calc(50% - 1px), #DC2626 calc(50% + 1px), transparent calc(50% + 1px))'
-                            }}
-                          />
-                        </>
+                      {/* Selected checkmark */}
+                      {isSelected && (
+                        <span
+                          className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center"
+                          style={{ backgroundColor: 'var(--blue)' }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                          </svg>
+                        </span>
                       )}
-                      <div
-                        className="font-semibold"
-                        style={{ color: isSoldOut ? '#991B1B' : isSelected ? '#004AAD' : '#1A1A1A' }}
-                      >
+
+                      {/* Time */}
+                      <div className="text-[1.05rem] font-bold mb-1" style={{ color: 'var(--blue)' }}>
                         {formatTime(slot.time)}
                       </div>
-                      {isSoldOut ? (
-                        <div
-                          className="text-sm mt-1 font-bold uppercase tracking-wide"
-                          style={{ color: '#DC2626' }}
-                        >
-                          SOLD OUT
-                        </div>
-                      ) : slot.remaining <= 12 ? (
-                        <div
-                          className="text-sm mt-1 font-medium"
-                          style={{ color: '#C75050' }}
-                        >
-                          Only {slot.remaining} bagels left!
-                        </div>
-                      ) : (
-                        <div
-                          className="text-sm mt-1"
-                          style={{ color: isAvailable ? '#6B6B6B' : '#C75050' }}
-                        >
-                          Bagels Available!
-                        </div>
-                      )}
+
+                      {/* Status */}
+                      <div className="text-[0.78rem] font-medium flex items-center gap-[5px]">
+                        {status === 'available' && (
+                          <>
+                            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--green)' }} />
+                            <span style={{ color: 'var(--green)' }}>Available</span>
+                          </>
+                        )}
+                        {status === 'low' && (
+                          <>
+                            <span
+                              className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: 'var(--amber)', animation: 'pulse-dot 2s ease infinite' }}
+                            />
+                            <span style={{ color: 'var(--amber)' }}>Only {slot.remaining} left!</span>
+                          </>
+                        )}
+                        {status === 'sold-out' && (
+                          <>
+                            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--red)' }} />
+                            <span style={{ color: 'var(--red)' }}>Sold Out</span>
+                          </>
+                        )}
+                      </div>
                     </button>
                   );
                 })}
-              </div>
             </div>
-          );
-          })}
-        </div>
-      )}
+          </div>
+        );
+      })}
     </div>
   );
 }

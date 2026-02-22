@@ -1,55 +1,84 @@
 @import "tailwindcss";
 
 :root {
+  /* Brand colors */
+  --blue: #004aad;
+  --blue-hover: #003a8c;
+  --blue-light: #e8f0fb;
+  --brown: #7a4900;
+  --brown-light: #f5ede0;
+  --bg: #f6f4f0;
+  --bg-card: #ffffff;
+  --border: rgba(0, 74, 173, 0.08);
+
+  /* Text */
+  --text-dark: #1a1a1a;
+  --text-medium: #4a4a4a;
+  --text-light: #6b6b6b;
+  --text-secondary: #6b7280;
+
+  /* Status */
+  --green: #15803d;
+  --green-bg: #f0fdf4;
+  --amber: #b45309;
+  --amber-bg: #fffbeb;
+  --red: #dc2626;
+  --red-bg: #fef2f2;
+  --success: #4A7C59;
+  --error: #C75050;
+
+  /* Legacy */
   --background: #f6f4f0;
   --foreground: #2D2D2D;
   --primary: #004AAD;
   --primary-dark: #003A8C;
   --primary-light: #1A5FBD;
-  --brown: #7A4900;
   --accent: #E8EDF5;
   --accent-dark: #D4DCE8;
-  --text-dark: #1A1A1A;
-  --text-medium: #4A4A4A;
-  --text-light: #6B6B6B;
-  --border: #E5E0DB;
-  --success: #4A7C59;
-  --error: #C75050;
+
+  /* Fonts */
   --font-arapey: var(--font-arapey);
+  --font-playfair: var(--font-playfair);
+  --font-dm-sans: var(--font-dm-sans);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-arapey);
+  --color-blue: var(--blue);
+  --color-blue-hover: var(--blue-hover);
+  --color-blue-light: var(--blue-light);
+  --color-brown: var(--brown);
+  --color-brown-light: var(--brown-light);
+  --color-bg: var(--bg);
+  --color-bg-card: var(--bg-card);
+  --color-border: var(--border);
+  --color-green: var(--green);
+  --color-green-bg: var(--green-bg);
+  --color-amber: var(--amber);
+  --color-amber-bg: var(--amber-bg);
+  --color-red: var(--red);
+  --color-red-bg: var(--red-bg);
+  --font-sans: var(--font-dm-sans);
+  --font-serif: var(--font-playfair);
   --font-mono: var(--font-arapey);
 }
 
 body {
-  font-size: 18px;
-  background: var(--background);
+  font-size: 16px;
+  background: var(--bg);
   color: var(--foreground);
-  font-family: var(--font-arapey), Georgia, serif;
-  font-style: italic;
+  font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
   min-height: 100vh;
 }
 
 h1, h2, h3 {
-  font-family: var(--font-arapey), Georgia, serif;
-  font-style: italic;
-  font-weight: 400;
-}
-
-h4, h5, h6 {
-  font-family: var(--font-arapey), Georgia, serif;
-  font-style: italic;
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-family: var(--font-playfair), 'Playfair Display', serif;
 }
 
 input, select, button {
-  font-family: var(--font-arapey), Georgia, serif;
+  font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
 }
 
 /* Custom scrollbar */
@@ -77,4 +106,30 @@ input, select, button {
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* Status dot pulse animation */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Hero fade-up animation */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  opacity: 0;
+  animation: fadeUp 0.9s ease forwards;
+}
+
+.animate-fade-up-1 { animation-delay: 0.2s; }
+.animate-fade-up-2 { animation-delay: 0.4s; }
+.animate-fade-up-3 { animation-delay: 0.6s; }
+
+/* Newsletter input on dark bg */
+.newsletter-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
 }

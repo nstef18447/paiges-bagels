@@ -1,111 +1,139 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
-const NAV_ITEMS = [
-  { href: '/about', label: 'ABOUT' },
-  { href: '/menu', label: 'MENU' },
-  { href: '/order', label: 'ORDER NOW' },
-  { href: '/merch', label: 'MERCH' },
-  { href: '/contact', label: 'CONTACT' },
+const NAV_LINKS = [
+  { href: '/about', label: 'About' },
+  { href: '/menu', label: 'Menu' },
+  { href: '/merch', label: 'Merch' },
+  { href: '/contact', label: 'Contact' },
 ];
 
 export default function NavBar() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [menuOpen]);
+
   return (
-    <div style={{ backgroundColor: '#f6f4f0' }}>
-      {/* Logo + Mobile Hamburger Row */}
-      <div className="relative flex justify-center overflow-hidden">
-        <Link href="/">
-          <Image
+    <>
+      {/* Sticky Nav */}
+      <nav
+        className="sticky top-0 z-50 flex items-center justify-between px-5 py-3 md:px-10 md:py-4 overflow-hidden"
+        style={{ backgroundColor: 'var(--bg)', borderBottom: '1px solid var(--border)' }}
+      >
+        {/* Logo */}
+        <Link href="/" className="flex-shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src="/logo.svg"
             alt="Paige's Bagels"
-            width={375}
-            height={375}
-            priority
-            unoptimized
-            className="w-auto h-auto max-w-[300px] sm:max-w-[400px] lg:max-w-[500px] cursor-pointer -mt-12 sm:-mt-16 lg:-mt-20 -mb-14 sm:-mb-18 lg:-mb-22"
+            className="h-10 md:h-12 w-auto"
           />
         </Link>
-        {/* Mobile Hamburger — positioned to right of logo */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="md:hidden absolute right-2 bottom-12 p-2 cursor-pointer"
-          aria-label="Toggle menu"
-        >
-          <div className="space-y-1.5">
-            <span
-              className="block w-7 h-0.5 transition-all"
-              style={{
-                backgroundColor: '#004AAD',
-                transform: menuOpen ? 'rotate(45deg) translate(4px, 4px)' : 'none',
-              }}
-            />
-            <span
-              className="block w-7 h-0.5 transition-all"
-              style={{
-                backgroundColor: '#004AAD',
-                opacity: menuOpen ? 0 : 1,
-              }}
-            />
-            <span
-              className="block w-7 h-0.5 transition-all"
-              style={{
-                backgroundColor: '#004AAD',
-                transform: menuOpen ? 'rotate(-45deg) translate(4px, -4px)' : 'none',
-              }}
-            />
-          </div>
-        </button>
-      </div>
 
-      {/* Desktop Nav */}
-      <nav className="hidden md:flex gap-8 justify-center py-3 px-4">
-        {NAV_ITEMS.map(({ href, label }) => {
-          const isActive = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`whitespace-nowrap font-bold text-xl lg:text-2xl tracking-widest transition-all ${isActive ? '' : 'hover:scale-105'}`}
-              style={isActive
-                ? { color: '#1A1A1A', borderBottom: '2px solid #004AAD' }
-                : { color: '#004AAD' }
-              }
-            >
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Mobile Menu Dropdown */}
-      {menuOpen && (
-        <nav className="md:hidden flex flex-col items-center gap-4 pb-4">
-          {NAV_ITEMS.map(({ href, label }) => {
+        {/* Desktop Links */}
+        <div className="hidden md:flex items-center gap-7">
+          {NAV_LINKS.map(({ href, label }) => {
             const isActive = pathname === href;
             return (
               <Link
                 key={href}
                 href={href}
-                onClick={() => setMenuOpen(false)}
-                className="font-bold text-lg tracking-widest transition-all"
-                style={isActive
-                  ? { color: '#1A1A1A', borderBottom: '2px solid #004AAD' }
-                  : { color: '#004AAD' }
-                }
+                className="text-[0.82rem] font-medium uppercase tracking-[0.07em] transition-colors hover:text-brown"
+                style={{
+                  color: isActive ? 'var(--text-dark)' : 'var(--blue)',
+                  borderBottom: isActive ? '2px solid var(--blue)' : 'none',
+                  paddingBottom: isActive ? '2px' : '0',
+                }}
               >
                 {label}
               </Link>
             );
           })}
-        </nav>
-      )}
-    </div>
+          <Link
+            href="/order"
+            className="px-6 py-2.5 text-[0.8rem] font-semibold uppercase tracking-[0.08em] transition-colors hover:bg-blue-hover"
+            style={{ backgroundColor: 'var(--blue)', color: 'var(--bg)' }}
+          >
+            Order Now
+          </Link>
+        </div>
+
+        {/* Mobile Hamburger */}
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="md:hidden flex flex-col gap-[5px] p-2 cursor-pointer bg-transparent border-none"
+          aria-label="Toggle menu"
+        >
+          <span
+            className="block w-[22px] h-0.5 transition-all duration-300"
+            style={{
+              backgroundColor: 'var(--blue)',
+              transform: menuOpen ? 'rotate(45deg) translate(5px, 5px)' : 'none',
+            }}
+          />
+          <span
+            className="block w-[22px] h-0.5 transition-all duration-300"
+            style={{
+              backgroundColor: 'var(--blue)',
+              opacity: menuOpen ? 0 : 1,
+            }}
+          />
+          <span
+            className="block w-[22px] h-0.5 transition-all duration-300"
+            style={{
+              backgroundColor: 'var(--blue)',
+              transform: menuOpen ? 'rotate(-45deg) translate(5px, -5px)' : 'none',
+            }}
+          />
+        </button>
+      </nav>
+
+      {/* Mobile Slide-in Menu */}
+      <div
+        className="fixed inset-0 z-40 flex flex-col px-6 pt-10 md:hidden transition-transform duration-300"
+        style={{
+          top: '68px',
+          backgroundColor: 'var(--bg)',
+          transform: menuOpen ? 'translateX(0)' : 'translateX(100%)',
+        }}
+      >
+        {NAV_LINKS.map(({ href, label }) => (
+          <Link
+            key={href}
+            href={href}
+            onClick={() => setMenuOpen(false)}
+            className="py-4 text-[1.8rem] font-bold transition-colors hover:text-brown"
+            style={{
+              fontFamily: 'var(--font-playfair)',
+              color: pathname === href ? 'var(--brown)' : 'var(--blue)',
+              borderBottom: '1px solid var(--border)',
+            }}
+          >
+            {label}
+          </Link>
+        ))}
+        <Link
+          href="/order"
+          onClick={() => setMenuOpen(false)}
+          className="mt-8 py-4 text-center text-[0.9rem] font-semibold uppercase tracking-[0.08em] transition-colors"
+          style={{ backgroundColor: 'var(--blue)', color: 'var(--bg)' }}
+        >
+          Order Now
+        </Link>
+      </div>
+    </>
   );
 }

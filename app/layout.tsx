@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Arapey } from "next/font/google";
+import { Arapey, Playfair_Display, DM_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
@@ -7,6 +7,19 @@ const arapey = Arapey({
   weight: "400",
   style: ["normal", "italic"],
   variable: "--font-arapey",
+  subsets: ["latin"],
+});
+
+const playfair = Playfair_Display({
+  weight: ["700", "900"],
+  style: ["normal", "italic"],
+  variable: "--font-playfair",
+  subsets: ["latin"],
+});
+
+const dmSans = DM_Sans({
+  weight: ["400", "500", "600"],
+  variable: "--font-dm-sans",
   subsets: ["latin"],
 });
 
@@ -48,7 +61,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${arapey.variable} antialiased`}
+        className={`${arapey.variable} ${playfair.variable} ${dmSans.variable} antialiased`}
       >
         {children}
         <Analytics />
