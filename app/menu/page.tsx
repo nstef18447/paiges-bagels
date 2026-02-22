@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { BagelType, Pricing } from '@/types';
+import { BagelType } from '@/types';
 import NavBar from '@/components/NavBar';
 
 const INGREDIENTS = ['Sourdough Starter', 'Bread Flour', 'Water', 'Sugar', 'Salt'];
@@ -18,20 +18,14 @@ const GALLERY_IMAGES = [
 
 export default function MenuPage() {
   const [bagelTypes, setBagelTypes] = useState<BagelType[]>([]);
-  const [pricing, setPricing] = useState<Pricing[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeBagel, setActiveBagel] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/bagel-types').then(r => r.json()),
-      fetch('/api/pricing?type=regular').then(r => r.json()),
-    ])
-      .then(([bagels, prices]) => {
-        setBagelTypes(bagels);
-        setPricing(Array.isArray(prices) ? prices : []);
-      })
+    fetch('/api/bagel-types')
+      .then(r => r.json())
+      .then(bagels => setBagelTypes(bagels))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -50,19 +44,6 @@ export default function MenuPage() {
     if (!el) return;
     el.scrollBy({ left: dir * 200, behavior: 'smooth' });
   };
-
-  // Build pricing display string from DB
-  const priceLine = (() => {
-    if (pricing.length === 0) return null;
-    const single = pricing.find(p => p.bagel_quantity === 1);
-    const halfDozen = pricing.find(p => p.bagel_quantity === 6);
-    const dozen = pricing.find(p => p.bagel_quantity === 12 || p.bagel_quantity === 13);
-    const parts: string[] = [];
-    if (single) parts.push(`$${single.price.toFixed(2)} each`);
-    if (halfDozen) parts.push(`Half dozen $${halfDozen.price.toFixed(0)}`);
-    if (dozen) parts.push(`${dozen.label || 'Dozen'} $${dozen.price.toFixed(0)}`);
-    return parts;
-  })();
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--bg)' }}>
@@ -226,19 +207,6 @@ export default function MenuPage() {
             })}
           </div>
 
-          {/* Pricing line */}
-          {priceLine && priceLine.length > 0 && (
-            <div className="text-center px-5 pt-4 pb-10 max-w-[900px] mx-auto">
-              <p className="text-base font-semibold" style={{ color: 'var(--brown)' }}>
-                {priceLine[0]}
-                {priceLine.slice(1).map((part, i) => (
-                  <span key={i} className="font-normal text-[0.88rem]" style={{ color: 'var(--text-secondary)' }}>
-                    {' · '}{part}
-                  </span>
-                ))}
-              </p>
-            </div>
-          )}
         </div>
       )}
 
