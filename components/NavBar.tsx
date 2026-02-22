@@ -19,8 +19,8 @@ export default function NavBar() {
 
   return (
     <div style={{ backgroundColor: '#f6f4f0' }}>
-      {/* Logo */}
-      <div className="flex justify-center overflow-hidden">
+      {/* Logo + Mobile Hamburger Row */}
+      <div className="relative flex justify-center overflow-hidden">
         <Link href="/">
           <Image
             src="/logo.svg"
@@ -32,33 +32,10 @@ export default function NavBar() {
             className="w-auto h-auto max-w-[300px] sm:max-w-[400px] lg:max-w-[500px] cursor-pointer -mt-12 sm:-mt-16 lg:-mt-20 -mb-14 sm:-mb-18 lg:-mb-22"
           />
         </Link>
-      </div>
-
-      {/* Desktop Nav */}
-      <nav className="hidden md:flex gap-8 justify-center py-3 px-4">
-        {NAV_ITEMS.map(({ href, label }) => {
-          const isActive = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`whitespace-nowrap font-bold text-xl lg:text-2xl tracking-widest transition-all ${isActive ? '' : 'hover:scale-105'}`}
-              style={isActive
-                ? { color: '#1A1A1A', borderBottom: '2px solid #004AAD' }
-                : { color: '#004AAD' }
-              }
-            >
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Mobile Hamburger */}
-      <div className="md:hidden flex justify-center py-2">
+        {/* Mobile Hamburger — positioned to right of logo */}
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className="p-2 cursor-pointer"
+          className="md:hidden absolute right-4 top-1/2 -translate-y-1/2 p-2 cursor-pointer"
           aria-label="Toggle menu"
         >
           <div className="space-y-1.5">
@@ -86,6 +63,26 @@ export default function NavBar() {
           </div>
         </button>
       </div>
+
+      {/* Desktop Nav */}
+      <nav className="hidden md:flex gap-8 justify-center py-3 px-4">
+        {NAV_ITEMS.map(({ href, label }) => {
+          const isActive = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`whitespace-nowrap font-bold text-xl lg:text-2xl tracking-widest transition-all ${isActive ? '' : 'hover:scale-105'}`}
+              style={isActive
+                ? { color: '#1A1A1A', borderBottom: '2px solid #004AAD' }
+                : { color: '#004AAD' }
+              }
+            >
+              {label}
+            </Link>
+          );
+        })}
+      </nav>
 
       {/* Mobile Menu Dropdown */}
       {menuOpen && (
