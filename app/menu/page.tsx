@@ -292,7 +292,7 @@ export default function MenuPage() {
                                 src={`/${bagel.image_url}`}
                                 alt={bagel.name}
                                 fill
-                                className="object-cover transition-all duration-300"
+                                className="object-contain transition-all duration-300"
                                 sizes={`${ACTIVE_W}px`}
                               />
                             </div>
