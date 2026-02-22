@@ -69,12 +69,14 @@ interface AddOnCounterProps {
 }
 
 function AddOnCounter({ label, price, count, onIncrement, onDecrement }: AddOnCounterProps) {
+  const isActive = count > 0;
+
   return (
     <div
-      className="flex items-center justify-between p-4 rounded-lg"
+      className="flex items-center justify-between p-4 rounded-lg transition-all"
       style={{
-        backgroundColor: '#FFFFFF',
-        border: '1px solid #E5E0DB'
+        backgroundColor: isActive ? '#e8f0fb' : '#FFFFFF',
+        border: isActive ? '2px solid #004aad' : '2px solid #E5E0DB',
       }}
     >
       <div>

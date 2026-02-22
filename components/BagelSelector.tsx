@@ -3,6 +3,19 @@
 import { BagelCounts, BagelType } from '@/types';
 import { calculateTotal, isValidTotal } from '@/lib/utils';
 
+const BAGEL_IMAGES: Record<string, string> = {
+  plain: '/plaintrans.png',
+  everything: '/everythingtrans.png',
+  sesame: '/sesametrans.png',
+  'poppy seed': '/poppytrans.png',
+  poppy: '/poppytrans.png',
+  salt: '/salttrans.png',
+};
+
+function getBagelImage(name: string): string | null {
+  return BAGEL_IMAGES[name.toLowerCase()] ?? null;
+}
+
 interface BagelSelectorProps {
   bagelTypes: BagelType[];
   counts: BagelCounts;
@@ -40,7 +53,8 @@ export default function BagelSelector({ bagelTypes, counts, onChange, maxTotal }
         {bagelTypes.map((type) => (
           <BagelCounter
             key={type.id}
-            label={type.name}
+            name={type.name}
+            imageUrl={getBagelImage(type.name)}
             count={counts[type.id] || 0}
             onIncrement={() => handleIncrement(type.id)}
             onDecrement={() => handleDecrement(type.id)}
@@ -70,24 +84,47 @@ export default function BagelSelector({ bagelTypes, counts, onChange, maxTotal }
 }
 
 interface BagelCounterProps {
-  label: string;
+  name: string;
+  imageUrl: string | null;
   count: number;
   onIncrement: () => void;
   onDecrement: () => void;
   disabled?: boolean;
 }
 
-function BagelCounter({ label, count, onIncrement, onDecrement, disabled }: BagelCounterProps) {
+function BagelCounter({ name, imageUrl, count, onIncrement, onDecrement, disabled }: BagelCounterProps) {
+  const isActive = count > 0;
+
   return (
     <div
-      className="flex items-center justify-between p-4 rounded-lg"
+      className="flex items-center gap-4 p-4 rounded-lg transition-all"
       style={{
-        backgroundColor: '#FFFFFF',
-        border: '1px solid #E5E0DB'
+        backgroundColor: isActive ? '#e8f0fb' : '#FFFFFF',
+        border: isActive ? '2px solid #004aad' : '2px solid #E5E0DB',
       }}
     >
-      <span className="font-medium" style={{ color: '#1A1A1A' }}>{label}</span>
-      <div className="flex items-center gap-3">
+      {/* Bagel image */}
+      {imageUrl && (
+        <div className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0 flex items-center justify-center">
+          <img
+            src={imageUrl}
+            alt={name}
+            className="w-full h-full object-contain"
+            style={{ filter: 'drop-shadow(0 3px 8px rgba(0,0,0,0.12))' }}
+          />
+        </div>
+      )}
+
+      {/* Name */}
+      <span
+        className="flex-1 font-medium"
+        style={{ color: '#1A1A1A', fontFamily: 'var(--font-playfair)' }}
+      >
+        {name}
+      </span>
+
+      {/* +/- controls */}
+      <div className="flex items-center gap-3 flex-shrink-0">
         <button
           type="button"
           onClick={onDecrement}
