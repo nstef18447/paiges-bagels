@@ -35,7 +35,7 @@ export default function NavBar() {
         {/* Mobile Hamburger — positioned to right of logo */}
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className="md:hidden absolute right-4 top-1/2 -translate-y-1/2 p-2 cursor-pointer"
+          className="md:hidden absolute right-2 bottom-0 p-2 cursor-pointer"
           aria-label="Toggle menu"
         >
           <div className="space-y-1.5">
