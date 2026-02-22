@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Arapey, Playfair_Display, DM_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
+import Footer from "@/components/Footer";
 import "./globals.css";
 
 const arapey = Arapey({
@@ -64,6 +65,7 @@ export default function RootLayout({
         className={`${arapey.variable} ${playfair.variable} ${dmSans.variable} antialiased`}
       >
         {children}
+        <Footer />
         <Analytics />
       </body>
     </html>
