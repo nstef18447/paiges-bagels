@@ -54,6 +54,7 @@ export interface Order {
   status: 'pending' | 'confirmed' | 'ready';
   is_fake: boolean;
   venmo_note: string;
+  stripe_session_id: string | null;
   created_at: string;
   updated_at: string;
 }
