@@ -32,9 +32,9 @@ const BENEFITS = [
 ];
 
 const STRIP_IMAGES = [
-  { src: '/bagels.jpg', alt: 'Fresh bagels' },
-  { src: '/inside.jpg', alt: 'Inside a bagel' },
-  { src: '/everything.jpg', alt: 'Everything bagel' },
+  { src: '/best-images/IMG_2102.JPG', alt: 'Fresh bagel variety on cutting board' },
+  { src: '/best-images/IMG_2105.JPG', alt: 'Hand holding sesame bagel overhead' },
+  { src: '/best-images/IMG_2163.JPG', alt: 'Salt bagel with flaky crystals' },
 ];
 
 export default function AboutPage() {

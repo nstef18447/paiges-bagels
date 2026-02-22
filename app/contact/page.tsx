@@ -7,11 +7,11 @@ import NavBar from '@/components/NavBar';
 const INSTA_URL = 'https://instagram.com/paigesbagels';
 
 const GRID_IMAGES = [
-  { src: '/bagels.jpg', alt: 'Fresh bagels' },
-  { src: '/inside.jpg', alt: 'Inside a bagel' },
-  { src: '/plain.jpg', alt: 'Plain bagel' },
-  { src: '/everything.jpg', alt: 'Everything bagel' },
-  { src: '/sesame.jpg', alt: 'Sesame bagel' },
+  { src: '/best-images/IMG_2113.JPEG', alt: 'Branded bagel box with logo' },
+  { src: '/best-images/IMG_2107.JPG', alt: 'Sesame bagel close-up' },
+  { src: '/best-images/IMG_2163.JPG', alt: 'Salt bagel with crystals' },
+  { src: '/best-images/IMG_2184.JPG', alt: 'Sourdough crumb on baking sheet' },
+  { src: '/best-images/IMG_1999.JPG', alt: 'Hand holding fresh plain bagel' },
 ];
 
 function InstagramIcon({ size = 26 }: { size?: number }) {

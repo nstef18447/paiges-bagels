@@ -311,8 +311,8 @@ export default function Home() {
           className="rounded-2xl overflow-hidden h-[280px] md:h-[380px]"
         >
           <Image
-            src="/Best images/IMG_2105.JPG"
-            alt="Sourdough bagels"
+            src="/best-images/IMG_2184.JPG"
+            alt="Sourdough bagel crumb structure on baking sheet"
             width={600}
             height={400}
             className="w-full h-full object-cover"

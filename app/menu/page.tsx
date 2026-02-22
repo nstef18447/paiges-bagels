@@ -9,11 +9,9 @@ import NavBar from '@/components/NavBar';
 const INGREDIENTS = ['Sourdough Starter', 'Bread Flour', 'Water', 'Sugar', 'Salt'];
 
 const GALLERY_IMAGES = [
-  { src: '/bagels.jpg', alt: 'Fresh bagels' },
-  { src: '/inside.jpg', alt: 'Inside a bagel' },
-  { src: '/plain.jpg', alt: 'Plain bagel' },
-  { src: '/everything.jpg', alt: 'Everything bagel' },
-  { src: '/sesame.jpg', alt: 'Sesame bagel' },
+  { src: '/best-images/IMG_2113.JPEG', alt: 'Branded bagel box' },
+  { src: '/best-images/IMG_2163.JPG', alt: 'Salt bagel close-up' },
+  { src: '/best-images/IMG_1999.JPG', alt: 'Hand holding a fresh plain bagel' },
 ];
 
 export default function MenuPage() {
@@ -68,8 +66,8 @@ export default function MenuPage() {
       {/* Ingredients Banner */}
       <div className="relative mx-5 mb-12 rounded-2xl overflow-hidden max-w-[900px] md:mx-auto">
         <Image
-          src="/inside.jpg"
-          alt="Bagel dough"
+          src="/best-images/IMG_2102.JPG"
+          alt="Fresh bagels on cutting board"
           width={900}
           height={280}
           className="w-full h-[280px] object-cover"
