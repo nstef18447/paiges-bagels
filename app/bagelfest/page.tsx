@@ -91,14 +91,14 @@ export default function BagelfestPage() {
       </div>
 
       {/* 3. FLOATING BAGELS */}
-      <div className="relative mx-auto" style={{ height: 80, maxWidth: 360, width: '100%', marginTop: -10 }}>
+      <div className="relative mx-auto" style={{ height: 100, maxWidth: 360, width: '100%', marginTop: -10 }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/everythingtrans.png"
           alt=""
           className="absolute object-contain"
           style={{
-            width: 70, height: 70, left: '10%', top: 0,
+            width: 90, height: 90, left: '10%', top: 0,
             filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.12))',
             animation: 'bobble1 3s ease-in-out infinite',
           }}
@@ -109,7 +109,7 @@ export default function BagelfestPage() {
           alt=""
           className="absolute object-contain"
           style={{
-            width: 70, height: 70, left: '38%', top: 10,
+            width: 90, height: 90, left: '38%', top: 10,
             filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.12))',
             animation: 'bobble2 3s ease-in-out 0.5s infinite',
           }}
@@ -120,7 +120,7 @@ export default function BagelfestPage() {
           alt=""
           className="absolute object-contain"
           style={{
-            width: 70, height: 70, left: '66%', top: 0,
+            width: 90, height: 90, left: '66%', top: 0,
             filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.12))',
             animation: 'bobble3 3s ease-in-out 1s infinite',
           }}
