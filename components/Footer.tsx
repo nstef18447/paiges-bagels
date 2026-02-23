@@ -18,7 +18,7 @@ export default function Footer() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
-  if (pathname.startsWith('/admin')) return null;
+  if (pathname.startsWith('/admin') || pathname.startsWith('/bagelfest')) return null;
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
