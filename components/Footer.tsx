@@ -54,15 +54,12 @@ export default function Footer() {
       >
         {/* Brand */}
         <div className="md:col-span-1">
-          <div className="w-[130px] h-[44px] mx-auto md:mx-0 mb-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/logo.svg"
-              alt="Paige's Bagels"
-              className="h-full w-auto object-contain"
-              style={{ filter: 'brightness(0) invert(1)' }}
-            />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo-white.svg"
+            alt="Paige's Bagels"
+            className="h-10 md:h-12 w-auto mx-auto md:mx-0 mb-3"
+          />
           <p
             className="text-[0.78rem] font-semibold uppercase tracking-[0.15em] mb-3"
             style={{ color: '#c9a24e' }}
