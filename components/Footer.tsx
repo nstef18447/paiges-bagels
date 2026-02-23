@@ -56,9 +56,9 @@ export default function Footer() {
         <div className="md:col-span-1">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/logo-white.svg"
+            src="/logo.svg"
             alt="Paige's Bagels"
-            className="h-10 md:h-12 w-auto mx-auto md:mx-0 mb-3"
+            className="h-10 w-auto brightness-0 invert mx-auto md:mx-0 mb-3"
           />
           <p
             className="text-[0.78rem] font-semibold uppercase tracking-[0.15em] mb-3"
