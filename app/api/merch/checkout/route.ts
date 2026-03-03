@@ -146,6 +146,7 @@ export async function POST(request: Request) {
 
   try {
     const session = await stripe.checkout.sessions.create({
+      ui_mode: 'embedded',
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
@@ -153,8 +154,7 @@ export async function POST(request: Request) {
       metadata: {
         order_id: order.id,
       },
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/merch/confirmation?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/merch`,
+      return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/merch/confirmation?session_id={CHECKOUT_SESSION_ID}`,
     });
 
     // Update order with stripe session ID
@@ -166,7 +166,7 @@ export async function POST(request: Request) {
       })
       .eq('id', order.id);
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ clientSecret: session.client_secret });
   } catch (stripeError: unknown) {
     const message = stripeError instanceof Error ? stripeError.message : 'Stripe error';
     return NextResponse.json({ error: message }, { status: 500 });

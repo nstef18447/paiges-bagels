@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Arapey, Playfair_Display, DM_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import Footer from "@/components/Footer";
+import CartProvider from "@/app/components/CartProvider";
+import CartDrawer from "@/app/components/CartDrawer";
 import "./globals.css";
 
 const arapey = Arapey({
@@ -64,8 +66,11 @@ export default function RootLayout({
       <body
         className={`${arapey.variable} ${playfair.variable} ${dmSans.variable} antialiased`}
       >
-        {children}
-        <Footer />
+        <CartProvider>
+          {children}
+          <CartDrawer />
+          <Footer />
+        </CartProvider>
         <Analytics />
       </body>
     </html>
