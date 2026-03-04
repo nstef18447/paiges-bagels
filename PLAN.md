@@ -25,29 +25,38 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 ### Customer-Facing Pages
 | Route | Purpose |
 |-------|---------|
-| `/` | Landing page with shared NavBar + swipeable bagel carousel + order button + email signup |
+| `/` | Full homepage: hero with gradient overlay, "Why Paige's?" value props, bagel carousel with transparent PNGs, "Sourdough Difference" photo split, "Meet the Baker" blue section, newsletter signup, final CTA |
 | `/about` | Paige's story, sourdough benefits, bagel photo |
 | `/menu` | Menu page with inside bagel hero (ingredients + macros) and infinite-scroll carousel of each bagel type with photos |
 | `/order` | Full order form: time slot → bagels → add-ons → info → submit |
-| `/hangover` | Hangover Bagels — same-day impulse ordering with warm amber branding and higher pricing |
+| `/hangover` | Standalone hangover page: blue hero with countdown timer, "How It Works" steps, time slot selector, inline bagel selection with images, order summary, sticky checkout bar. Does NOT use OrderForm. |
 | `/contact` | Instagram link + DM prompt |
 | `/confirmation` | Order summary with Venmo pay button + "Pay with Credit Card" option (3% fee), paid state on return from Stripe |
-| `/merch` | Merch store — item cards with size/qty selectors, shipping form, Stripe Checkout redirect |
+| `/merch` | Merch store: page header + category tabs, product grid (2/3 cols) of `ProductCard` links, persistent cart bar. All data from Supabase. |
+| `/products/[id]` | Product detail page: two-column grid (image left, info right, stacks mobile). Server component with `ProductDetailActions` client component (size picker, qty, "Add to Bag"). |
 | `/merch/confirmation` | Post-payment confirmation with order summary, polls for webhook completion |
+| `/bagelfest` | Standalone mobile-first QR code landing page for Chicago Bagel Fest (March 7, 2026). No nav/footer — centered logo (h-16), wave emoji header, floating bagel animations (90px), email signup card (primary CTA → `/api/subscribers`), how-it-works vertical timeline, order CTA → `/order`, Instagram pill, brand closer. |
+| `not-found.tsx` | Custom 404 page: large faded "404", "Lost Your Bagel?" headline, Go Home + Order Bagels buttons |
 
 ### Shared Components
 | Component | Purpose |
 |-----------|---------|
 | `NavBar.tsx` | Shared logo + navigation bar used on all customer pages. Active page underlined. Uses `usePathname()` for automatic highlighting. |
-| `OrderForm.tsx` | Main customer order flow. Supports `mode` prop: `regular` (default) or `hangover` (amber branding, higher pricing, different copy). |
+| `Footer.tsx` | Full branded footer: 4-column grid (brand w/ `logo-white.svg`, quick links, social/email, newsletter signup via `/api/subscribers`), blue `#004aad` bg, bottom copyright bar. Hidden on `/admin` and `/bagelfest` routes. |
+| `OrderForm.tsx` | Main customer order flow for regular orders. Hangover page no longer uses this — it has its own standalone page. |
 | `HangoverBanner.tsx` | Cross-promo banner on regular order page linking to /hangover when hangover slots are available |
-| `BagelSelector.tsx` | +/- counters per bagel type, max 6 total |
-| `AddOnSelector.tsx` | +/- counters per add-on type |
+| `BagelSelector.tsx` | +/- counters per bagel type with transparent PNG images (64px/80px), active-row blue highlighting, max 13 total |
+| `AddOnSelector.tsx` | +/- counters per add-on type with active-row blue highlighting |
 | `TimeSlotSelector.tsx` | Date/time slot picker with scarcity messaging: "Bagels Available!" (13+), "Only X bagels left!" (1-12), "SOLD OUT" (0) |
 | `AdminOrderCard.tsx` | Order card with confirm/ready/delete actions. Ready state shows green "Completed" badge. "Mark as Fake" toggle for artificial scarcity ($0 revenue, excluded from financials). |
 | `BagelTypeManager.tsx` | Admin CRUD for bagel types with image filename, ingredients text, and macro inputs (calories, protein, carbs, fat) |
 | `AddOnTypeManager.tsx` | Admin CRUD for add-on types |
 | `SlotManager.tsx` | Admin CRUD for time slots. Active/Past tabs, multi-slot creation form. Past tab is read-only. |
+| `CartProvider.tsx` (app/components) | Global cart context with `useCart()` hook. Manages cart items, add/remove, drawer state. Wraps app in root layout. |
+| `CartDrawer.tsx` (app/components) | Slide-in cart drawer: item list, shipping form, embedded Stripe checkout. Widens to 480px in checkout mode. |
+| `ProductCard.tsx` (app/components) | Pure display card wrapped in `<Link>` to `/products/[id]`. No cart logic. |
+| `ProductDetailActions.tsx` (app/components) | Client component: size picker, quantity +/-, "Add to Bag" button. Uses `useCart()`. |
+| `EmbeddedCheckoutForm.tsx` (app/components) | Stripe `EmbeddedCheckoutProvider` + `EmbeddedCheckout` wrapper. |
 
 ### Admin Dashboard (`/admin/*`)
 | Route | Purpose |
@@ -85,7 +94,7 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 | `/api/merch/items` | GET, POST | List active merch items, create new item |
 | `/api/merch/items/[id]` | PATCH, DELETE | Update/delete merch item |
 | `/api/merch/settings` | GET, PATCH | Get/update flat shipping cost |
-| `/api/merch/checkout` | POST | Validate cart against DB prices, decrement stock, create order + Stripe Checkout Session |
+| `/api/merch/checkout` | POST | Validate cart against DB prices, decrement stock, create order + Stripe embedded Checkout Session (returns `clientSecret`) |
 | `/api/merch/webhook` | POST | Stripe webhook — handles checkout.session.completed (mark paid + email) and checkout.session.expired (restore stock + cancel) |
 | `/api/merch/orders` | GET | List all merch orders (admin) |
 | `/api/merch/orders/[id]` | PATCH | Update merch order status (mark shipped) |
@@ -126,17 +135,18 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 12. `migration-merch.sql` — merch_items, merch_settings, merch_orders tables with RLS + seed data
 13. `ALTER TABLE orders ADD COLUMN stripe_session_id text` + index on stripe_session_id (run manually in Supabase)
 
-### Bagel Photos
-Photos stored in `/public/`:
-- `inside.jpg` — cross-section hero photo used on menu page
-- `plaintrans.png` — Plain bagel
-- `sesametrans.png` — Sesame bagel
-- `everythingtrans.png` — Everything bagel
-- `salttrans.png` — Salt bagel
-- `poppytrans.png` — Poppy bagel
-- `logo.svg` — Customer-facing logo
-- `logo.png` — Admin + email logo
-- `logo-transparent.svg` — Transparent logo for hangover banner
+### Photos & Assets
+Stored in `/public/`:
+- **Transparent bagel PNGs** (used in carousels, order form rows, hangover page): `plaintrans.png`, `sesametrans.png`, `everythingtrans.png`, `salttrans.png`, `poppytrans.png`
+- **Best images** (`/public/best-images/`): Curated bagel photography used across site:
+  - `IMG_2184.JPG` — Crumb structure on baking sheet (homepage photo split)
+  - `IMG_2102.JPG` — Variety grid on cutting board (menu banner, about strip)
+  - `IMG_2113.JPEG` — Branded box with logo (menu gallery hero, contact grid hero)
+  - `IMG_2107.JPG` — Sesame close-up (contact grid)
+  - `IMG_2105.JPG` — Hand holding sesame overhead (about strip)
+  - `IMG_2163.JPG` — Salt bagel with crystals (menu gallery, contact grid, about strip)
+  - `IMG_1999.JPG` — Hand holding plain bagel (menu gallery, contact grid)
+- **Other**: `background-photo.jpeg` (homepage hero), `paige.JPG` (about page + homepage), `logo.svg` (cropped, proper viewBox), `logo-white.svg` (white version for footer), `logo.png`, `logo-home.svg`
 
 ## Bugs Fixed
 - **Hangover pricing leak (Feb 2025)** — `/api/orders` POST was fetching ALL pricing tiers (both regular and hangover) without filtering by `pricing_type`. The greedy bundle algorithm could pick the higher hangover tier for regular orders, causing 3 bagels to show a higher price on the confirmation page than what the customer saw on the order form. Fix: API now looks up the time slot's `is_hangover` flag and filters pricing tiers by `pricing_type` accordingly (`app/api/orders/route.ts`).
@@ -173,7 +183,28 @@ Photos stored in `/public/`:
 - [x] **Flexible quantity validation** — Customers can order any quantity 1-6, pricing uses greedy bundle algorithm
 - [x] **Scarcity messaging** — Show "Only X bagels left!" when ≤12 remain, "Bagels Available!" when plentiful, "SOLD OUT" at 0
 
-### Completed This Session (Feb 2025 Session 5)
+### Completed This Session (Mar 2026 Session 8)
+- [x] **Product detail pages** — `/products/[id]` server component with two-column layout (large image left, info right, stacks on mobile). Fetches product via `getProductById()` from Supabase. Size picker, quantity, and "Add to Bag" in `ProductDetailActions` client component.
+- [x] **Product card → link card** — Merch grid cards now link to `/products/[id]` instead of opening modal. Extracted into `ProductCard` component.
+- [x] **Embedded Stripe checkout** — Switched merch checkout API to `ui_mode: "embedded"` with `return_url`. Cart drawer shows embedded Stripe form inline (no redirect). Uses `@stripe/react-stripe-js` `EmbeddedCheckoutProvider` + `EmbeddedCheckout`.
+- [x] **Cart drawer** — Slide-in drawer from right replaces old checkout modal. Shows cart items, shipping form, and embedded Stripe payment. Widens to 480px in checkout mode. "Back to Cart" link to return from payment.
+- [x] **CartProvider context** — Global cart state (`useCart()` hook) wraps app via root layout. Cart persists across `/merch` and `/products/[id]` pages. Manages add/remove, drawer open/close.
+- [x] **Merch page refactor** — Reduced from 710-line monolith to ~130 lines using `ProductCard` + `useCart`. Removed inline modal, checkout panel, and all cart state.
+
+### Completed Previously (Feb 2025 Session 7)
+- [x] **Hangover page redesign** — Rebuilt as standalone page (no longer uses OrderForm). Blue hero with countdown timer, "How It Works" steps, TimeSlotSelector for multiple slots, inline bagel selection with images, order summary card, sticky checkout bar. Empty state when no slots available.
+- [x] **Full homepage rebuild** — 7 sections: hero (kept), "Why Paige's?" value props (3 cards), bagel carousel with transparent PNGs + drop-shadows, "Sourdough Difference" photo split, "Meet the Baker" blue section with Paige's photo, newsletter card (existing /api/subscribers), final CTA.
+- [x] **Bagel selector images** — Added transparent PNG images (64px/80px) to BagelSelector rows with drop-shadow. Active rows highlight with blue-light bg + blue border. Same highlight on AddOnSelector.
+- [x] **Best images integration** — Renamed "Best images" → "best-images". Assigned 7 curated photos across homepage, menu, contact, and about pages based on content/composition.
+- [x] **Hangover page metadata** — Moved to `app/hangover/layout.tsx` since page became client component.
+- [x] **Full merch page** — Replaced "Coming Soon" with complete shopping experience: category filter tabs, product grid with hover effects, slide-up product detail modal (size picker, qty, add to bag), persistent cart bar, checkout panel with bag summary + shipping form → existing Stripe checkout flow. All data from Supabase.
+- [x] **Branded footer** — Full 4-column footer (brand + `logo-white.svg`, quick links, Instagram/email with icons, newsletter signup). Blue `#004aad` bg, bottom copyright bar. Hidden on admin.
+- [x] **Redesigned email templates** — Branded header/footer wrapper (`emailWrapper()` in `lib/email.ts`) with off-white header + logo, blue footer strip. Styled confirmation, ready, and merch emails with table-based layout + inline styles.
+- [x] **404 page** — `app/not-found.tsx` with large faded "404", "Lost Your Bagel?" headline, Go Home + Order Bagels buttons.
+- [x] **Cropped SVG logos** — Replaced `logo.svg` with properly cropped version (viewBox 42 95 296 165). Added `logo-white.svg` for footer. No more container/filter workarounds needed.
+- [x] **Bagel Fest landing page** — `/bagelfest` standalone mobile-first page for QR code signup at Chicago Bagel Fest (March 7, 2026). No nav/footer, centered logo, wave animation, floating bagel graphics (90px), email signup card → `/api/subscribers`, how-it-works timeline, order CTA, Instagram pill, brand closer.
+
+### Completed Previously (Feb 2025 Session 5)
 - [x] **Stripe credit card payments for bagel orders** — "Pay with Credit Card" button on confirmation page with 3% fee, Stripe Checkout flow, webhook auto-confirms + sends email, "Payment Received!" state on return
 - [x] **Shared NavBar component** — Extracted `components/NavBar.tsx` used on all customer pages (home, about, menu, order, contact, merch) with consistent sizing, active page underline
 - [x] **Homepage redesign** — Removed hero image, moved bagel carousel to top, brown bagel type names (`#7a4900`)
@@ -201,7 +232,6 @@ Photos stored in `/public/`:
 ### Low Priority / Nice to Have
 - [ ] **Promo codes / discounts** — Apply percentage or flat discounts
 - [ ] **Catering orders** — Larger quantity tiers for events
-- [ ] **Email templates** — Move HTML email templates to separate files or use React Email
 - [ ] **Dark mode admin** — Admin dashboard dark theme
 - [ ] **PWA support** — Installable app for mobile ordering
 - [ ] **Clean up legacy columns** — Remove `plain_count`/`everything_count`/`sesame_count` after confirming no old orders remain
