@@ -183,7 +183,10 @@ Stored in `/public/`:
 - [x] **Flexible quantity validation** — Customers can order any quantity 1-6, pricing uses greedy bundle algorithm
 - [x] **Scarcity messaging** — Show "Only X bagels left!" when ≤12 remain, "Bagels Available!" when plentiful, "SOLD OUT" at 0
 
-### Completed This Session (Mar 2026 Session 8)
+### Completed This Session (Apr 2026 Session 9)
+- [x] **Custom order form** — Admin can add corporate/manual orders via "+ Custom Order" button on orders page. Form takes date, customer name, total bagels, and total revenue. API (`/api/orders/custom`) finds or creates a time slot for the date and inserts directly into orders with status `confirmed` (bypasses capacity checks). Shows up in financials automatically.
+
+### Completed Previously (Mar 2026 Session 8)
 - [x] **Product detail pages** — `/products/[id]` server component with two-column layout (large image left, info right, stacks on mobile). Fetches product via `getProductById()` from Supabase. Size picker, quantity, and "Add to Bag" in `ProductDetailActions` client component.
 - [x] **Product card → link card** — Merch grid cards now link to `/products/[id]` instead of opening modal. Extracted into `ProductCard` component.
 - [x] **Embedded Stripe checkout** — Switched merch checkout API to `ui_mode: "embedded"` with `return_url`. Cart drawer shows embedded Stripe form inline (no redirect). Uses `@stripe/react-stripe-js` `EmbeddedCheckoutProvider` + `EmbeddedCheckout`.
