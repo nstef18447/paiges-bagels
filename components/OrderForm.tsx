@@ -4,10 +4,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { AddOnCounts, AddOnType, BagelCounts, BagelType, TimeSlotWithCapacity, Pricing } from '@/types';
+import { AddOnCounts, AddOnType, BagelCounts, BagelType, BiteFlavor, BiteFlavorCounts, BitePricing, TimeSlotWithCapacity, Pricing } from '@/types';
 import NavBar from './NavBar';
 import { calculateTotal, isValidTotal, calculateBundlePrice } from '@/lib/utils';
 import BagelSelector from './BagelSelector';
+import BiteSelector from './BiteSelector';
 import AddOnSelector from './AddOnSelector';
 import TimeSlotSelector from './TimeSlotSelector';
 
@@ -81,12 +82,16 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
   const [slots, setSlots] = useState<TimeSlotWithCapacity[]>([]);
   const [bagelTypes, setBagelTypes] = useState<BagelType[]>([]);
   const [addOnTypes, setAddOnTypes] = useState<AddOnType[]>([]);
+  const [biteFlavors, setBiteFlavors] = useState<BiteFlavor[]>([]);
+  const [bitePricing, setBitePricing] = useState<BitePricing[]>([]);
   const [pricing, setPricing] = useState<Pricing[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   const [selectedSlotId, setSelectedSlotId] = useState('');
   const [bagelCounts, setBagelCounts] = useState<BagelCounts>({});
+  const [selectedBitePackSize, setSelectedBitePackSize] = useState<number | null>(null);
+  const [biteFlavorCounts, setBiteFlavorCounts] = useState<BiteFlavorCounts>({});
   const [addOnCounts, setAddOnCounts] = useState<AddOnCounts>({});
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
@@ -114,22 +119,28 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
       const slotsUrl = isHangover ? '/api/slots?hangover=true' : '/api/slots?hangover=false';
       const pricingUrl = isHangover ? '/api/pricing?type=hangover' : '/api/pricing?type=regular';
 
-      const [slotsResponse, typesResponse, pricingResponse, addOnsResponse] = await Promise.all([
+      const [slotsResponse, typesResponse, pricingResponse, addOnsResponse, biteFlavorsResponse, bitePricingResponse] = await Promise.all([
         fetch(slotsUrl),
         fetch('/api/bagel-types'),
         fetch(pricingUrl),
         fetch('/api/add-on-types'),
+        fetch('/api/bite-flavors'),
+        fetch('/api/bite-pricing'),
       ]);
 
       const slotsData = await slotsResponse.json();
       const typesData = await typesResponse.json();
       const pricingData = await pricingResponse.json();
       const addOnsData = await addOnsResponse.json();
+      const biteFlavorsData = await biteFlavorsResponse.json();
+      const bitePricingData = await bitePricingResponse.json();
 
       setSlots(slotsData);
       setBagelTypes(typesData);
       setPricing(pricingData);
       setAddOnTypes(Array.isArray(addOnsData) ? addOnsData : []);
+      setBiteFlavors(Array.isArray(biteFlavorsData) ? biteFlavorsData : []);
+      setBitePricing(Array.isArray(bitePricingData) ? bitePricingData : []);
     } catch (err) {
       console.error('Failed to fetch data:', err);
     } finally {
@@ -147,7 +158,15 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
     return sum + (addOnCounts[type.id] || 0) * type.price;
   }, 0);
 
-  const price = calculatePrice(total) + addOnSubtotal;
+  const biteSubtotal = selectedBitePackSize
+    ? bitePricing.find((p) => p.pack_size === selectedBitePackSize)?.price || 0
+    : 0;
+
+  const biteTotalSelected = Object.values(biteFlavorCounts).reduce((sum, n) => sum + n, 0);
+  const bitesStarted = selectedBitePackSize !== null || biteTotalSelected > 0;
+  const bitesValid = !bitesStarted || (selectedBitePackSize !== null && biteTotalSelected === selectedBitePackSize);
+
+  const price = calculatePrice(total) + addOnSubtotal + biteSubtotal;
 
   // Determine current step based on what's been filled
   const currentStep = !selectedSlotId ? 1 : !isValidTotal(total) ? 2 : 3;
@@ -171,7 +190,26 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
       return;
     }
 
+    if (!bitesValid) {
+      setError(`Please select exactly ${selectedBitePackSize} bites to complete your bite pack`);
+      return;
+    }
+
     setSubmitting(true);
+
+    // Build bites payload if a pack was selected
+    let bitesPayload = null;
+    if (selectedBitePackSize && bitesValid && biteTotalSelected > 0) {
+      const flavorMap: { [slug: string]: number } = {};
+      for (const flavor of biteFlavors) {
+        flavorMap[flavor.slug] = biteFlavorCounts[flavor.id] || 0;
+      }
+      bitesPayload = {
+        pack_size: selectedBitePackSize,
+        price: biteSubtotal,
+        flavors: flavorMap,
+      };
+    }
 
     try {
       const response = await fetch('/api/orders', {
@@ -184,6 +222,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
           customerPhone,
           bagelCounts,
           addOnCounts,
+          bites: bitesPayload,
         }),
       });
 
@@ -406,6 +445,30 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
             />
           </section>
 
+          {/* Paige's Bites */}
+          {biteFlavors.length > 0 && bitePricing.filter((p) => p.active).length > 0 && (
+            <section className="mt-10">
+              <h2
+                className="text-lg font-bold mb-4 pb-2"
+                style={{
+                  color: 'var(--blue)',
+                  fontFamily: 'var(--font-playfair)',
+                  borderBottom: `2px solid ${accent}`
+                }}
+              >
+                Paige&apos;s Bites
+              </h2>
+              <BiteSelector
+                biteFlavors={biteFlavors}
+                bitePricing={bitePricing}
+                selectedPackSize={selectedBitePackSize}
+                onPackSizeChange={setSelectedBitePackSize}
+                flavorCounts={biteFlavorCounts}
+                onFlavorCountsChange={setBiteFlavorCounts}
+              />
+            </section>
+          )}
+
           {/* Add-Ons */}
           {addOnTypes.length > 0 && (
             <section className="mt-10">
@@ -561,20 +624,20 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={submitting || !isValidTotal(total)}
+            disabled={submitting || !isValidTotal(total) || !bitesValid}
             className="w-full py-4 px-6 font-semibold text-[0.9rem] uppercase tracking-[0.06em] transition-all mt-8"
             style={{
-              backgroundColor: submitting || !isValidTotal(total) ? '#D1D1D1' : buttonColor,
-              color: submitting || !isValidTotal(total) ? '#8A8A8A' : '#FFFFFF',
-              cursor: submitting || !isValidTotal(total) ? 'not-allowed' : 'pointer'
+              backgroundColor: submitting || !isValidTotal(total) || !bitesValid ? '#D1D1D1' : buttonColor,
+              color: submitting || !isValidTotal(total) || !bitesValid ? '#8A8A8A' : '#FFFFFF',
+              cursor: submitting || !isValidTotal(total) || !bitesValid ? 'not-allowed' : 'pointer'
             }}
             onMouseOver={(e) => {
-              if (!submitting && isValidTotal(total)) {
+              if (!submitting && isValidTotal(total) && bitesValid) {
                 e.currentTarget.style.backgroundColor = buttonHover;
               }
             }}
             onMouseOut={(e) => {
-              if (!submitting && isValidTotal(total)) {
+              if (!submitting && isValidTotal(total) && bitesValid) {
                 e.currentTarget.style.backgroundColor = buttonColor;
               }
             }}

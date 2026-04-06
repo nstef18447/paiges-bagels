@@ -116,6 +116,34 @@ export interface Pricing {
   updated_at: string;
 }
 
+// Bites types
+export interface BiteFlavor {
+  id: string;
+  name: string;
+  slug: string;
+  image_url: string | null;
+  active: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface BitePricing {
+  id: string;
+  pack_size: number;
+  price: number;
+  active: boolean;
+}
+
+export interface BiteSelection {
+  pack_size: number;
+  price: number;
+  flavors: { [slug: string]: number };
+}
+
+export interface BiteFlavorCounts {
+  [flavorId: string]: number;
+}
+
 export interface Ingredient {
   id: string;
   name: string;

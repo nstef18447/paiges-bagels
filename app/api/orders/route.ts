@@ -5,7 +5,7 @@ import { calculateTotal, isValidTotal, calculateBundlePrice, generateVenmoNote }
 
 export async function POST(request: NextRequest) {
   try {
-    const formData: OrderFormData = await request.json();
+    const { bites, ...formData }: OrderFormData & { bites?: unknown } = await request.json();
 
     const total = calculateTotal(formData.bagelCounts);
 
@@ -72,8 +72,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Calculate bites price
+    let bitesPrice = 0;
+    if (bites && typeof bites === 'object' && 'pack_size' in (bites as Record<string, unknown>)) {
+      const b = bites as { price?: number };
+      bitesPrice = b.price || 0;
+    }
+
     // Calculate price
-    const price = calculateBundlePrice(total, pricingTiers) + addOnTotal;
+    const price = calculateBundlePrice(total, pricingTiers) + addOnTotal + bitesPrice;
 
     // Atomic order creation — locks the slot, checks capacity, and inserts in one transaction
     const { data: orderId, error: insertError } = await supabase.rpc(
@@ -103,11 +110,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update venmo_note with order ID
+    // Update venmo_note with order ID, and save bites if present
     const venmoNote = generateVenmoNote(orderId);
+    const orderUpdate: Record<string, unknown> = { venmo_note: venmoNote };
+    if (bites) {
+      orderUpdate.bites = bites;
+    }
     await supabase
       .from('orders')
-      .update({ venmo_note: venmoNote })
+      .update(orderUpdate)
       .eq('id', orderId);
 
     // Create order items for each bagel type
