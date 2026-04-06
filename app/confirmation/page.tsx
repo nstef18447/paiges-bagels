@@ -138,22 +138,24 @@ function ConfirmationContent() {
             </p>
           </div>
 
-          {/* Items */}
-          <div className="px-6 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
-            <h3
-              className="text-[0.72rem] font-semibold uppercase tracking-[0.15em] mb-2"
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              Your Bagels
-            </h3>
-            <ul className="space-y-1">
-              {bagelList.map((item, i) => (
-                <li key={i} className="text-[0.95rem] font-semibold" style={{ color: 'var(--text-dark)' }}>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Bagels */}
+          {bagelList.length > 0 && (
+            <div className="px-6 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
+              <h3
+                className="text-[0.72rem] font-semibold uppercase tracking-[0.15em] mb-2"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                Your Bagels
+              </h3>
+              <ul className="space-y-1">
+                {bagelList.map((item, i) => (
+                  <li key={i} className="text-[0.95rem] font-semibold" style={{ color: 'var(--text-dark)' }}>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Add-Ons */}
           {order.order_add_ons && order.order_add_ons.length > 0 && (
