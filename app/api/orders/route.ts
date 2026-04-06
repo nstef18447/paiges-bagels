@@ -9,10 +9,17 @@ export async function POST(request: NextRequest) {
 
     const total = calculateTotal(formData.bagelCounts);
 
-    // Validate total bagels
-    if (!isValidTotal(total)) {
+    // Validate: must have bagels or bites (or both)
+    const hasBites = bites && typeof bites === 'object' && 'pack_size' in (bites as Record<string, unknown>);
+    if (total > 0 && !isValidTotal(total)) {
       return NextResponse.json(
         { error: 'Total bagels must be between 1 and 13' },
+        { status: 400 }
+      );
+    }
+    if (total === 0 && !hasBites) {
+      return NextResponse.json(
+        { error: 'Please select some bagels or a pack of bites' },
         { status: 400 }
       );
     }

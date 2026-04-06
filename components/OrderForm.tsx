@@ -167,8 +167,15 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
 
   const price = calculatePrice(total) + addOnSubtotal + biteSubtotal;
 
+  // Order is valid if they have bagels, valid bites, or both
+  const hasBagels = total > 0 && isValidTotal(total);
+  const hasValidBites = bitesStarted && bitesValid;
+  const hasValidItems = hasBagels || hasValidBites;
+  // Bagels at invalid count (1-13 range violated) only blocks if they started adding bagels
+  const bagelsInvalid = total > 0 && !isValidTotal(total);
+
   // Determine current step based on what's been filled
-  const currentStep = !selectedSlotId ? 1 : !isValidTotal(total) ? 2 : 3;
+  const currentStep = !selectedSlotId ? 1 : !hasValidItems ? 2 : 3;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,8 +186,13 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
       return;
     }
 
-    if (!isValidTotal(total)) {
+    if (bagelsInvalid) {
       setError('Please select between 1 and 13 bagels');
+      return;
+    }
+
+    if (!hasValidItems) {
+      setError('Please select some bagels or a pack of bites');
       return;
     }
 
@@ -581,7 +593,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
           </section>
 
           {/* Order Total */}
-          {total > 0 && isValidTotal(total) && (
+          {hasValidItems && (
             <div
               className="p-5 rounded-lg mt-10"
               style={{
@@ -623,20 +635,20 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={submitting || !isValidTotal(total) || !bitesValid}
+            disabled={submitting || !hasValidItems || bagelsInvalid || !bitesValid}
             className="w-full py-4 px-6 font-semibold text-[0.9rem] uppercase tracking-[0.06em] transition-all mt-8"
             style={{
-              backgroundColor: submitting || !isValidTotal(total) || !bitesValid ? '#D1D1D1' : buttonColor,
-              color: submitting || !isValidTotal(total) || !bitesValid ? '#8A8A8A' : '#FFFFFF',
-              cursor: submitting || !isValidTotal(total) || !bitesValid ? 'not-allowed' : 'pointer'
+              backgroundColor: submitting || !hasValidItems || bagelsInvalid || !bitesValid ? '#D1D1D1' : buttonColor,
+              color: submitting || !hasValidItems || bagelsInvalid || !bitesValid ? '#8A8A8A' : '#FFFFFF',
+              cursor: submitting || !hasValidItems || bagelsInvalid || !bitesValid ? 'not-allowed' : 'pointer'
             }}
             onMouseOver={(e) => {
-              if (!submitting && isValidTotal(total) && bitesValid) {
+              if (!submitting && hasValidItems && !bagelsInvalid && bitesValid) {
                 e.currentTarget.style.backgroundColor = buttonHover;
               }
             }}
             onMouseOut={(e) => {
-              if (!submitting && isValidTotal(total) && bitesValid) {
+              if (!submitting && hasValidItems && !bagelsInvalid && bitesValid) {
                 e.currentTarget.style.backgroundColor = buttonColor;
               }
             }}
@@ -658,7 +670,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
           borderColor: 'var(--border)',
           padding: '16px 20px',
           paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
-          transform: selectedSlotId && !isValidTotal(total) ? 'translateY(0)' : 'translateY(100%)',
+          transform: selectedSlotId && !hasValidItems ? 'translateY(0)' : 'translateY(100%)',
         }}
       >
         <button
