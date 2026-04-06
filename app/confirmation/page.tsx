@@ -157,25 +157,6 @@ function ConfirmationContent() {
             </div>
           )}
 
-          {/* Add-Ons */}
-          {order.order_add_ons && order.order_add_ons.length > 0 && (
-            <div className="px-6 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
-              <h3
-                className="text-[0.72rem] font-semibold uppercase tracking-[0.15em] mb-2"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                Add-Ons <span className="normal-case italic tracking-normal font-normal">(on the side)</span>
-              </h3>
-              <ul className="space-y-1">
-                {order.order_add_ons.map((addOn, i) => (
-                  <li key={i} className="text-[0.95rem] font-semibold" style={{ color: 'var(--text-dark)' }}>
-                    {addOn.quantity} {addOn.add_on_type.name}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
           {/* Bites */}
           {(() => {
             const bites = (order as unknown as Record<string, unknown>).bites as { pack_size: number; price: number; flavors: Record<string, number>; flavor_names?: Record<string, string> } | null;
@@ -200,6 +181,25 @@ function ConfirmationContent() {
               </div>
             );
           })()}
+
+          {/* Add-Ons */}
+          {order.order_add_ons && order.order_add_ons.length > 0 && (
+            <div className="px-6 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
+              <h3
+                className="text-[0.72rem] font-semibold uppercase tracking-[0.15em] mb-2"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                Add-Ons <span className="normal-case italic tracking-normal font-normal">(on the side)</span>
+              </h3>
+              <ul className="space-y-1">
+                {order.order_add_ons.map((addOn, i) => (
+                  <li key={i} className="text-[0.95rem] font-semibold" style={{ color: 'var(--text-dark)' }}>
+                    {addOn.quantity} {addOn.add_on_type.name}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Total */}
           <div className="px-6 py-5">
