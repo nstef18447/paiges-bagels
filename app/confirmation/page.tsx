@@ -174,6 +174,31 @@ function ConfirmationContent() {
             </div>
           )}
 
+          {/* Bites */}
+          {(() => {
+            const bites = (order as unknown as Record<string, unknown>).bites as { pack_size: number; price: number; flavors: Record<string, number> } | null;
+            if (!bites) return null;
+            const flavorEntries = Object.entries(bites.flavors).filter(([, qty]) => qty > 0);
+            if (flavorEntries.length === 0) return null;
+            return (
+              <div className="px-6 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
+                <h3
+                  className="text-[0.72rem] font-semibold uppercase tracking-[0.15em] mb-2"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  Your Bites <span className="normal-case italic tracking-normal font-normal">({bites.pack_size}-pack)</span>
+                </h3>
+                <ul className="space-y-1">
+                  {flavorEntries.map(([slug, qty]) => (
+                    <li key={slug} className="text-[0.95rem] font-semibold" style={{ color: 'var(--text-dark)' }}>
+                      {qty} {slug.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })()}
+
           {/* Total */}
           <div className="px-6 py-5">
             <div className="flex justify-between items-center">
