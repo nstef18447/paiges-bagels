@@ -12,8 +12,8 @@ interface SlotManagerProps {
 export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
   const [showForm, setShowForm] = useState(false);
   const [date, setDate] = useState('');
-  const [timeEntries, setTimeEntries] = useState<Array<{ time: string; capacity: number }>>([
-    { time: '', capacity: 12 },
+  const [timeEntries, setTimeEntries] = useState<Array<{ time: string; capacity: number; bite_capacity: number }>>([
+    { time: '', capacity: 12, bite_capacity: 0 },
   ]);
   const [cutoffDate, setCutoffDate] = useState('');
   const [cutoffTime, setCutoffTime] = useState('');
@@ -23,6 +23,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
   const [editDate, setEditDate] = useState('');
   const [editTime, setEditTime] = useState('');
   const [editCapacity, setEditCapacity] = useState(12);
+  const [editBiteCapacity, setEditBiteCapacity] = useState(0);
   const [editCutoffDate, setEditCutoffDate] = useState('');
   const [editCutoffTime, setEditCutoffTime] = useState('');
   const [editIsHangover, setEditIsHangover] = useState(false);
@@ -40,7 +41,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
   const displayedSlots = slotTab === 'active' ? activeSlots : pastSlots;
 
   const addTimeEntry = () => {
-    setTimeEntries([...timeEntries, { time: '', capacity: 12 }]);
+    setTimeEntries([...timeEntries, { time: '', capacity: 12, bite_capacity: 0 }]);
   };
 
   const removeTimeEntry = (index: number) => {
@@ -48,12 +49,12 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
     setTimeEntries(timeEntries.filter((_, i) => i !== index));
   };
 
-  const updateTimeEntry = (index: number, field: 'time' | 'capacity', value: string | number) => {
+  const updateTimeEntry = (index: number, field: 'time' | 'capacity' | 'bite_capacity', value: string | number) => {
     const updated = [...timeEntries];
     if (field === 'time') {
       updated[index].time = value as string;
     } else {
-      updated[index].capacity = value as number;
+      updated[index][field] = value as number;
     }
     setTimeEntries(updated);
   };
@@ -77,6 +78,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
               date,
               time: entry.time,
               capacity: entry.capacity,
+              bite_capacity: entry.bite_capacity,
               cutoff_time,
               is_hangover: isHangover,
             }),
@@ -90,7 +92,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
       }
 
       setDate('');
-      setTimeEntries([{ time: '', capacity: 12 }]);
+      setTimeEntries([{ time: '', capacity: 12, bite_capacity: 0 }]);
       setCutoffDate('');
       setCutoffTime('');
       setIsHangover(false);
@@ -119,6 +121,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
           date: editDate,
           time: editTime,
           capacity: editCapacity,
+          bite_capacity: editBiteCapacity,
           cutoff_time,
           is_hangover: editIsHangover,
         }),
@@ -164,6 +167,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
     setEditDate(slot.date);
     setEditTime(slot.time);
     setEditCapacity(slot.capacity);
+    setEditBiteCapacity(slot.bite_capacity || 0);
     setEditIsHangover(slot.is_hangover || false);
     if (slot.cutoff_time) {
       const cutoff = new Date(slot.cutoff_time);
@@ -235,11 +239,20 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
                       value={entry.capacity}
                       onChange={(e) => updateTimeEntry(index, 'capacity', parseInt(e.target.value))}
                       min="1"
-                      className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
-                      placeholder="Capacity"
+                      className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
+                      placeholder="Cap"
                       required
                     />
                     <span className="text-xs text-gray-500 whitespace-nowrap">bagels</span>
+                    <input
+                      type="number"
+                      value={entry.bite_capacity}
+                      onChange={(e) => updateTimeEntry(index, 'bite_capacity', parseInt(e.target.value) || 0)}
+                      min="0"
+                      className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
+                      placeholder="Cap"
+                    />
+                    <span className="text-xs text-gray-500 whitespace-nowrap">bites</span>
                     {timeEntries.length > 1 && (
                       <button
                         type="button"
@@ -359,7 +372,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
               >
                 {editingId === slot.id ? (
                   <div className="space-y-3">
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div>
                         <label className="block text-xs text-gray-600 mb-1">Date</label>
                         <input
@@ -379,12 +392,22 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-600 mb-1">Capacity</label>
+                        <label className="block text-xs text-gray-600 mb-1">Bagel Capacity</label>
                         <input
                           type="number"
                           value={editCapacity}
                           onChange={(e) => setEditCapacity(parseInt(e.target.value))}
                           min="1"
+                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Bite Capacity</label>
+                        <input
+                          type="number"
+                          value={editBiteCapacity}
+                          onChange={(e) => setEditBiteCapacity(parseInt(e.target.value) || 0)}
+                          min="0"
                           className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
                         />
                       </div>
@@ -454,10 +477,15 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
                     </div>
                     <div className="text-right">
                       <p className="font-semibold">
-                        {slot.remaining} / {slot.capacity} available
+                        {slot.remaining} / {slot.capacity} bagels
                       </p>
+                      {(slot.bite_capacity > 0) && (
+                        <p className="font-semibold text-sm" style={{ color: '#0369A1' }}>
+                          {slot.bite_remaining} / {slot.bite_capacity} bites
+                        </p>
+                      )}
                       <p className="text-sm text-gray-600">
-                        {slot.capacity - slot.remaining} sold
+                        {slot.capacity - slot.remaining} bagels sold
                       </p>
                     </div>
                     <div className="flex gap-2 ml-4">

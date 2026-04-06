@@ -45,6 +45,13 @@ function getSlotStatus(slot: TimeSlotWithCapacity, requiredCapacity: number) {
   return 'available';
 }
 
+function getBiteStatus(slot: TimeSlotWithCapacity) {
+  if (slot.bite_capacity <= 0) return 'none';
+  if (slot.bite_remaining <= 0) return 'sold-out';
+  if (slot.bite_remaining <= 12) return 'low';
+  return 'available';
+}
+
 export default function TimeSlotSelector({
   slots,
   selectedSlotId,
@@ -132,12 +139,12 @@ export default function TimeSlotSelector({
                         {formatTime(slot.time)}
                       </div>
 
-                      {/* Status */}
+                      {/* Bagel Status */}
                       <div className="text-[0.78rem] font-medium flex items-center gap-[5px]">
                         {status === 'available' && (
                           <>
                             <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--green)' }} />
-                            <span style={{ color: 'var(--green)' }}>Available</span>
+                            <span style={{ color: 'var(--green)' }}>Bagels Available</span>
                           </>
                         )}
                         {status === 'low' && (
@@ -146,16 +153,47 @@ export default function TimeSlotSelector({
                               className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                               style={{ backgroundColor: 'var(--amber)', animation: 'pulse-dot 2s ease infinite' }}
                             />
-                            <span style={{ color: 'var(--amber)' }}>Only {slot.remaining} left!</span>
+                            <span style={{ color: 'var(--amber)' }}>Only {slot.remaining} bagels left!</span>
                           </>
                         )}
                         {status === 'sold-out' && (
                           <>
                             <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--red)' }} />
-                            <span style={{ color: 'var(--red)' }}>Sold Out</span>
+                            <span style={{ color: 'var(--red)' }}>Bagels Sold Out</span>
                           </>
                         )}
                       </div>
+
+                      {/* Bite Status */}
+                      {(() => {
+                        const biteStatus = getBiteStatus(slot);
+                        if (biteStatus === 'none') return null;
+                        return (
+                          <div className="text-[0.78rem] font-medium flex items-center gap-[5px] mt-0.5">
+                            {biteStatus === 'available' && (
+                              <>
+                                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--green)' }} />
+                                <span style={{ color: 'var(--green)' }}>Bites Available</span>
+                              </>
+                            )}
+                            {biteStatus === 'low' && (
+                              <>
+                                <span
+                                  className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                  style={{ backgroundColor: 'var(--amber)', animation: 'pulse-dot 2s ease infinite' }}
+                                />
+                                <span style={{ color: 'var(--amber)' }}>Only {slot.bite_remaining} bites left!</span>
+                              </>
+                            )}
+                            {biteStatus === 'sold-out' && (
+                              <>
+                                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--red)' }} />
+                                <span style={{ color: 'var(--red)' }}>Bites Sold Out</span>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </button>
                   );
                 })}

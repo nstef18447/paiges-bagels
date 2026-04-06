@@ -3,6 +3,7 @@ export interface TimeSlot {
   date: string;
   time: string;
   capacity: number;
+  bite_capacity: number;
   cutoff_time: string | null;
   is_hangover: boolean;
   created_at: string;
@@ -10,6 +11,7 @@ export interface TimeSlot {
 
 export interface TimeSlotWithCapacity extends TimeSlot {
   remaining: number;
+  bite_remaining: number;
   total_orders: number;
   active_orders: number;
 }
