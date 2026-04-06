@@ -137,18 +137,6 @@ export async function sendConfirmationEmail(
       <tr><td>
         <table width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND.card};border:1px solid ${BRAND.border};border-radius:12px;overflow:hidden;">
           <tr><td style="padding:20px;">
-            <!-- Order ID -->
-            <table width="100%" cellpadding="0" cellspacing="0">
-              <tr>
-                <td style="font-family:Arial,sans-serif;font-size:12px;color:${BRAND.textSec};text-transform:uppercase;letter-spacing:0.05em;padding-bottom:4px;">Order</td>
-              </tr>
-              <tr>
-                <td style="font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#333;padding-bottom:16px;border-bottom:1px solid ${BRAND.border};">
-                  #${order.id.slice(0, 8).toUpperCase()}
-                </td>
-              </tr>
-            </table>
-
             <!-- Pickup -->
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
