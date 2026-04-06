@@ -158,13 +158,12 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
     return sum + (addOnCounts[type.id] || 0) * type.price;
   }, 0);
 
-  const biteSubtotal = selectedBitePackSize
-    ? bitePricing.find((p) => p.pack_size === selectedBitePackSize)?.price || 0
-    : 0;
-
   const biteTotalSelected = Object.values(biteFlavorCounts).reduce((sum, n) => sum + n, 0);
-  const bitesStarted = selectedBitePackSize !== null || biteTotalSelected > 0;
-  const bitesValid = !bitesStarted || (selectedBitePackSize !== null && biteTotalSelected === selectedBitePackSize);
+  const activePackSizes = bitePricing.filter((p) => p.active).map((p) => p.pack_size);
+  const biteMatchedPack = bitePricing.find((p) => p.active && p.pack_size === biteTotalSelected);
+  const biteSubtotal = biteMatchedPack?.price || 0;
+  const bitesStarted = biteTotalSelected > 0;
+  const bitesValid = !bitesStarted || activePackSizes.includes(biteTotalSelected);
 
   const price = calculatePrice(total) + addOnSubtotal + biteSubtotal;
 
@@ -197,16 +196,16 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
 
     setSubmitting(true);
 
-    // Build bites payload if a pack was selected
+    // Build bites payload if bites were selected
     let bitesPayload = null;
-    if (selectedBitePackSize && bitesValid && biteTotalSelected > 0) {
+    if (bitesValid && biteTotalSelected > 0 && biteMatchedPack) {
       const flavorMap: { [slug: string]: number } = {};
       for (const flavor of biteFlavors) {
         flavorMap[flavor.slug] = biteFlavorCounts[flavor.id] || 0;
       }
       bitesPayload = {
-        pack_size: selectedBitePackSize,
-        price: biteSubtotal,
+        pack_size: biteMatchedPack.pack_size,
+        price: biteMatchedPack.price,
         flavors: flavorMap,
       };
     }
