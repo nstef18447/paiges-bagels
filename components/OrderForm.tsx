@@ -383,64 +383,8 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
             />
           </section>
 
-          {/* Pricing Section */}
-          {pricing.length > 0 && (
-            <section
-              ref={bagelsRef}
-              className="rounded-lg p-6 mt-10"
-              style={{
-                backgroundColor: isHangover ? '#FFF7ED' : 'var(--blue-light)',
-                border: isHangover ? '1px solid #FED7AA' : '1px solid var(--border)'
-              }}
-            >
-              <h2
-                className="text-2xl mb-4 text-center"
-                style={{ color: 'var(--text-dark)', fontFamily: 'var(--font-playfair)' }}
-              >
-                {isHangover ? 'Hangover Pricing' : 'Our Pricing'}
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {pricing.map((item) => (
-                  <div
-                    key={item.id}
-                    className="text-center p-3 rounded-lg"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.7)' }}
-                  >
-                    <div
-                      className="font-semibold text-sm mb-1"
-                      style={{ color: 'var(--text-medium)' }}
-                    >
-                      {(() => {
-                        const label = item.label || `${item.bagel_quantity} ${item.bagel_quantity === 1 ? 'Bagel' : 'Bagels'}`;
-                        const match = label.match(/^(.+?)\s*(\(.+\))$/);
-                        if (match) {
-                          return <>{match[1]}<br /><span className="text-xs font-normal">{match[2]}</span></>;
-                        }
-                        return label;
-                      })()}
-                    </div>
-                    <div
-                      className="text-2xl font-bold"
-                      style={{ color: accent }}
-                    >
-                      ${item.price.toFixed(2)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {isHangover && (
-                <p
-                  className="text-xs text-center mt-3"
-                  style={{ color: '#92400E' }}
-                >
-                  Convenience pricing — order ahead and save!
-                </p>
-              )}
-            </section>
-          )}
-
           {/* Step 2: Bagel Selection */}
-          <section className="mt-10">
+          <section ref={bagelsRef} className="mt-10">
             <h2
               className="text-lg font-bold mb-4 pb-2"
               style={{
@@ -449,8 +393,42 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
                 borderBottom: `2px solid ${accent}`
               }}
             >
-              Choose Your Bagels
+              {isHangover ? 'Hangover Bagels' : "Paige\u2019s Bagels"}
             </h2>
+
+            {/* Pricing cards */}
+            {pricing.length > 0 && (
+              <div className={`grid gap-3 mb-4 ${pricing.length <= 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'}`}>
+                {pricing.map((item) => {
+                  const label = item.label || `${item.bagel_quantity} ${item.bagel_quantity === 1 ? 'Bagel' : 'Bagels'}`;
+                  const mainLabel = label.replace(/\s*\(.+\)$/, '');
+                  return (
+                    <div
+                      key={item.id}
+                      className="p-3 rounded-lg text-center"
+                      style={{
+                        backgroundColor: '#FFFFFF',
+                        border: '2px solid #E5E0DB',
+                      }}
+                    >
+                      <div
+                        className="text-lg font-bold"
+                        style={{ color: '#1A1A1A' }}
+                      >
+                        {mainLabel}
+                      </div>
+                      <div
+                        className="text-base font-semibold"
+                        style={{ color: '#6B6B6B' }}
+                      >
+                        ${item.price.toFixed(2)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             <BagelSelector
               bagelTypes={bagelTypes}
               counts={bagelCounts}
