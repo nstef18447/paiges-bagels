@@ -104,12 +104,12 @@ export default function BiteSelector({
               }}
             >
               {/* Flavor image */}
-              <div className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0 flex items-center justify-center">
+              <div className="w-20 h-20 md:w-24 md:h-24 flex-shrink-0 flex items-center justify-center">
                 {flavor.image_url ? (
                   <img
                     src={flavor.image_url}
                     alt={flavor.name}
-                    className="w-full h-full object-contain rounded-full"
+                    className="w-full h-full object-contain"
                     style={{ filter: 'drop-shadow(0 3px 8px rgba(0,0,0,0.12))' }}
                   />
                 ) : (
