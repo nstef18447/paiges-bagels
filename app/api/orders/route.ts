@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase, getServiceSupabase } from '@/lib/supabase';
 import { OrderFormData } from '@/types';
 import { calculateTotal, isValidTotal, calculateBundlePrice, generateVenmoNote } from '@/lib/utils';
 
@@ -116,7 +116,8 @@ export async function POST(request: NextRequest) {
     if (bites) {
       orderUpdate.bites = bites;
     }
-    await supabase
+    const serviceSupabase = getServiceSupabase();
+    await serviceSupabase
       .from('orders')
       .update(orderUpdate)
       .eq('id', orderId);
