@@ -15,12 +15,18 @@ interface AddOnCount {
   quantity: number;
 }
 
+interface BiteCount {
+  name: string;
+  quantity: number;
+}
+
 interface PrepOrder {
   customer_name: string;
   total_price: number;
   status: string;
   bagels: BagelCount[];
   add_ons: AddOnCount[];
+  bites: BiteCount[];
   total_bagels: number;
 }
 
@@ -30,7 +36,9 @@ interface SlotPrep {
   is_hangover: boolean;
   bagels: BagelCount[];
   add_ons: AddOnCount[];
+  bites: BiteCount[];
   total_bagels: number;
+  total_bites: number;
   orders: PrepOrder[];
 }
 
@@ -178,6 +186,26 @@ export default function AdminPrepPage() {
                       </div>
                     )}
 
+                    {slot.bites && slot.bites.length > 0 && (
+                      <div className="mt-3">
+                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                          Bites ({slot.total_bites} total)
+                        </span>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mt-1">
+                          {slot.bites.map((bite) => (
+                            <div
+                              key={bite.name}
+                              className="flex items-center justify-between rounded-lg px-3 py-2"
+                              style={{ backgroundColor: '#E0F2FE' }}
+                            >
+                              <span className="text-sm">{bite.name}</span>
+                              <span className="text-sm font-bold ml-2">{bite.quantity}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {slot.orders && slot.orders.length > 0 && (() => {
                       const confirmedCount = slot.orders.filter((o) => o.status === 'confirmed').length;
                       return (
@@ -233,6 +261,12 @@ export default function AdminPrepPage() {
                                       {order.add_ons.map((a) => `${a.quantity} ${a.name}`).join(', ')}
                                     </span>
                                   )}
+                                  {order.bites && order.bites.length > 0 && (
+                                    <span style={{ color: '#0369A1' }}>
+                                      {' + Bites: '}
+                                      {order.bites.map((b) => `${b.quantity} ${b.name}`).join(', ')}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             ))}
@@ -275,6 +309,26 @@ export default function AdminPrepPage() {
                         .sort(([a], [b]) => a.localeCompare(b))
                         .map(([name, quantity]) => (
                           <div key={name} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ backgroundColor: '#FEF3C7' }}>
+                            <span className="text-sm font-medium">{name}</span>
+                            <span className="text-sm font-bold ml-2">{quantity}</span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+                {day.slots.some((s) => s.bites && s.bites.length > 0) && (
+                  <div className="mt-2">
+                    <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#0369A1' }}>Bites</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mt-1">
+                      {Object.entries(
+                        day.slots.reduce<Record<string, number>>((acc, slot) => {
+                          (slot.bites || []).forEach((b) => { acc[b.name] = (acc[b.name] || 0) + b.quantity; });
+                          return acc;
+                        }, {})
+                      )
+                        .sort(([a], [b]) => a.localeCompare(b))
+                        .map(([name, quantity]) => (
+                          <div key={name} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ backgroundColor: '#E0F2FE' }}>
                             <span className="text-sm font-medium">{name}</span>
                             <span className="text-sm font-bold ml-2">{quantity}</span>
                           </div>
