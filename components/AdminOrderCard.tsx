@@ -70,7 +70,7 @@ export default function AdminOrderCard({ order, onConfirm, onMarkReady, onDelete
       )}
 
       {(() => {
-        const bites = (order as unknown as Record<string, unknown>).bites as { pack_size: number; price: number; flavors: Record<string, number> } | null;
+        const bites = (order as unknown as Record<string, unknown>).bites as { pack_size: number; price: number; flavors: Record<string, number>; flavor_names?: Record<string, string> } | null;
         if (!bites) return null;
         const flavorEntries = Object.entries(bites.flavors).filter(([, qty]) => qty > 0);
         if (flavorEntries.length === 0) return null;
@@ -79,7 +79,7 @@ export default function AdminOrderCard({ order, onConfirm, onMarkReady, onDelete
             <p className="text-sm font-medium text-gray-700 mb-1">Bites ({bites.pack_size}-pack):</p>
             <ul className="text-sm text-gray-600">
               {flavorEntries.map(([slug, qty]) => (
-                <li key={slug}>{qty} {slug.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}</li>
+                <li key={slug}>{qty} {bites.flavor_names?.[slug] || slug.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}</li>
               ))}
             </ul>
           </div>

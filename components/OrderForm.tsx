@@ -212,13 +212,16 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
     let bitesPayload = null;
     if (bitesValid && biteTotalSelected > 0 && biteMatchedPack) {
       const flavorMap: { [slug: string]: number } = {};
+      const flavorNames: { [slug: string]: string } = {};
       for (const flavor of biteFlavors) {
         flavorMap[flavor.slug] = biteFlavorCounts[flavor.id] || 0;
+        flavorNames[flavor.slug] = flavor.name;
       }
       bitesPayload = {
         pack_size: biteMatchedPack.pack_size,
         price: biteMatchedPack.price,
         flavors: flavorMap,
+        flavor_names: flavorNames,
       };
     }
 
