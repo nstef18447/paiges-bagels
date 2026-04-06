@@ -115,7 +115,7 @@ export default function BiteSelector({
                     className="w-full h-full object-cover"
                     style={{
                       mixBlendMode: 'multiply',
-                      objectPosition: '15% 10%',
+                      objectPosition: 'center 20%',
                     }}
                   />
                 ) : (
