@@ -380,6 +380,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
               selectedSlotId={selectedSlotId}
               onChange={setSelectedSlotId}
               requiredCapacity={total}
+              requiredBites={bitesValid ? biteTotalSelected : 0}
             />
           </section>
 

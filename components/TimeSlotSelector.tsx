@@ -8,6 +8,7 @@ interface TimeSlotSelectorProps {
   selectedSlotId: string;
   onChange: (slotId: string) => void;
   requiredCapacity: number;
+  requiredBites?: number;
 }
 
 function isPastCutoff(cutoffTime: string | null): boolean {
@@ -45,9 +46,10 @@ function getSlotStatus(slot: TimeSlotWithCapacity, requiredCapacity: number) {
   return 'available';
 }
 
-function getBiteStatus(slot: TimeSlotWithCapacity) {
+function getBiteStatus(slot: TimeSlotWithCapacity, requiredBites: number) {
   if (slot.bite_capacity <= 0) return 'none';
   if (slot.bite_remaining <= 0) return 'sold-out';
+  if (requiredBites > 0 && slot.bite_remaining < requiredBites) return 'sold-out';
   if (slot.bite_remaining <= 12) return 'low';
   return 'available';
 }
@@ -57,6 +59,7 @@ export default function TimeSlotSelector({
   selectedSlotId,
   onChange,
   requiredCapacity,
+  requiredBites = 0,
 }: TimeSlotSelectorProps) {
   const slotsByDate = slots.reduce((acc, slot) => {
     if (!acc[slot.date]) acc[slot.date] = [];
@@ -102,8 +105,10 @@ export default function TimeSlotSelector({
                 .filter(slot => !isPastCutoff(slot.cutoff_time))
                 .map((slot) => {
                   const status = getSlotStatus(slot, requiredCapacity);
+                  const biteStatus = getBiteStatus(slot, requiredBites);
+                  const biteBlocked = requiredBites > 0 && biteStatus === 'sold-out';
                   const isSelected = slot.id === selectedSlotId;
-                  const isDisabled = status === 'sold-out';
+                  const isDisabled = status === 'sold-out' || biteBlocked;
 
                   return (
                     <button
@@ -166,7 +171,6 @@ export default function TimeSlotSelector({
 
                       {/* Bite Status */}
                       {(() => {
-                        const biteStatus = getBiteStatus(slot);
                         if (biteStatus === 'none') return null;
                         return (
                           <div className="text-[0.78rem] font-medium flex items-center gap-[5px] mt-0.5">

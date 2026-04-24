@@ -79,11 +79,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Calculate bites price
+    // Calculate bites price and extract pack size for capacity check
     let bitesPrice = 0;
+    let bitePackSize = 0;
     if (bites && typeof bites === 'object' && 'pack_size' in (bites as Record<string, unknown>)) {
-      const b = bites as { price?: number };
+      const b = bites as { price?: number; pack_size?: number };
       bitesPrice = b.price || 0;
+      bitePackSize = b.pack_size || 0;
     }
 
     // Calculate price
@@ -99,11 +101,18 @@ export async function POST(request: NextRequest) {
         p_customer_phone: formData.customerPhone,
         p_total_bagels: total,
         p_total_price: price,
+        p_bite_pack_size: bitePackSize,
       }
     );
 
     if (insertError) {
       // The RPC raises an exception if capacity is exceeded
+      if (insertError.message?.includes('Not enough bite capacity')) {
+        return NextResponse.json(
+          { error: 'Not enough bite capacity remaining for this time slot' },
+          { status: 400 }
+        );
+      }
       if (insertError.message?.includes('Not enough capacity')) {
         return NextResponse.json(
           { error: 'Not enough capacity remaining for this time slot' },
