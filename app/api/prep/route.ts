@@ -7,6 +7,15 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
 
+    // Build slug → name map for bite flavors
+    const { data: biteFlavorsData } = await supabase
+      .from('bite_flavors')
+      .select('slug, name');
+    const biteFlavorMap: Record<string, string> = {};
+    for (const f of biteFlavorsData || []) {
+      biteFlavorMap[f.slug] = f.name;
+    }
+
     // Fetch all non-fake orders with their time slots and order items
     const { data: orders, error: ordersError } = await supabase
       .from('orders')
@@ -101,7 +110,7 @@ export async function GET(request: NextRequest) {
       if (orderBites && orderBites.flavors) {
         for (const [flavorSlug, qty] of Object.entries(orderBites.flavors)) {
           if (qty > 0) {
-            const displayName = flavorSlug.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+            const displayName = biteFlavorMap[flavorSlug] || flavorSlug.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
             slot.bites[displayName] = (slot.bites[displayName] || 0) + qty;
             slot.total_bites += qty;
           }
