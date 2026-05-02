@@ -13,6 +13,9 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'pending' | 'confirmed' | 'completed' | 'history'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showCustomForm, setShowCustomForm] = useState(false);
+  const [customOrder, setCustomOrder] = useState({ date: '', totalBagels: '', totalPrice: '', customerName: '' });
+  const [customSubmitting, setCustomSubmitting] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -116,6 +119,35 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const handleCustomOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCustomSubmitting(true);
+    try {
+      const response = await fetch('/api/orders/custom', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: customOrder.date,
+          totalBagels: parseInt(customOrder.totalBagels),
+          totalPrice: parseFloat(customOrder.totalPrice),
+          customerName: customOrder.customerName || undefined,
+        }),
+      });
+
+      if (response.ok) {
+        setCustomOrder({ date: '', totalBagels: '', totalPrice: '', customerName: '' });
+        setShowCustomForm(false);
+        fetchOrders();
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Failed to create custom order');
+      }
+    } catch {
+      alert('An error occurred');
+    }
+    setCustomSubmitting(false);
+  };
+
   const filteredOrders = orders.filter((order) =>
     activeTab === 'completed' ? order.status === 'ready' : order.status === activeTab
   );
@@ -147,6 +179,74 @@ export default function AdminOrdersPage() {
           <Link href="/admin/prep" className="hover:underline" style={{ color: '#004AAD' }}>Prep</Link>
           <Link href="/admin/merch" className="hover:underline" style={{ color: '#004AAD' }}>Merch</Link>
         </nav>
+      </div>
+
+      <div className="mb-6">
+        <button
+          onClick={() => setShowCustomForm(!showCustomForm)}
+          className="px-4 py-2 text-sm font-semibold rounded-lg text-white"
+          style={{ backgroundColor: '#004AAD' }}
+        >
+          {showCustomForm ? 'Cancel' : '+ Custom Order'}
+        </button>
+
+        {showCustomForm && (
+          <form onSubmit={handleCustomOrder} className="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-200 max-w-lg">
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                <input
+                  type="date"
+                  required
+                  value={customOrder.date}
+                  onChange={(e) => setCustomOrder({ ...customOrder, date: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004AAD]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
+                <input
+                  type="text"
+                  placeholder="Corporate Order"
+                  value={customOrder.customerName}
+                  onChange={(e) => setCustomOrder({ ...customOrder, customerName: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004AAD]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Total Bagels</label>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  value={customOrder.totalBagels}
+                  onChange={(e) => setCustomOrder({ ...customOrder, totalBagels: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004AAD]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Total Revenue ($)</label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  step="0.01"
+                  value={customOrder.totalPrice}
+                  onChange={(e) => setCustomOrder({ ...customOrder, totalPrice: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004AAD]"
+                />
+              </div>
+            </div>
+            <button
+              type="submit"
+              disabled={customSubmitting}
+              className="px-4 py-2 text-sm font-semibold rounded-lg text-white disabled:opacity-50"
+              style={{ backgroundColor: '#004AAD' }}
+            >
+              {customSubmitting ? 'Creating...' : 'Add Order'}
+            </button>
+          </form>
+        )}
       </div>
 
       <div className="mb-6 flex gap-2 border-b border-gray-200">

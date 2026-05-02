@@ -29,7 +29,7 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 | `/about` | Paige's story, sourdough benefits, bagel photo |
 | `/menu` | Menu page with inside bagel hero (ingredients + macros) and infinite-scroll carousel of each bagel type with photos |
 | `/order` | Full order form: time slot → bagels → add-ons → info → submit |
-| `/hangover` | Standalone hangover page: blue hero with countdown timer, "How It Works" steps, time slot selector, inline bagel selection with images, order summary, sticky checkout bar. Does NOT use OrderForm. |
+| `/hangover` | Standalone hangover page: blue hero with countdown timer, "How It Works" steps, time slot selector, inline bagel selection with images, order summary, sticky checkout bar. Does NOT use OrderForm. No bites (bagels only). |
 | `/contact` | Instagram link + DM prompt |
 | `/confirmation` | Order summary with Venmo pay button + "Pay with Credit Card" option (3% fee), paid state on return from Stripe |
 | `/merch` | Merch store: page header + category tabs, product grid (2/3 cols) of `ProductCard` links, persistent cart bar. All data from Supabase. |
@@ -46,8 +46,10 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 | `OrderForm.tsx` | Main customer order flow for regular orders. Hangover page no longer uses this — it has its own standalone page. |
 | `HangoverBanner.tsx` | Cross-promo banner on regular order page linking to /hangover when hangover slots are available |
 | `BagelSelector.tsx` | +/- counters per bagel type with transparent PNG images (64px/80px), active-row blue highlighting, max 13 total |
+| `BiteSelector.tsx` | Bite pack picker: pricing cards per pack size + flavor rows with 72px rounded-square images, auto-matches total to nearest pack size, blocks at max pack |
+| `BiteFlavorManager.tsx` | Admin CRUD for bite flavors (name, slug, image_url, active, sort_order) |
 | `AddOnSelector.tsx` | +/- counters per add-on type with active-row blue highlighting |
-| `TimeSlotSelector.tsx` | Date/time slot picker with scarcity messaging: "Bagels Available!" (13+), "Only X bagels left!" (1-12), "SOLD OUT" (0) |
+| `TimeSlotSelector.tsx` | Date/time slot picker with scarcity messaging for bagels and bites: "Available!" (13+), "Only X left!" (1-12), "SOLD OUT" (0). Disables slots whose bite_remaining can't fit the selected pack (requiredBites prop). |
 | `AdminOrderCard.tsx` | Order card with confirm/ready/delete actions. Ready state shows green "Completed" badge. "Mark as Fake" toggle for artificial scarcity ($0 revenue, excluded from financials). |
 | `BagelTypeManager.tsx` | Admin CRUD for bagel types with image filename, ingredients text, and macro inputs (calories, protein, carbs, fat) |
 | `AddOnTypeManager.tsx` | Admin CRUD for add-on types |
@@ -64,6 +66,8 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 | `/admin/orders` | View/manage orders by status (pending → confirmed → completed). "Completed" is UI label; DB status remains `ready`. Email still sends on mark-complete. |
 | `/admin/slots` | Create and manage pickup time slots. Active/Past tabs (past = date passed or all orders done). Multi-slot creation: multiple pickup times per date in one form. |
 | `/admin/bagel-types` | Add/edit/deactivate bagel types with image filename, ingredients text, and macros (calories, protein, carbs, fat) |
+| `/admin/bite-flavors` | Add/edit/deactivate bite flavors with image and sort order |
+| `/admin/bite-pricing` | Manage bite pack sizes and prices (default seeds: 3/$6, 6/$11, 12/$20) |
 | `/admin/add-ons` | Manage add-on items (e.g., schmear) with pricing |
 | `/admin/pricing` | Set pricing tiers with custom labels (e.g. 1/$4, 3/$10, 6/$18) — any quantity 1-6 uses greedy bundle pricing |
 | `/admin/costs` | Three-section cost tracking: Bagel Ingredients (per bagel), Add-On Costs (per unit sold, linked to add-on type), Fixed Costs (amortized over all bagels sold) |
@@ -84,6 +88,9 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 | `/api/slots/[id]` | PATCH, DELETE | Update/delete time slot |
 | `/api/bagel-types` | GET, POST | List/create bagel types (includes image_url, description, macro fields) |
 | `/api/bagel-types/[id]` | PATCH, DELETE | Update/delete bagel type |
+| `/api/bite-flavors` | GET, POST | List/create bite flavors |
+| `/api/bite-flavors/[id]` | PATCH, DELETE | Update/delete bite flavor |
+| `/api/bite-pricing` | GET, PATCH | List bite pack sizes + prices; batch-update prices/active |
 | `/api/add-on-types` | GET, POST | List/create add-on types |
 | `/api/add-on-types/[id]` | PATCH, DELETE | Update/delete add-on type |
 | `/api/pricing` | GET, PATCH | Get/update pricing tiers. Supports `?type=regular\|hangover` filter. |
@@ -108,10 +115,12 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 ### Database Tables
 | Table | Purpose |
 |-------|---------|
-| `time_slots` | Pickup dates/times with capacity limits, optional cutoff time, and `is_hangover` flag |
-| `orders` | Customer orders with status tracking (pending/confirmed/ready), `is_fake` flag, and `stripe_session_id` for CC payments |
+| `time_slots` | Pickup dates/times with bagel `capacity`, `bite_capacity` (max bites per slot), optional cutoff time, and `is_hangover` flag |
+| `orders` | Customer orders with status tracking (pending/confirmed/ready), `is_fake` flag, `stripe_session_id` for CC payments, and `bites` JSONB column (`{ pack_size, price, flavors, flavor_names }`, nullable) |
 | `bagel_types` | Dynamic bagel flavors (active/inactive, display order, image_url, description, calories, protein_g, carbs_g, fat_g) |
 | `order_items` | Junction: order → bagel types with quantities |
+| `bite_flavors` | Bite flavors (name, slug, image_url, active, sort_order) |
+| `bite_pricing` | Bite pack pricing (pack_size unique, price, active) |
 | `add_on_types` | Add-on items with pricing (e.g., schmear) |
 | `order_add_ons` | Junction: order → add-ons with quantities |
 | `pricing` | Pricing tiers (quantity → price, with display labels and `pricing_type`: regular/hangover) |
@@ -134,6 +143,9 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 11. `migration-menu.sql` — image_url, description, calories, protein_g, carbs_g, fat_g columns on bagel_types
 12. `migration-merch.sql` — merch_items, merch_settings, merch_orders tables with RLS + seed data
 13. `ALTER TABLE orders ADD COLUMN stripe_session_id text` + index on stripe_session_id (run manually in Supabase)
+14. `bites-schema.sql` — bite_flavors + bite_pricing tables with RLS, seed pack pricing, `bites` JSONB column on orders
+15. `ALTER TABLE time_slots ADD COLUMN bite_capacity INTEGER DEFAULT 0` (run manually in Supabase)
+16. `migration-bite-capacity.sql` — extends `create_order_atomic` with `p_bite_pack_size` so bite capacity is enforced under the same slot lock as bagels
 
 ### Photos & Assets
 Stored in `/public/`:
@@ -151,6 +163,7 @@ Stored in `/public/`:
 ## Bugs Fixed
 - **Hangover pricing leak (Feb 2025)** — `/api/orders` POST was fetching ALL pricing tiers (both regular and hangover) without filtering by `pricing_type`. The greedy bundle algorithm could pick the higher hangover tier for regular orders, causing 3 bagels to show a higher price on the confirmation page than what the customer saw on the order form. Fix: API now looks up the time slot's `is_hangover` flag and filters pricing tiers by `pricing_type` accordingly (`app/api/orders/route.ts`).
 - **Order creation "Time slot not found" (Feb 2025)** — `create_order_atomic` RPC lacked `SECURITY DEFINER`, so the anon role couldn't execute `SELECT ... FOR UPDATE` on `time_slots` due to RLS. Fix: recreated function with `SECURITY DEFINER` in Supabase SQL editor. Local migration file should be updated if migrations are re-run.
+- **Bite capacity oversold / negative bites (Apr 2026)** — `create_order_atomic` only checked bagel capacity, and `TimeSlotSelector` only disabled slots when bagels were sold out. A customer placed an 18-pack on a 15-bite slot, producing `-3 / 15 bites` in admin. Fix: added `p_bite_pack_size` param to the RPC that sums active bite pack sizes under the same slot lock and raises "Not enough bite capacity remaining for this time slot" on overflow. Client-side, `TimeSlotSelector` now takes `requiredBites` and disables slots whose `bite_remaining < requested pack`. Migration: `database/migration-bite-capacity.sql`, applied manually in Supabase. The existing oversold order was left untouched.
 
 ## Known Tech Debt
 - Legacy columns on `orders` table (`plain_count`, `everything_count`, `sesame_count`) — kept for backward compat with old orders, new orders use `order_items`
@@ -183,7 +196,20 @@ Stored in `/public/`:
 - [x] **Flexible quantity validation** — Customers can order any quantity 1-6, pricing uses greedy bundle algorithm
 - [x] **Scarcity messaging** — Show "Only X bagels left!" when ≤12 remain, "Bagels Available!" when plentiful, "SOLD OUT" at 0
 
-### Completed This Session (Mar 2026 Session 8)
+### Completed This Session (Apr 2026 Session 10)
+- [x] **Bite capacity enforcement** — `create_order_atomic` now takes `p_bite_pack_size` and raises if the pack exceeds the slot's `bite_capacity` under the same row lock as the bagel check. API maps the exception to a 400 with a bite-specific message. `TimeSlotSelector` accepts `requiredBites` and disables slots that can't fit the current pack. Migration file: `database/migration-bite-capacity.sql`. See Bugs Fixed for the root cause.
+
+### Completed Previously (Apr 2026 Session 9.5 — Paige's Bites)
+- [x] **Bites feature** — New product line alongside bagels. Schema: `bite_flavors` (name/slug/image/active/sort), `bite_pricing` (pack_size/price/active, seeded 3/$6, 6/$11, 12/$20), and `bites` JSONB on orders storing `{ pack_size, price, flavors, flavor_names }`.
+- [x] **Bite admin** — `/admin/bite-flavors` CRUD with image upload, `/admin/bite-pricing` for pack sizes and prices. `BiteFlavorManager` component.
+- [x] **Bite order UX** — `BiteSelector` on order form shows pricing cards + flavor rows with 72px rounded-square images; auto-matches total count to valid pack size; blocks at max pack. Bites-only orders allowed (no bagels required).
+- [x] **Bite capacity on slots** — Added `bite_capacity` column on `time_slots`; admin `SlotManager` has a bite capacity input; `/api/slots` returns `bite_remaining` per slot; `TimeSlotSelector` shows "Bites Available / Only X left / Sold Out" per slot.
+- [x] **Bites in downstream views** — Admin order cards and `/admin/prep` show bite packs + flavor breakdown. Confirmation page and confirmation email include a "Your Bites" section with real flavor names (not slugs). Confirmation layout order: Bagels → Bites → Add-Ons → Total, with the Bagels section hidden when the order has no bagels.
+
+### Completed Previously (Apr 2026 Session 9)
+- [x] **Custom order form** — Admin can add corporate/manual orders via "+ Custom Order" button on orders page. Form takes date, customer name, total bagels, and total revenue. API (`/api/orders/custom`) finds or creates a time slot for the date and inserts directly into orders with status `confirmed` (bypasses capacity checks). Shows up in financials automatically.
+
+### Completed Previously (Mar 2026 Session 8)
 - [x] **Product detail pages** — `/products/[id]` server component with two-column layout (large image left, info right, stacks on mobile). Fetches product via `getProductById()` from Supabase. Size picker, quantity, and "Add to Bag" in `ProductDetailActions` client component.
 - [x] **Product card → link card** — Merch grid cards now link to `/products/[id]` instead of opening modal. Extracted into `ProductCard` component.
 - [x] **Embedded Stripe checkout** — Switched merch checkout API to `ui_mode: "embedded"` with `return_url`. Cart drawer shows embedded Stripe form inline (no redirect). Uses `@stripe/react-stripe-js` `EmbeddedCheckoutProvider` + `EmbeddedCheckout`.

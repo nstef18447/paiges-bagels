@@ -3,6 +3,7 @@ export interface TimeSlot {
   date: string;
   time: string;
   capacity: number;
+  bite_capacity: number;
   cutoff_time: string | null;
   is_hangover: boolean;
   created_at: string;
@@ -10,6 +11,7 @@ export interface TimeSlot {
 
 export interface TimeSlotWithCapacity extends TimeSlot {
   remaining: number;
+  bite_remaining: number;
   total_orders: number;
   active_orders: number;
 }
@@ -114,6 +116,34 @@ export interface Pricing {
   label?: string;
   pricing_type?: string;
   updated_at: string;
+}
+
+// Bites types
+export interface BiteFlavor {
+  id: string;
+  name: string;
+  slug: string;
+  image_url: string | null;
+  active: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface BitePricing {
+  id: string;
+  pack_size: number;
+  price: number;
+  active: boolean;
+}
+
+export interface BiteSelection {
+  pack_size: number;
+  price: number;
+  flavors: { [slug: string]: number };
+}
+
+export interface BiteFlavorCounts {
+  [flavorId: string]: number;
 }
 
 export interface Ingredient {

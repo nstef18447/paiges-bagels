@@ -16,6 +16,7 @@ export async function PATCH(
     if (body.capacity !== undefined) updateData.capacity = body.capacity;
     if (body.cutoff_time !== undefined) updateData.cutoff_time = body.cutoff_time;
     if (body.is_hangover !== undefined) updateData.is_hangover = body.is_hangover;
+    if (body.bite_capacity !== undefined) updateData.bite_capacity = body.bite_capacity;
 
     const { data: slot, error } = await supabase
       .from('time_slots')

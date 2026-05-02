@@ -138,22 +138,49 @@ function ConfirmationContent() {
             </p>
           </div>
 
-          {/* Items */}
-          <div className="px-6 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
-            <h3
-              className="text-[0.72rem] font-semibold uppercase tracking-[0.15em] mb-2"
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              Your Bagels
-            </h3>
-            <ul className="space-y-1">
-              {bagelList.map((item, i) => (
-                <li key={i} className="text-[0.95rem] font-semibold" style={{ color: 'var(--text-dark)' }}>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Bagels */}
+          {bagelList.length > 0 && (
+            <div className="px-6 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
+              <h3
+                className="text-[0.72rem] font-semibold uppercase tracking-[0.15em] mb-2"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                Your Bagels
+              </h3>
+              <ul className="space-y-1">
+                {bagelList.map((item, i) => (
+                  <li key={i} className="text-[0.95rem] font-semibold" style={{ color: 'var(--text-dark)' }}>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Bites */}
+          {(() => {
+            const bites = (order as unknown as Record<string, unknown>).bites as { pack_size: number; price: number; flavors: Record<string, number>; flavor_names?: Record<string, string> } | null;
+            if (!bites) return null;
+            const flavorEntries = Object.entries(bites.flavors).filter(([, qty]) => qty > 0);
+            if (flavorEntries.length === 0) return null;
+            return (
+              <div className="px-6 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
+                <h3
+                  className="text-[0.72rem] font-semibold uppercase tracking-[0.15em] mb-2"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  Your Bites <span className="normal-case italic tracking-normal font-normal">({bites.pack_size}-pack)</span>
+                </h3>
+                <ul className="space-y-1">
+                  {flavorEntries.map(([slug, qty]) => (
+                    <li key={slug} className="text-[0.95rem] font-semibold" style={{ color: 'var(--text-dark)' }}>
+                      {qty} {bites.flavor_names?.[slug] || slug.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })()}
 
           {/* Add-Ons */}
           {order.order_add_ons && order.order_add_ons.length > 0 && (

@@ -42,20 +42,29 @@ export async function GET(request: NextRequest) {
       })
     );
 
-    // Get order counts per slot
+    // Get order counts and bite totals per slot
     const { data: orderData } = await supabase
       .from('orders')
-      .select('time_slot_id, status');
+      .select('time_slot_id, status, bites')
+      .in('status', ['pending', 'confirmed', 'ready']);
 
-    const orderInfo: Record<string, { total: number; active: number }> = {};
+    const orderInfo: Record<string, { total: number; active: number; bite_total: number }> = {};
     for (const o of orderData || []) {
-      if (!orderInfo[o.time_slot_id]) orderInfo[o.time_slot_id] = { total: 0, active: 0 };
+      if (!orderInfo[o.time_slot_id]) orderInfo[o.time_slot_id] = { total: 0, active: 0, bite_total: 0 };
       orderInfo[o.time_slot_id].total++;
-      if (o.status === 'pending' || o.status === 'confirmed') orderInfo[o.time_slot_id].active++;
+      if (o.status === 'pending' || o.status === 'confirmed') {
+        orderInfo[o.time_slot_id].active++;
+        // Count bites from active orders
+        const bites = (o as any).bites as { pack_size?: number } | null;
+        if (bites && bites.pack_size) {
+          orderInfo[o.time_slot_id].bite_total += bites.pack_size;
+        }
+      }
     }
 
     const slotsWithOrders = slotsWithCapacity.map(slot => ({
       ...slot,
+      bite_remaining: (slot.bite_capacity || 0) - (orderInfo[slot.id]?.bite_total ?? 0),
       total_orders: orderInfo[slot.id]?.total ?? 0,
       active_orders: orderInfo[slot.id]?.active ?? 0,
     }));
@@ -72,7 +81,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { date, time, capacity, cutoff_time, is_hangover } = await request.json();
+    const { date, time, capacity, bite_capacity, cutoff_time, is_hangover } = await request.json();
 
     if (!date || !time || !capacity) {
       return NextResponse.json(
@@ -84,7 +93,7 @@ export async function POST(request: NextRequest) {
     const supabase = getServiceSupabase();
     const { data: slot, error } = await supabase
       .from('time_slots')
-      .insert({ date, time, capacity, cutoff_time, is_hangover: is_hangover || false })
+      .insert({ date, time, capacity, bite_capacity: bite_capacity || 0, cutoff_time, is_hangover: is_hangover || false })
       .select()
       .single();
 

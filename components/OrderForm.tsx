@@ -4,10 +4,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { AddOnCounts, AddOnType, BagelCounts, BagelType, TimeSlotWithCapacity, Pricing } from '@/types';
+import { AddOnCounts, AddOnType, BagelCounts, BagelType, BiteFlavor, BiteFlavorCounts, BitePricing, TimeSlotWithCapacity, Pricing } from '@/types';
 import NavBar from './NavBar';
 import { calculateTotal, isValidTotal, calculateBundlePrice } from '@/lib/utils';
 import BagelSelector from './BagelSelector';
+import BiteSelector from './BiteSelector';
 import AddOnSelector from './AddOnSelector';
 import TimeSlotSelector from './TimeSlotSelector';
 
@@ -81,12 +82,16 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
   const [slots, setSlots] = useState<TimeSlotWithCapacity[]>([]);
   const [bagelTypes, setBagelTypes] = useState<BagelType[]>([]);
   const [addOnTypes, setAddOnTypes] = useState<AddOnType[]>([]);
+  const [biteFlavors, setBiteFlavors] = useState<BiteFlavor[]>([]);
+  const [bitePricing, setBitePricing] = useState<BitePricing[]>([]);
   const [pricing, setPricing] = useState<Pricing[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   const [selectedSlotId, setSelectedSlotId] = useState('');
   const [bagelCounts, setBagelCounts] = useState<BagelCounts>({});
+  const [selectedBitePackSize, setSelectedBitePackSize] = useState<number | null>(null);
+  const [biteFlavorCounts, setBiteFlavorCounts] = useState<BiteFlavorCounts>({});
   const [addOnCounts, setAddOnCounts] = useState<AddOnCounts>({});
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
@@ -114,22 +119,28 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
       const slotsUrl = isHangover ? '/api/slots?hangover=true' : '/api/slots?hangover=false';
       const pricingUrl = isHangover ? '/api/pricing?type=hangover' : '/api/pricing?type=regular';
 
-      const [slotsResponse, typesResponse, pricingResponse, addOnsResponse] = await Promise.all([
+      const [slotsResponse, typesResponse, pricingResponse, addOnsResponse, biteFlavorsResponse, bitePricingResponse] = await Promise.all([
         fetch(slotsUrl),
         fetch('/api/bagel-types'),
         fetch(pricingUrl),
         fetch('/api/add-on-types'),
+        fetch('/api/bite-flavors'),
+        fetch('/api/bite-pricing'),
       ]);
 
       const slotsData = await slotsResponse.json();
       const typesData = await typesResponse.json();
       const pricingData = await pricingResponse.json();
       const addOnsData = await addOnsResponse.json();
+      const biteFlavorsData = await biteFlavorsResponse.json();
+      const bitePricingData = await bitePricingResponse.json();
 
       setSlots(slotsData);
       setBagelTypes(typesData);
       setPricing(pricingData);
       setAddOnTypes(Array.isArray(addOnsData) ? addOnsData : []);
+      setBiteFlavors(Array.isArray(biteFlavorsData) ? biteFlavorsData : []);
+      setBitePricing(Array.isArray(bitePricingData) ? bitePricingData : []);
     } catch (err) {
       console.error('Failed to fetch data:', err);
     } finally {
@@ -147,10 +158,24 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
     return sum + (addOnCounts[type.id] || 0) * type.price;
   }, 0);
 
-  const price = calculatePrice(total) + addOnSubtotal;
+  const biteTotalSelected = Object.values(biteFlavorCounts).reduce((sum, n) => sum + n, 0);
+  const activePackSizes = bitePricing.filter((p) => p.active).map((p) => p.pack_size);
+  const biteMatchedPack = bitePricing.find((p) => p.active && p.pack_size === biteTotalSelected);
+  const biteSubtotal = biteMatchedPack?.price || 0;
+  const bitesStarted = biteTotalSelected > 0;
+  const bitesValid = !bitesStarted || activePackSizes.includes(biteTotalSelected);
+
+  const price = calculatePrice(total) + addOnSubtotal + biteSubtotal;
+
+  // Order is valid if they have bagels, valid bites, or both
+  const hasBagels = total > 0 && isValidTotal(total);
+  const hasValidBites = bitesStarted && bitesValid;
+  const hasValidItems = hasBagels || hasValidBites;
+  // Bagels at invalid count (1-13 range violated) only blocks if they started adding bagels
+  const bagelsInvalid = total > 0 && !isValidTotal(total);
 
   // Determine current step based on what's been filled
-  const currentStep = !selectedSlotId ? 1 : !isValidTotal(total) ? 2 : 3;
+  const currentStep = !selectedSlotId ? 1 : !hasValidItems ? 2 : 3;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,8 +186,13 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
       return;
     }
 
-    if (!isValidTotal(total)) {
+    if (bagelsInvalid) {
       setError('Please select between 1 and 13 bagels');
+      return;
+    }
+
+    if (!hasValidItems) {
+      setError('Please select some bagels or a pack of bites');
       return;
     }
 
@@ -171,7 +201,29 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
       return;
     }
 
+    if (!bitesValid) {
+      setError(`Please select exactly ${selectedBitePackSize} bites to complete your bite pack`);
+      return;
+    }
+
     setSubmitting(true);
+
+    // Build bites payload if bites were selected
+    let bitesPayload = null;
+    if (bitesValid && biteTotalSelected > 0 && biteMatchedPack) {
+      const flavorMap: { [slug: string]: number } = {};
+      const flavorNames: { [slug: string]: string } = {};
+      for (const flavor of biteFlavors) {
+        flavorMap[flavor.slug] = biteFlavorCounts[flavor.id] || 0;
+        flavorNames[flavor.slug] = flavor.name;
+      }
+      bitesPayload = {
+        pack_size: biteMatchedPack.pack_size,
+        price: biteMatchedPack.price,
+        flavors: flavorMap,
+        flavor_names: flavorNames,
+      };
+    }
 
     try {
       const response = await fetch('/api/orders', {
@@ -184,6 +236,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
           customerPhone,
           bagelCounts,
           addOnCounts,
+          bites: bitesPayload,
         }),
       });
 
@@ -327,67 +380,12 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
               selectedSlotId={selectedSlotId}
               onChange={setSelectedSlotId}
               requiredCapacity={total}
+              requiredBites={bitesValid ? biteTotalSelected : 0}
             />
           </section>
 
-          {/* Pricing Section */}
-          {pricing.length > 0 && (
-            <section
-              ref={bagelsRef}
-              className="rounded-lg p-6 mt-10"
-              style={{
-                backgroundColor: isHangover ? '#FFF7ED' : 'var(--blue-light)',
-                border: isHangover ? '1px solid #FED7AA' : '1px solid var(--border)'
-              }}
-            >
-              <h2
-                className="text-2xl mb-4 text-center"
-                style={{ color: 'var(--text-dark)', fontFamily: 'var(--font-playfair)' }}
-              >
-                {isHangover ? 'Hangover Pricing' : 'Our Pricing'}
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {pricing.map((item) => (
-                  <div
-                    key={item.id}
-                    className="text-center p-3 rounded-lg"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.7)' }}
-                  >
-                    <div
-                      className="font-semibold text-sm mb-1"
-                      style={{ color: 'var(--text-medium)' }}
-                    >
-                      {(() => {
-                        const label = item.label || `${item.bagel_quantity} ${item.bagel_quantity === 1 ? 'Bagel' : 'Bagels'}`;
-                        const match = label.match(/^(.+?)\s*(\(.+\))$/);
-                        if (match) {
-                          return <>{match[1]}<br /><span className="text-xs font-normal">{match[2]}</span></>;
-                        }
-                        return label;
-                      })()}
-                    </div>
-                    <div
-                      className="text-2xl font-bold"
-                      style={{ color: accent }}
-                    >
-                      ${item.price.toFixed(2)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {isHangover && (
-                <p
-                  className="text-xs text-center mt-3"
-                  style={{ color: '#92400E' }}
-                >
-                  Convenience pricing — order ahead and save!
-                </p>
-              )}
-            </section>
-          )}
-
           {/* Step 2: Bagel Selection */}
-          <section className="mt-10">
+          <section ref={bagelsRef} className="mt-10">
             <h2
               className="text-lg font-bold mb-4 pb-2"
               style={{
@@ -396,8 +394,42 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
                 borderBottom: `2px solid ${accent}`
               }}
             >
-              Choose Your Bagels
+              {isHangover ? 'Hangover Bagels' : "Paige\u2019s Bagels"}
             </h2>
+
+            {/* Pricing cards */}
+            {pricing.length > 0 && (
+              <div className={`grid gap-3 mb-4 ${pricing.length <= 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'}`}>
+                {pricing.map((item) => {
+                  const label = item.label || `${item.bagel_quantity} ${item.bagel_quantity === 1 ? 'Bagel' : 'Bagels'}`;
+                  const mainLabel = label.replace(/\s*\(.+\)$/, '');
+                  return (
+                    <div
+                      key={item.id}
+                      className="p-3 rounded-lg text-center"
+                      style={{
+                        backgroundColor: '#FFFFFF',
+                        border: '2px solid #E5E0DB',
+                      }}
+                    >
+                      <div
+                        className="text-lg font-bold"
+                        style={{ color: '#1A1A1A' }}
+                      >
+                        {mainLabel}
+                      </div>
+                      <div
+                        className="text-base font-semibold"
+                        style={{ color: '#6B6B6B' }}
+                      >
+                        ${item.price.toFixed(2)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             <BagelSelector
               bagelTypes={bagelTypes}
               counts={bagelCounts}
@@ -405,6 +437,30 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
               maxTotal={13}
             />
           </section>
+
+          {/* Paige's Bites */}
+          {biteFlavors.length > 0 && bitePricing.filter((p) => p.active).length > 0 && (
+            <section className="mt-10">
+              <h2
+                className="text-lg font-bold mb-4 pb-2"
+                style={{
+                  color: 'var(--blue)',
+                  fontFamily: 'var(--font-playfair)',
+                  borderBottom: `2px solid ${accent}`
+                }}
+              >
+                Paige&apos;s Bites
+              </h2>
+              <BiteSelector
+                biteFlavors={biteFlavors}
+                bitePricing={bitePricing}
+                selectedPackSize={selectedBitePackSize}
+                onPackSizeChange={setSelectedBitePackSize}
+                flavorCounts={biteFlavorCounts}
+                onFlavorCountsChange={setBiteFlavorCounts}
+              />
+            </section>
+          )}
 
           {/* Add-Ons */}
           {addOnTypes.length > 0 && (
@@ -519,7 +575,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
           </section>
 
           {/* Order Total */}
-          {total > 0 && isValidTotal(total) && (
+          {hasValidItems && (
             <div
               className="p-5 rounded-lg mt-10"
               style={{
@@ -561,20 +617,20 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={submitting || !isValidTotal(total)}
+            disabled={submitting || !hasValidItems || bagelsInvalid || !bitesValid}
             className="w-full py-4 px-6 font-semibold text-[0.9rem] uppercase tracking-[0.06em] transition-all mt-8"
             style={{
-              backgroundColor: submitting || !isValidTotal(total) ? '#D1D1D1' : buttonColor,
-              color: submitting || !isValidTotal(total) ? '#8A8A8A' : '#FFFFFF',
-              cursor: submitting || !isValidTotal(total) ? 'not-allowed' : 'pointer'
+              backgroundColor: submitting || !hasValidItems || bagelsInvalid || !bitesValid ? '#D1D1D1' : buttonColor,
+              color: submitting || !hasValidItems || bagelsInvalid || !bitesValid ? '#8A8A8A' : '#FFFFFF',
+              cursor: submitting || !hasValidItems || bagelsInvalid || !bitesValid ? 'not-allowed' : 'pointer'
             }}
             onMouseOver={(e) => {
-              if (!submitting && isValidTotal(total)) {
+              if (!submitting && hasValidItems && !bagelsInvalid && bitesValid) {
                 e.currentTarget.style.backgroundColor = buttonHover;
               }
             }}
             onMouseOut={(e) => {
-              if (!submitting && isValidTotal(total)) {
+              if (!submitting && hasValidItems && !bagelsInvalid && bitesValid) {
                 e.currentTarget.style.backgroundColor = buttonColor;
               }
             }}
@@ -596,7 +652,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
           borderColor: 'var(--border)',
           padding: '16px 20px',
           paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
-          transform: selectedSlotId && !isValidTotal(total) ? 'translateY(0)' : 'translateY(100%)',
+          transform: selectedSlotId && !hasValidItems ? 'translateY(0)' : 'translateY(100%)',
         }}
       >
         <button

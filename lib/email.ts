@@ -82,10 +82,32 @@ export async function sendConfirmationEmail(
     ? orderAddOns.map(item => `${item.quantity} ${item.add_on_type.name}`)
     : [];
 
-  const itemRows = bagelList.map(item => `
+  // Build bites list from JSONB
+  const bites = (order as unknown as Record<string, unknown>).bites as { pack_size: number; flavors: Record<string, number>; flavor_names?: Record<string, string> } | null;
+  const biteList: string[] = [];
+  if (bites && bites.flavors) {
+    for (const [slug, qty] of Object.entries(bites.flavors)) {
+      if (qty > 0) {
+        const name = bites.flavor_names?.[slug] || slug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+        biteList.push(`${qty} ${name}`);
+      }
+    }
+  }
+
+  const itemRows = bagelList.length > 0
+    ? bagelList.map(item => `
     <tr><td style="padding:10px 0;border-bottom:1px solid ${BRAND.border};font-family:Arial,sans-serif;font-size:14px;color:#333;">
       ${item}
-    </td></tr>`).join('');
+    </td></tr>`).join('')
+    : '';
+
+  const biteRows = biteList.length > 0
+    ? `<tr><td style="font-family:Arial,sans-serif;font-size:12px;color:${BRAND.textSec};text-transform:uppercase;letter-spacing:0.05em;padding:16px 0 4px;">Bites${bites ? ` (${bites.pack_size}-pack)` : ''}</td></tr>` +
+      biteList.map(item => `
+    <tr><td style="padding:10px 0;border-bottom:1px solid ${BRAND.border};font-family:Arial,sans-serif;font-size:14px;color:#333;">
+      ${item}
+    </td></tr>`).join('')
+    : '';
 
   const addOnRows = addOnList.length > 0
     ? addOnList.map(item => `
@@ -115,18 +137,6 @@ export async function sendConfirmationEmail(
       <tr><td>
         <table width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND.card};border:1px solid ${BRAND.border};border-radius:12px;overflow:hidden;">
           <tr><td style="padding:20px;">
-            <!-- Order ID -->
-            <table width="100%" cellpadding="0" cellspacing="0">
-              <tr>
-                <td style="font-family:Arial,sans-serif;font-size:12px;color:${BRAND.textSec};text-transform:uppercase;letter-spacing:0.05em;padding-bottom:4px;">Order</td>
-              </tr>
-              <tr>
-                <td style="font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#333;padding-bottom:16px;border-bottom:1px solid ${BRAND.border};">
-                  #${order.id.slice(0, 8).toUpperCase()}
-                </td>
-              </tr>
-            </table>
-
             <!-- Pickup -->
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
@@ -141,10 +151,11 @@ export async function sendConfirmationEmail(
 
             <!-- Items -->
             <table width="100%" cellpadding="0" cellspacing="0">
-              <tr>
-                <td style="font-family:Arial,sans-serif;font-size:12px;color:${BRAND.textSec};text-transform:uppercase;letter-spacing:0.05em;padding:16px 0 4px;">Items</td>
+              ${itemRows ? `<tr>
+                <td style="font-family:Arial,sans-serif;font-size:12px;color:${BRAND.textSec};text-transform:uppercase;letter-spacing:0.05em;padding:16px 0 4px;">Bagels</td>
               </tr>
-              ${itemRows}
+              ${itemRows}` : ''}
+              ${biteRows}
               ${addOnRows}
             </table>
 

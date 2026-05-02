@@ -1,18 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase, getServiceSupabase } from '@/lib/supabase';
 import { OrderFormData } from '@/types';
 import { calculateTotal, isValidTotal, calculateBundlePrice, generateVenmoNote } from '@/lib/utils';
 
 export async function POST(request: NextRequest) {
   try {
-    const formData: OrderFormData = await request.json();
+    const { bites, ...formData }: OrderFormData & { bites?: unknown } = await request.json();
 
     const total = calculateTotal(formData.bagelCounts);
 
-    // Validate total bagels
-    if (!isValidTotal(total)) {
+    // Validate: must have bagels or bites (or both)
+    const hasBites = bites && typeof bites === 'object' && 'pack_size' in (bites as Record<string, unknown>);
+    if (total > 0 && !isValidTotal(total)) {
       return NextResponse.json(
         { error: 'Total bagels must be between 1 and 13' },
+        { status: 400 }
+      );
+    }
+    if (total === 0 && !hasBites) {
+      return NextResponse.json(
+        { error: 'Please select some bagels or a pack of bites' },
         { status: 400 }
       );
     }
@@ -72,8 +79,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Calculate bites price and extract pack size for capacity check
+    let bitesPrice = 0;
+    let bitePackSize = 0;
+    if (bites && typeof bites === 'object' && 'pack_size' in (bites as Record<string, unknown>)) {
+      const b = bites as { price?: number; pack_size?: number };
+      bitesPrice = b.price || 0;
+      bitePackSize = b.pack_size || 0;
+    }
+
     // Calculate price
-    const price = calculateBundlePrice(total, pricingTiers) + addOnTotal;
+    const price = calculateBundlePrice(total, pricingTiers) + addOnTotal + bitesPrice;
 
     // Atomic order creation — locks the slot, checks capacity, and inserts in one transaction
     const { data: orderId, error: insertError } = await supabase.rpc(
@@ -85,11 +101,18 @@ export async function POST(request: NextRequest) {
         p_customer_phone: formData.customerPhone,
         p_total_bagels: total,
         p_total_price: price,
+        p_bite_pack_size: bitePackSize,
       }
     );
 
     if (insertError) {
       // The RPC raises an exception if capacity is exceeded
+      if (insertError.message?.includes('Not enough bite capacity')) {
+        return NextResponse.json(
+          { error: 'Not enough bite capacity remaining for this time slot' },
+          { status: 400 }
+        );
+      }
       if (insertError.message?.includes('Not enough capacity')) {
         return NextResponse.json(
           { error: 'Not enough capacity remaining for this time slot' },
@@ -103,11 +126,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update venmo_note with order ID
+    // Update venmo_note with order ID, and save bites if present
     const venmoNote = generateVenmoNote(orderId);
-    await supabase
+    const orderUpdate: Record<string, unknown> = { venmo_note: venmoNote };
+    if (bites) {
+      orderUpdate.bites = bites;
+    }
+    const serviceSupabase = getServiceSupabase();
+    await serviceSupabase
       .from('orders')
-      .update({ venmo_note: venmoNote })
+      .update(orderUpdate)
       .eq('id', orderId);
 
     // Create order items for each bagel type

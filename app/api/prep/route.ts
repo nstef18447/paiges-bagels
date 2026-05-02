@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
         is_fake,
         customer_name,
         total_price,
+        bites,
         time_slot_id,
         time_slots(id, date, time, is_hangover),
         order_items(quantity, bagel_types(name)),
@@ -40,12 +41,15 @@ export async function GET(request: NextRequest) {
       bagels: Record<string, number>;
       total_bagels: number;
       add_ons: Record<string, number>;
+      bites: Record<string, number>;
+      total_bites: number;
       orders: {
         customer_name: string;
         total_price: number;
         status: string;
         bagels: { name: string; quantity: number }[];
         add_ons: { name: string; quantity: number }[];
+        bites: { name: string; quantity: number }[];
         total_bagels: number;
       }[];
     }>> = {};
@@ -67,7 +71,7 @@ export async function GET(request: NextRequest) {
 
       if (!dateMap[date]) dateMap[date] = {};
       if (!dateMap[date][slotId]) {
-        dateMap[date][slotId] = { time, is_hangover, bagels: {}, total_bagels: 0, add_ons: {}, orders: [] };
+        dateMap[date][slotId] = { time, is_hangover, bagels: {}, total_bagels: 0, add_ons: {}, bites: {}, total_bites: 0, orders: [] };
       }
 
       const slot = dateMap[date][slotId];
@@ -92,6 +96,18 @@ export async function GET(request: NextRequest) {
         slot.add_ons[name] = (slot.add_ons[name] || 0) + addOn.quantity;
       }
 
+      // Aggregate bites from JSONB
+      const orderBites = (order as any).bites as { pack_size: number; flavors: Record<string, number> } | null;
+      if (orderBites && orderBites.flavors) {
+        for (const [flavorSlug, qty] of Object.entries(orderBites.flavors)) {
+          if (qty > 0) {
+            const displayName = flavorSlug.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+            slot.bites[displayName] = (slot.bites[displayName] || 0) + qty;
+            slot.total_bites += qty;
+          }
+        }
+      }
+
       // Collect individual confirmed/ready orders for bag packing
       if (order.status === 'confirmed' || order.status === 'ready') {
         const orderBagels = (items || []).map((item) => ({
@@ -102,12 +118,24 @@ export async function GET(request: NextRequest) {
           name: addOn.add_on_types?.name || 'Unknown',
           quantity: addOn.quantity,
         }));
+        const orderBitesList: { name: string; quantity: number }[] = [];
+        if (orderBites && orderBites.flavors) {
+          for (const [flavorSlug, qty] of Object.entries(orderBites.flavors)) {
+            if (qty > 0) {
+              orderBitesList.push({
+                name: flavorSlug.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+                quantity: qty,
+              });
+            }
+          }
+        }
         slot.orders.push({
           customer_name: (order as any).customer_name || 'Unknown',
           total_price: (order as any).total_price || 0,
           status: order.status,
           bagels: orderBagels.sort((a, b) => a.name.localeCompare(b.name)),
           add_ons: orderAddOns.sort((a, b) => a.name.localeCompare(b.name)),
+          bites: orderBitesList.sort((a, b) => a.name.localeCompare(b.name)),
           total_bagels: order.total_bagels || orderBagels.reduce((sum, b) => sum + b.quantity, 0),
         });
       }
@@ -129,7 +157,11 @@ export async function GET(request: NextRequest) {
             add_ons: Object.entries(slot.add_ons)
               .sort(([a], [b]) => a.localeCompare(b))
               .map(([name, quantity]) => ({ name, quantity })),
+            bites: Object.entries(slot.bites)
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([name, quantity]) => ({ name, quantity })),
             total_bagels: slot.total_bagels,
+            total_bites: slot.total_bites,
             orders: slot.orders.sort((a, b) => a.customer_name.localeCompare(b.customer_name)),
           }));
 
