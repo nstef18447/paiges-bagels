@@ -160,39 +160,26 @@ export default function AdminPrepPage() {
                         </span>
                       )}
                       <span className="text-sm text-gray-500">
-                        — {slot.total_bagels} bagel{slot.total_bagels !== 1 ? 's' : ''}
+                        — {slot.total_bagels} bagel{slot.total_bagels !== 1 ? 's' : ''}{slot.total_bites > 0 ? `, ${slot.total_bites} bite${slot.total_bites !== 1 ? 's' : ''}` : ''}
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                      {slot.bagels.map((bagel) => (
-                        <div
-                          key={bagel.name}
-                          className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2"
-                        >
-                          <span className="text-sm">{bagel.name}</span>
-                          <span className="text-sm font-bold ml-2">{bagel.quantity}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {slot.add_ons.length > 0 && (
-                      <div className="mt-3">
-                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Add-ons</span>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mt-1">
-                          {slot.add_ons.map((addOn) => (
-                            <div
-                              key={addOn.name}
-                              className="flex items-center justify-between rounded-lg px-3 py-2"
-                              style={{ backgroundColor: '#FEF3C7' }}
-                            >
-                              <span className="text-sm">{addOn.name}</span>
-                              <span className="text-sm font-bold ml-2">{addOn.quantity}</span>
-                            </div>
-                          ))}
-                        </div>
+                    <div>
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        Bagels ({slot.total_bagels} total)
+                      </span>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mt-1">
+                        {slot.bagels.map((bagel) => (
+                          <div
+                            key={bagel.name}
+                            className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2"
+                          >
+                            <span className="text-sm">{bagel.name}</span>
+                            <span className="text-sm font-bold ml-2">{bagel.quantity}</span>
+                          </div>
+                        ))}
                       </div>
-                    )}
+                    </div>
 
                     {slot.bites && slot.bites.length > 0 && (
                       <div className="mt-3">
@@ -208,6 +195,24 @@ export default function AdminPrepPage() {
                             >
                               <span className="text-sm">{bite.name}</span>
                               <span className="text-sm font-bold ml-2">{bite.quantity}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {slot.add_ons.length > 0 && (
+                      <div className="mt-3">
+                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Add-ons</span>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mt-1">
+                          {slot.add_ons.map((addOn) => (
+                            <div
+                              key={addOn.name}
+                              className="flex items-center justify-between rounded-lg px-3 py-2"
+                              style={{ backgroundColor: '#FEF3C7' }}
+                            >
+                              <span className="text-sm">{addOn.name}</span>
+                              <span className="text-sm font-bold ml-2">{addOn.quantity}</span>
                             </div>
                           ))}
                         </div>
