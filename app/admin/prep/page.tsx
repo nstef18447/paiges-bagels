@@ -92,7 +92,15 @@ export default function AdminPrepPage() {
   };
 
   const today = new Date().toISOString().split('T')[0];
-  const upcomingDays = days.filter((d) => d.date >= today);
+
+  const upcomingDays = days
+    .filter((d) => d.date >= today)
+    .map((d) => ({
+      ...d,
+      slots: d.slots.filter((s) => s.orders.some((o) => o.status === 'confirmed')),
+    }))
+    .filter((d) => d.slots.length > 0);
+
   const pastDays = days.filter((d) => d.date < today);
 
   if (loading) {
