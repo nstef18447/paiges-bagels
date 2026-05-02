@@ -66,7 +66,7 @@ export default function AboutPage() {
                   WebkitBackdropFilter: 'blur(8px)',
                 }}
               >
-                Paige &middot; Chief Bagel Officer
+                Paige &middot; Founder
               </div>
             </div>
           </div>
@@ -115,7 +115,7 @@ export default function AboutPage() {
                 className="text-[0.85rem] font-medium"
                 style={{ color: 'var(--brown)' }}
               >
-                Chief Bagel Officer
+                Founder
               </div>
             </div>
           </div>
