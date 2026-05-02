@@ -288,63 +288,93 @@ export default function AdminPrepPage() {
               </div>
 
               {/* Day Totals */}
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <span className="text-sm font-semibold uppercase tracking-wide" style={{ color: '#004AAD' }}>Day Totals</span>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mt-2">
-                  {Object.entries(
-                    day.slots.reduce<Record<string, number>>((acc, slot) => {
-                      slot.bagels.forEach((b) => { acc[b.name] = (acc[b.name] || 0) + b.quantity; });
-                      return acc;
-                    }, {})
-                  )
-                    .sort(([a], [b]) => a.localeCompare(b))
-                    .map(([name, quantity]) => (
-                      <div key={name} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ backgroundColor: '#E8F0FE' }}>
-                        <span className="text-sm font-medium">{name}</span>
-                        <span className="text-sm font-bold ml-2">{quantity}</span>
+              {(() => {
+                const bagelTotals = Object.entries(
+                  day.slots.reduce<Record<string, number>>((acc, slot) => {
+                    slot.bagels.forEach((b) => { acc[b.name] = (acc[b.name] || 0) + b.quantity; });
+                    return acc;
+                  }, {})
+                ).sort(([a], [b]) => a.localeCompare(b));
+
+                const biteTotals = Object.entries(
+                  day.slots.reduce<Record<string, number>>((acc, slot) => {
+                    (slot.bites || []).forEach((b) => { acc[b.name] = (acc[b.name] || 0) + b.quantity; });
+                    return acc;
+                  }, {})
+                ).sort(([a], [b]) => a.localeCompare(b));
+
+                const addOnTotals = day.slots.reduce<Record<string, number>>((acc, slot) => {
+                  slot.add_ons.forEach((a) => { acc[a.name] = (acc[a.name] || 0) + a.quantity; });
+                  return acc;
+                }, {});
+
+                const grandTotalBagels = bagelTotals.reduce((sum, [, qty]) => sum + qty, 0);
+                const grandTotalBites = biteTotals.reduce((sum, [, qty]) => sum + qty, 0);
+
+                return (
+                  <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+                    <span className="text-sm font-semibold uppercase tracking-wide" style={{ color: '#004AAD' }}>Day Totals</span>
+
+                    {/* Bagels */}
+                    {bagelTotals.length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Bagels</span>
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#E8F0FE', color: '#004AAD' }}>
+                            {grandTotalBagels} total
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                          {bagelTotals.map(([name, quantity]) => (
+                            <div key={name} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ backgroundColor: '#E8F0FE' }}>
+                              <span className="text-sm font-medium">{name}</span>
+                              <span className="text-sm font-bold ml-2">{quantity}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    ))}
-                </div>
-                {day.slots.some((s) => s.add_ons.length > 0) && (
-                  <div className="mt-2">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                      {Object.entries(
-                        day.slots.reduce<Record<string, number>>((acc, slot) => {
-                          slot.add_ons.forEach((a) => { acc[a.name] = (acc[a.name] || 0) + a.quantity; });
-                          return acc;
-                        }, {})
-                      )
-                        .sort(([a], [b]) => a.localeCompare(b))
-                        .map(([name, quantity]) => (
-                          <div key={name} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ backgroundColor: '#FEF3C7' }}>
-                            <span className="text-sm font-medium">{name}</span>
-                            <span className="text-sm font-bold ml-2">{quantity}</span>
+                    )}
+
+                    {/* Bites */}
+                    {biteTotals.length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#0369A1' }}>Bites</span>
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#E0F2FE', color: '#0369A1' }}>
+                            {grandTotalBites} total
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                          {biteTotals.map(([name, quantity]) => (
+                            <div key={name} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ backgroundColor: '#E0F2FE' }}>
+                              <span className="text-sm font-medium">{name}</span>
+                              <span className="text-sm font-bold ml-2">{quantity}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Butter & Schmear */}
+                    {(addOnTotals['Butter'] || addOnTotals['Schmear']) && (
+                      <div className="pt-3 border-t border-gray-100 flex gap-3">
+                        {addOnTotals['Butter'] && (
+                          <div className="flex items-center justify-between rounded-lg px-3 py-2 flex-1" style={{ backgroundColor: '#FEF3C7' }}>
+                            <span className="text-sm font-medium">Butter</span>
+                            <span className="text-sm font-bold ml-2">{addOnTotals['Butter']}</span>
                           </div>
-                        ))}
-                    </div>
-                  </div>
-                )}
-                {day.slots.some((s) => s.bites && s.bites.length > 0) && (
-                  <div className="mt-2">
-                    <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#0369A1' }}>Bites</span>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mt-1">
-                      {Object.entries(
-                        day.slots.reduce<Record<string, number>>((acc, slot) => {
-                          (slot.bites || []).forEach((b) => { acc[b.name] = (acc[b.name] || 0) + b.quantity; });
-                          return acc;
-                        }, {})
-                      )
-                        .sort(([a], [b]) => a.localeCompare(b))
-                        .map(([name, quantity]) => (
-                          <div key={name} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ backgroundColor: '#E0F2FE' }}>
-                            <span className="text-sm font-medium">{name}</span>
-                            <span className="text-sm font-bold ml-2">{quantity}</span>
+                        )}
+                        {addOnTotals['Schmear'] && (
+                          <div className="flex items-center justify-between rounded-lg px-3 py-2 flex-1" style={{ backgroundColor: '#FEF3C7' }}>
+                            <span className="text-sm font-medium">Schmear</span>
+                            <span className="text-sm font-bold ml-2">{addOnTotals['Schmear']}</span>
                           </div>
-                        ))}
-                    </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                );
+              })()}
             </div>
           ))}
         </div>
