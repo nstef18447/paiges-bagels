@@ -4,6 +4,15 @@ import { useState } from 'react';
 import { TimeSlotWithCapacity } from '@/types';
 import { formatDate, formatTime } from '@/lib/utils';
 
+const TIME_OPTIONS = Array.from({ length: 33 }, (_, i) => {
+  const totalMinutes = 6 * 60 + i * 15; // 6:00 AM to 2:00 PM in 15-min steps
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  const label = `${h % 12 === 0 ? 12 : h % 12}:${m.toString().padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
+  const value = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+  return { label, value };
+});
+
 interface SlotManagerProps {
   slots: TimeSlotWithCapacity[];
   onRefresh: () => void;
@@ -223,13 +232,17 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
               <div className="space-y-2">
                 {timeEntries.map((entry, index) => (
                   <div key={index} className="flex gap-2 items-center">
-                    <input
-                      type="time"
+                    <select
                       value={entry.time}
                       onChange={(e) => updateTimeEntry(index, 'time', e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent bg-white"
                       required
-                    />
+                    >
+                      <option value="">Select time</option>
+                      {TIME_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
                     <input
                       type="number"
                       value={entry.capacity}
@@ -281,13 +294,17 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
                   <label htmlFor="cutoffTime" className="block text-xs text-gray-600 mb-1">
                     Cutoff Time
                   </label>
-                  <input
-                    type="time"
+                  <select
                     id="cutoffTime"
                     value={cutoffTime}
                     onChange={(e) => setCutoffTime(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent text-sm"
-                  />
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent text-sm bg-white"
+                  >
+                    <option value="">Select time</option>
+                    {TIME_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
@@ -371,12 +388,16 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
                       </div>
                       <div>
                         <label className="block text-xs text-gray-600 mb-1">Time</label>
-                        <input
-                          type="time"
+                        <select
                           value={editTime}
                           onChange={(e) => setEditTime(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
-                        />
+                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-white"
+                        >
+                          <option value="">Select time</option>
+                          {TIME_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
                       </div>
                       <div>
                         <label className="block text-xs text-gray-600 mb-1">Capacity</label>
@@ -401,12 +422,16 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
                       </div>
                       <div>
                         <label className="block text-xs text-gray-600 mb-1">Cutoff Time</label>
-                        <input
-                          type="time"
+                        <select
                           value={editCutoffTime}
                           onChange={(e) => setEditCutoffTime(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
-                        />
+                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-white"
+                        >
+                          <option value="">Select time</option>
+                          {TIME_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                     <label className="flex items-center gap-3 cursor-pointer">
