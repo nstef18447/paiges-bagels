@@ -11,7 +11,7 @@ const INGREDIENTS = ['Sourdough Starter', 'Bread Flour', 'Water', 'Sugar', 'Salt
 const GALLERY_IMAGES = [
   { src: '/best-images/IMG_2113.JPEG', alt: 'Branded bagel box' },
   { src: '/best-images/IMG_2163.JPG', alt: 'Salt bagel close-up' },
-  { src: '/best-images/IMG_1999.JPG', alt: 'Hand holding a fresh plain bagel' },
+  { src: '/best-images/bagel-bites-cinsug.JPG', alt: 'Cinnamon sugar bagel bites' },
 ];
 
 export default function MenuPage() {
