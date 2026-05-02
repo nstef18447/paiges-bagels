@@ -269,6 +269,150 @@ export async function sendReadyEmail(
   });
 }
 
+export async function sendPickupReminderEmail(
+  order: Order,
+  timeSlot: TimeSlot
+): Promise<void> {
+  const { data: orderItems } = await supabase
+    .from('order_items')
+    .select('*, bagel_type:bagel_types(*)')
+    .eq('order_id', order.id);
+
+  const bagelList = orderItems && orderItems.length > 0
+    ? orderItems.map(item => `${item.quantity} ${item.bagel_type.name} bagels`)
+    : [
+        order.plain_count > 0 && `${order.plain_count} Plain bagels`,
+        order.everything_count > 0 && `${order.everything_count} Everything bagels`,
+        order.sesame_count > 0 && `${order.sesame_count} Sesame bagels`,
+      ].filter(Boolean);
+
+  const { data: orderAddOns } = await supabase
+    .from('order_add_ons')
+    .select('*, add_on_type:add_on_types(*)')
+    .eq('order_id', order.id);
+
+  const addOnList = orderAddOns && orderAddOns.length > 0
+    ? orderAddOns.map(item => `${item.quantity} ${item.add_on_type.name}`)
+    : [];
+
+  const bites = (order as unknown as Record<string, unknown>).bites as { pack_size: number; flavors: Record<string, number>; flavor_names?: Record<string, string> } | null;
+  const biteList: string[] = [];
+  if (bites && bites.flavors) {
+    for (const [slug, qty] of Object.entries(bites.flavors)) {
+      if (qty > 0) {
+        const name = bites.flavor_names?.[slug] || slug.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+        biteList.push(`${qty} ${name}`);
+      }
+    }
+  }
+
+  const itemRows = bagelList.length > 0
+    ? bagelList.map(item => `
+    <tr><td style="padding:10px 0;border-bottom:1px solid ${BRAND.border};font-family:Arial,sans-serif;font-size:14px;color:#333;">
+      ${item}
+    </td></tr>`).join('')
+    : '';
+
+  const biteRows = biteList.length > 0
+    ? `<tr><td style="font-family:Arial,sans-serif;font-size:12px;color:${BRAND.textSec};text-transform:uppercase;letter-spacing:0.05em;padding:16px 0 4px;">Bites${bites ? ` (${bites.pack_size}-pack)` : ''}</td></tr>` +
+      biteList.map(item => `
+    <tr><td style="padding:10px 0;border-bottom:1px solid ${BRAND.border};font-family:Arial,sans-serif;font-size:14px;color:#333;">
+      ${item}
+    </td></tr>`).join('')
+    : '';
+
+  const addOnRows = addOnList.length > 0
+    ? addOnList.map(item => `
+    <tr><td style="padding:10px 0;border-bottom:1px solid ${BRAND.border};font-family:Arial,sans-serif;font-size:14px;color:#333;">
+      ${item} <span style="color:${BRAND.textSec};font-size:12px;">(on the side)</span>
+    </td></tr>`).join('')
+    : '';
+
+  const content = `
+    <!-- Clock icon + heading -->
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr><td align="center" style="padding:36px 24px 8px;">
+        <div style="font-size:40px;line-height:1;">🥯</div>
+      </td></tr>
+      <tr><td align="center" style="padding:12px 24px 4px;">
+        <h1 style="margin:0;font-family:Georgia,serif;font-size:24px;font-weight:bold;color:${BRAND.blue};">See You Tomorrow!</h1>
+      </td></tr>
+      <tr><td align="center" style="padding:0 24px 28px;">
+        <p style="margin:0;font-family:Arial,sans-serif;font-size:15px;color:${BRAND.textSec};">Just a reminder that your order is coming up, ${order.customer_name}!</p>
+      </td></tr>
+    </table>
+
+    <!-- Order details card -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="padding:0 24px;">
+      <tr><td>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND.card};border:1px solid ${BRAND.border};border-radius:12px;overflow:hidden;">
+          <tr><td style="padding:20px;">
+            <!-- Pickup -->
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="font-family:Arial,sans-serif;font-size:12px;color:${BRAND.textSec};text-transform:uppercase;letter-spacing:0.05em;padding:16px 0 4px;">Pickup</td>
+              </tr>
+              <tr>
+                <td style="font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#333;padding-bottom:16px;border-bottom:1px solid ${BRAND.border};">
+                  ${formatDate(timeSlot.date)} at ${formatTime(timeSlot.time)}
+                </td>
+              </tr>
+            </table>
+
+            <!-- Items -->
+            <table width="100%" cellpadding="0" cellspacing="0">
+              ${itemRows ? `<tr>
+                <td style="font-family:Arial,sans-serif;font-size:12px;color:${BRAND.textSec};text-transform:uppercase;letter-spacing:0.05em;padding:16px 0 4px;">Bagels</td>
+              </tr>
+              ${itemRows}` : ''}
+              ${biteRows}
+              ${addOnRows}
+            </table>
+
+            <!-- Total -->
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="padding:16px 0 0;font-family:Arial,sans-serif;font-size:16px;font-weight:bold;color:${BRAND.blue};">
+                  Total: $${order.total_price.toFixed(2)}
+                </td>
+              </tr>
+            </table>
+          </td></tr>
+        </table>
+      </td></tr>
+    </table>
+
+    <!-- Pickup instructions -->
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr><td style="padding:28px 24px 36px;">
+        <h3 style="margin:0 0 12px;font-family:Georgia,serif;font-size:16px;color:${BRAND.blue};">Pickup Info</h3>
+        <table cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding:0 8px 8px 0;font-size:14px;vertical-align:top;">&#x2022;</td>
+            <td style="padding:0 0 8px;font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.5;">We'll have your bagels ready at <strong>${formatTime(timeSlot.time)}</strong></td>
+          </tr>
+          <tr>
+            <td style="padding:0 8px 8px 0;font-size:14px;vertical-align:top;">&#x2022;</td>
+            <td style="padding:0 0 8px;font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.5;">Pickup at <strong>1881 Oak Avenue Apt 1510W, Evanston IL 60201</strong></td>
+          </tr>
+          <tr>
+            <td style="padding:0 8px 0 0;font-size:14px;vertical-align:top;">&#x2022;</td>
+            <td style="padding:0;font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.5;">Bagels will be outside! Use call box if needed.</td>
+          </tr>
+        </table>
+      </td></tr>
+    </table>`;
+
+  const emailHtml = emailWrapper(content);
+
+  await resend.emails.send({
+    from: 'Paige\'s Bagels <orders@paigesbagels.com>',
+    to: order.customer_email,
+    subject: `See you tomorrow! 🥯 Pickup at ${formatTime(timeSlot.time)}`,
+    html: emailHtml,
+  });
+}
+
 export async function sendMerchConfirmationEmail(
   order: MerchOrder
 ): Promise<void> {
