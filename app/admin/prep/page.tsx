@@ -144,9 +144,16 @@ export default function AdminPrepPage() {
             <div key={day.date} className="bg-white border border-gray-200 rounded-lg p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold">{formatDate(day.date)}</h2>
-                <span className="text-sm font-medium px-3 py-1 rounded-full" style={{ backgroundColor: '#E8F0FE', color: '#004AAD' }}>
-                  {day.total_bagels} bagel{day.total_bagels !== 1 ? 's' : ''} total
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium px-3 py-1 rounded-full" style={{ backgroundColor: '#E8F0FE', color: '#004AAD' }}>
+                    {day.total_bagels} bagel{day.total_bagels !== 1 ? 's' : ''} total
+                  </span>
+                  {day.slots.reduce((sum, s) => sum + (s.total_bites || 0), 0) > 0 && (
+                    <span className="text-sm font-medium px-3 py-1 rounded-full" style={{ backgroundColor: '#E0F2FE', color: '#0369A1' }}>
+                      {day.slots.reduce((sum, s) => sum + (s.total_bites || 0), 0)} bite{day.slots.reduce((sum, s) => sum + (s.total_bites || 0), 0) !== 1 ? 's' : ''} total
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-4">
