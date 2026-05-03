@@ -449,7 +449,7 @@ export async function sendMerchConfirmationEmail(
     <table width="100%" cellpadding="0" cellspacing="0" style="padding:0 24px 20px;">
       <tr><td style="background:#ede9fe;border:1px solid #ddd6fe;border-radius:10px;padding:14px 18px;">
         <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#7c3aed;">Pre-Order</p>
-        <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#6d28d9;">This is a pre-order — your item will ship in 2–3 weeks. Paige will reach out to coordinate delivery!</p>
+        <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#6d28d9;">This is a pre-order — your item will ship in 2–3 weeks. Paige will reach out to coordinate pickup!</p>
       </td></tr>
     </table>` : ''}
 
