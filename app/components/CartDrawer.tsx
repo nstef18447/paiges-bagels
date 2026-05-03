@@ -209,7 +209,7 @@ export default function CartDrawer() {
                 <span>${(cartTotal + pickupFee).toFixed(2)}</span>
               </div>
               <p className="text-[0.78rem] -mt-3 mb-4" style={{ color: '#6b7280' }}>
-                Includes ${pickupFee.toFixed(2)} pickup fee
+                Includes ${pickupFee.toFixed(2)} service fee
               </p>
 
               {checkoutError && (

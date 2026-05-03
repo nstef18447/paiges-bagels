@@ -110,7 +110,7 @@ function ConfirmationContent() {
         {/* Total */}
         <div className="px-6 py-5">
           <div className="flex justify-between text-[0.85rem] mb-1.5" style={{ color: '#6b7280' }}>
-            <span>Pickup fee</span>
+            <span>Service fee</span>
             <span>${order.shipping_cost.toFixed(2)}</span>
           </div>
           <div className="flex justify-between items-center">
