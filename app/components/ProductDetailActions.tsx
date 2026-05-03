@@ -13,6 +13,7 @@ export default function ProductDetailActions({ item }: { item: MerchItem }) {
 
   const soldOut = item.stock !== null && item.stock <= 0;
   const canAdd = !soldOut && (!item.needs_size || selectedSize);
+  const isPreorder = item.is_preorder;
 
   function handleAdd() {
     if (!canAdd) return;
@@ -90,13 +91,20 @@ export default function ProductDetailActions({ item }: { item: MerchItem }) {
         </button>
       </div>
 
+      {/* Pre-order note */}
+      {isPreorder && !soldOut && (
+        <p className="text-[0.82rem] mb-4 font-medium" style={{ color: '#7c3aed' }}>
+          Ships in 2–3 weeks
+        </p>
+      )}
+
       {/* Add to Cart */}
       <button
         onClick={handleAdd}
         disabled={!canAdd}
         className="w-full py-4 font-semibold text-[0.9rem] uppercase tracking-[0.06em] text-white flex items-center justify-center gap-2 transition-colors"
         style={{
-          background: canAdd ? 'var(--blue)' : 'var(--border)',
+          background: canAdd ? (isPreorder ? '#7c3aed' : 'var(--blue)') : 'var(--border)',
           cursor: canAdd ? 'pointer' : 'not-allowed',
           opacity: canAdd ? 1 : 0.4,
           border: 'none',
@@ -106,7 +114,7 @@ export default function ProductDetailActions({ item }: { item: MerchItem }) {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
           <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1.003 1.003 0 0 0 20 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
         </svg>
-        {soldOut ? 'Sold Out' : `Add to Bag — $${(item.price * qty).toFixed(2)}`}
+        {soldOut ? 'Sold Out' : isPreorder ? `Pre-Order — $${(item.price * qty).toFixed(2)}` : `Add to Bag — $${(item.price * qty).toFixed(2)}`}
       </button>
     </div>
   );

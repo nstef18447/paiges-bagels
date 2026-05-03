@@ -50,9 +50,16 @@ export default function ProductCard({ item }: { item: MerchItem }) {
         >
           {item.name}
         </h3>
-        <p className="font-semibold text-[0.88rem]" style={{ color: 'var(--brown)' }}>
-          {soldOut ? 'Sold Out' : `$${item.price.toFixed(2)}`}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="font-semibold text-[0.88rem]" style={{ color: 'var(--brown)' }}>
+            {soldOut ? 'Sold Out' : `$${item.price.toFixed(2)}`}
+          </p>
+          {item.is_preorder && !soldOut && (
+            <span className="text-[0.7rem] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded" style={{ background: '#ede9fe', color: '#7c3aed' }}>
+              Pre-Order
+            </span>
+          )}
+        </div>
       </div>
     </Link>
   );

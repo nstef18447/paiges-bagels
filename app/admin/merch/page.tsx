@@ -18,7 +18,7 @@ export default function AdminMerchPage() {
   // New item form
   const [showNewItem, setShowNewItem] = useState(false);
   const [newItem, setNewItem] = useState({
-    name: '', description: '', price: '', stock: '', needs_size: false, sizes: '', display_order: '0',
+    name: '', description: '', price: '', stock: '', needs_size: false, is_preorder: false, sizes: '', display_order: '0',
   });
   const [savingItem, setSavingItem] = useState(false);
 
@@ -82,6 +82,7 @@ export default function AdminMerchPage() {
           price: parseFloat(newItem.price),
           stock: newItem.stock ? parseInt(newItem.stock) : null,
           needs_size: newItem.needs_size,
+          is_preorder: newItem.is_preorder,
           sizes: newItem.needs_size && newItem.sizes
             ? newItem.sizes.split(',').map(s => s.trim()).filter(Boolean)
             : [],
@@ -89,7 +90,7 @@ export default function AdminMerchPage() {
         }),
       });
       if (response.ok) {
-        setNewItem({ name: '', description: '', price: '', stock: '', needs_size: false, sizes: '', display_order: '0' });
+        setNewItem({ name: '', description: '', price: '', stock: '', needs_size: false, is_preorder: false, sizes: '', display_order: '0' });
         setShowNewItem(false);
         await fetchAll();
       } else {
@@ -313,6 +314,15 @@ export default function AdminMerchPage() {
                   />
                   <label htmlFor="needs_size" className="text-sm">Needs Size</label>
                 </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={newItem.is_preorder}
+                    onChange={(e) => setNewItem(prev => ({ ...prev, is_preorder: e.target.checked }))}
+                    id="is_preorder"
+                  />
+                  <label htmlFor="is_preorder" className="text-sm">Pre-Order</label>
+                </div>
                 {newItem.needs_size && (
                   <input
                     placeholder="Sizes (comma-separated: S,M,L,XL)"
@@ -367,6 +377,12 @@ export default function AdminMerchPage() {
                       className={`px-3 py-1 text-xs rounded ${item.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}
                     >
                       {item.active ? 'Active' : 'Inactive'}
+                    </button>
+                    <button
+                      onClick={() => handleUpdateItem(item.id, { is_preorder: !item.is_preorder })}
+                      className={`px-3 py-1 text-xs rounded ${item.is_preorder ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'}`}
+                    >
+                      {item.is_preorder ? 'Pre-Order On' : 'Pre-Order Off'}
                     </button>
                     <button
                       onClick={() => handleDeleteItem(item.id)}

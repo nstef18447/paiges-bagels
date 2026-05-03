@@ -179,6 +179,7 @@ export interface MerchItem {
   needs_size: boolean;
   sizes: string[];
   active: boolean;
+  is_preorder: boolean;
   display_order: number;
   created_at: string;
   updated_at: string;
