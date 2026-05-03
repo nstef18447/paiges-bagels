@@ -380,157 +380,111 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
           <p className="text-gray-500">
             {slotTab === 'active' ? 'No active time slots' : 'No past time slots'}
           </p>
-        ) : (
+        ) : editingId ? (
+          // Show only the slot being edited
           <div className="grid gap-3">
-            {displayedSlots.map((slot) => (
-              <div
-                key={slot.id}
-                className="bg-white border border-gray-200 rounded-lg p-4"
-              >
-                {editingId === slot.id ? (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Date</label>
-                        <input
-                          type="date"
-                          value={editDate}
-                          onChange={(e) => setEditDate(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Time</label>
-                        <select
-                          value={editTime}
-                          onChange={(e) => setEditTime(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-white"
-                        >
-                          <option value="">Select time</option>
-                          {TIME_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Bagel Capacity</label>
-                        <input
-                          type="number"
-                          value={editCapacity}
-                          onChange={(e) => setEditCapacity(parseInt(e.target.value))}
-                          min="1"
-                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Bite Capacity</label>
-                        <input
-                          type="number"
-                          value={editBiteCapacity}
-                          onChange={(e) => setEditBiteCapacity(parseInt(e.target.value) || 0)}
-                          min="0"
-                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Cutoff Date</label>
-                        <input
-                          type="date"
-                          value={editCutoffDate}
-                          onChange={(e) => setEditCutoffDate(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Cutoff Time</label>
-                        <select
-                          value={editCutoffTime}
-                          onChange={(e) => setEditCutoffTime(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-white"
-                        >
-                          <option value="">Select time</option>
-                          {TIME_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={editIsHangover}
-                        onChange={(e) => setEditIsHangover(e.target.checked)}
-                        className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
-                      />
-                      <span className="text-sm font-medium text-gray-700">Hangover Bagels slot</span>
-                    </label>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEdit(slot.id)}
-                        disabled={submitting}
-                        className="flex-1 px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300 text-sm"
-                      >
-                        {submitting ? 'Saving...' : 'Save'}
-                      </button>
-                      <button
-                        onClick={cancelEditing}
-                        className="flex-1 px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex justify-between items-center">
+            {displayedSlots.filter(s => s.id === editingId).map((slot) => (
+              <div key={slot.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div>
-                      <p className="font-semibold">
-                        {formatDate(slot.date)}
-                        {slot.is_hangover && (
-                          <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-700">
-                            Hangover
-                          </span>
-                        )}
-                      </p>
-                      <p className="text-sm text-gray-600">{formatTime(slot.time)}</p>
-                      {slot.cutoff_time && (
-                        <p className="text-xs text-orange-600 mt-1">
-                          Orders close: {new Date(slot.cutoff_time).toLocaleString()}
-                        </p>
-                      )}
+                      <label className="block text-xs text-gray-600 mb-1">Date</label>
+                      <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded text-sm" />
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold">
-                        {slot.remaining} / {slot.capacity} bagels
-                      </p>
-                      {(slot.bite_capacity > 0) && (
-                        <p className="font-semibold text-sm" style={{ color: '#0369A1' }}>
-                          {slot.bite_remaining} / {slot.bite_capacity} bites
-                        </p>
-                      )}
-                      <p className="text-sm text-gray-600">
-                        {slot.capacity - slot.remaining} bagels sold
-                      </p>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Time</label>
+                      <select value={editTime} onChange={(e) => setEditTime(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-white">
+                        <option value="">Select time</option>
+                        {TIME_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+                      </select>
                     </div>
-                    <div className="flex gap-2 ml-4">
-                      <button
-                        onClick={() => startEditing(slot)}
-                        className="px-3 py-1 bg-[#004AAD] text-white rounded-lg hover:bg-[#003A8C] text-sm"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(slot.id)}
-                        className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm"
-                      >
-                        Delete
-                      </button>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Bagel Capacity</label>
+                      <input type="number" value={editCapacity} onChange={(e) => setEditCapacity(parseInt(e.target.value))} min="1" className="w-full px-3 py-2 border border-gray-300 rounded text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Bite Capacity</label>
+                      <input type="number" value={editBiteCapacity} onChange={(e) => setEditBiteCapacity(parseInt(e.target.value) || 0)} min="0" className="w-full px-3 py-2 border border-gray-300 rounded text-sm" />
                     </div>
                   </div>
-                )}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Cutoff Date</label>
+                      <input type="date" value={editCutoffDate} onChange={(e) => setEditCutoffDate(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Cutoff Time</label>
+                      <select value={editCutoffTime} onChange={(e) => setEditCutoffTime(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-white">
+                        <option value="">Select time</option>
+                        {TIME_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+                      </select>
+                    </div>
+                  </div>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" checked={editIsHangover} onChange={(e) => setEditIsHangover(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500" />
+                    <span className="text-sm font-medium text-gray-700">Hangover Bagels slot</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <button onClick={() => handleEdit(slot.id)} disabled={submitting} className="flex-1 px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300 text-sm">
+                      {submitting ? 'Saving...' : 'Save'}
+                    </button>
+                    <button onClick={cancelEditing} className="flex-1 px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm">Cancel</button>
+                  </div>
+                </div>
               </div>
             ))}
+          </div>
+        ) : (
+          // Grouped by date view
+          <div className="space-y-4">
+            {Object.entries(
+              displayedSlots.reduce<Record<string, TimeSlotWithCapacity[]>>((acc, slot) => {
+                if (!acc[slot.date]) acc[slot.date] = [];
+                acc[slot.date].push(slot);
+                return acc;
+              }, {})
+            )
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([date, dateSlots]) => (
+                <div key={date} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                  <div className="px-4 py-3 border-b border-gray-100" style={{ backgroundColor: '#F8FAFF' }}>
+                    <span className="font-semibold text-sm" style={{ color: '#004AAD' }}>{formatDate(date)}</span>
+                  </div>
+                  <div className="divide-y divide-gray-100">
+                    {dateSlots.sort((a, b) => a.time.localeCompare(b.time)).map((slot) => {
+                      const bagelsSold = slot.capacity - slot.remaining;
+                      const bitesSold = (slot.bite_capacity || 0) - (slot.bite_remaining || 0);
+                      return (
+                        <div key={slot.id} className="flex items-center justify-between px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <span className="font-medium text-sm w-20">{formatTime(slot.time)}</span>
+                            {slot.is_hangover && (
+                              <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-700">Hangover</span>
+                            )}
+                            {slot.cutoff_time && (
+                              <span className="text-xs text-orange-600">Closes {new Date(slot.cutoff_time).toLocaleString()}</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className="text-sm px-3 py-1 rounded-full font-medium" style={{ backgroundColor: '#E8F0FE', color: '#004AAD' }}>
+                              {bagelsSold}/{slot.capacity} bagels
+                            </span>
+                            {(slot.bite_capacity || 0) > 0 && (
+                              <span className="text-sm px-3 py-1 rounded-full font-medium" style={{ backgroundColor: '#E0F2FE', color: '#0369A1' }}>
+                                {bitesSold}/{slot.bite_capacity} bites
+                              </span>
+                            )}
+                            <div className="flex gap-2">
+                              <button onClick={() => startEditing(slot)} className="px-3 py-1 bg-[#004AAD] text-white rounded-lg hover:bg-[#003A8C] text-xs">Edit</button>
+                              <button onClick={() => handleDelete(slot.id)} className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 text-xs">Delete</button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
           </div>
         )}
       </div>
