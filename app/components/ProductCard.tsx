@@ -29,7 +29,7 @@ export default function ProductCard({ item }: { item: MerchItem }) {
       <div className="w-full overflow-hidden" style={{ aspectRatio: '5/6', background: '#eae7e1' }}>
         {item.image_url ? (
           <Image
-            src={item.image_url.startsWith('/') ? item.image_url : `/${item.image_url}`}
+            src={item.image_url}
             alt={item.name}
             width={400}
             height={480}

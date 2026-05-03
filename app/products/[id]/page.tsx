@@ -25,7 +25,7 @@ export default async function ProductDetailPage({ params }: Props) {
         <div className="product-detail-image">
           {product.image_url ? (
             <Image
-              src={product.image_url.startsWith('/') ? product.image_url : `/${product.image_url}`}
+              src={product.image_url}
               alt={product.name}
               width={800}
               height={800}

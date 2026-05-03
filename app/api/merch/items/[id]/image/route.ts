@@ -21,15 +21,15 @@ export async function POST(
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const { error: uploadError } = await supabase.storage
-      .from('merch')
+      .from('Merch')
       .upload(filePath, buffer, { contentType: file.type, upsert: true });
 
     if (uploadError) {
       console.error('Upload error:', uploadError);
-      return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 });
+      return NextResponse.json({ error: uploadError.message }, { status: 500 });
     }
 
-    const { data: urlData } = supabase.storage.from('merch').getPublicUrl(filePath);
+    const { data: urlData } = supabase.storage.from('Merch').getPublicUrl(filePath);
     const imageUrl = urlData.publicUrl;
 
     const { error: updateError } = await supabase

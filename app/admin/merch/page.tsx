@@ -134,7 +134,8 @@ export default function AdminMerchPage() {
       if (response.ok) {
         await fetchAll();
       } else {
-        alert('Failed to upload image');
+        const data = await response.json();
+        alert(`Upload failed: ${data.error}`);
       }
     } catch {
       alert('Failed to upload image');
