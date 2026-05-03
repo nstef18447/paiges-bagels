@@ -55,6 +55,7 @@ export async function POST(request: Request) {
       size: cartItem.size || null,
       quantity: cartItem.quantity,
       unit_price: dbItem.price,
+      is_preorder: dbItem.is_preorder ?? false,
     });
   }
 

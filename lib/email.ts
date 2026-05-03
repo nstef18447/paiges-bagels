@@ -416,6 +416,8 @@ export async function sendPickupReminderEmail(
 export async function sendMerchConfirmationEmail(
   order: MerchOrder
 ): Promise<void> {
+  const hasPreorder = order.items.some(item => item.is_preorder);
+
   const itemRows = order.items.map(item => `
     <tr>
       <td style="padding:10px 0;border-bottom:1px solid ${BRAND.border};font-family:Arial,sans-serif;font-size:14px;color:#333;">
@@ -441,6 +443,15 @@ export async function sendMerchConfirmationEmail(
         <p style="margin:0;font-family:Arial,sans-serif;font-size:15px;color:${BRAND.textSec};">Thanks for your order, ${order.customer_name}!</p>
       </td></tr>
     </table>
+
+    ${hasPreorder ? `
+    <!-- Pre-order banner -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="padding:0 24px 20px;">
+      <tr><td style="background:#ede9fe;border:1px solid #ddd6fe;border-radius:10px;padding:14px 18px;">
+        <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#7c3aed;">Pre-Order</p>
+        <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#6d28d9;">This is a pre-order — your item will ship in 2–3 weeks. Paige will reach out to coordinate delivery!</p>
+      </td></tr>
+    </table>` : ''}
 
     <!-- Order details card -->
     <table width="100%" cellpadding="0" cellspacing="0" style="padding:0 24px;">

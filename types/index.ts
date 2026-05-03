@@ -197,6 +197,7 @@ export interface MerchOrderItem {
   size: string | null;
   quantity: number;
   unit_price: number;
+  is_preorder?: boolean;
 }
 
 export interface MerchOrder {
