@@ -156,23 +156,9 @@ function ConfirmationContent() {
               2
             </span>
             <div>
-              <p className="text-[0.92rem] font-semibold" style={{ color: 'var(--text-dark)' }}>Wait for confirmation</p>
+              <p className="text-[0.92rem] font-semibold" style={{ color: 'var(--text-dark)' }}>We'll text you to arrange pickup</p>
               <p className="text-[0.82rem]" style={{ color: 'var(--text-secondary)' }}>
-                {`We'll reach out to ${order.customer_email} to arrange pickup once payment is verified.`}
-              </p>
-            </div>
-          </li>
-          <li className="flex gap-3">
-            <span
-              className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
-              style={{ backgroundColor: 'var(--blue)' }}
-            >
-              3
-            </span>
-            <div>
-              <p className="text-[0.92rem] font-semibold" style={{ color: 'var(--text-dark)' }}>Pick up your order</p>
-              <p className="text-[0.82rem]" style={{ color: 'var(--text-secondary)' }}>
-                Paige will reach out to coordinate a pickup time!
+                Once we verify your payment, Paige will text you to coordinate a pickup time!
               </p>
             </div>
           </li>
