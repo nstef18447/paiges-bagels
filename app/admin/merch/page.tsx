@@ -465,7 +465,7 @@ export default function AdminMerchPage() {
                     order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
                     'bg-yellow-100 text-yellow-700'
                   }`}>
-                    {order.status}
+                    {order.status === 'shipped' ? 'picked up' : order.status}
                   </span>
                   {order.status === 'pending_payment' && (
                     <button
@@ -482,7 +482,7 @@ export default function AdminMerchPage() {
                       className="px-3 py-1 text-xs rounded text-white"
                       style={{ backgroundColor: '#004AAD' }}
                     >
-                      Mark Picked Up
+                      Mark as Picked Up
                     </button>
                   )}
                 </div>
