@@ -93,9 +93,17 @@ export default function ProductDetailActions({ item }: { item: MerchItem }) {
 
       {/* Pre-order note */}
       {isPreorder && !soldOut && (
-        <p className="text-[0.82rem] mb-4 font-medium" style={{ color: '#7c3aed' }}>
-          Ships in 2–3 weeks
-        </p>
+        <div
+          className="rounded-xl px-4 py-3 mb-4"
+          style={{ background: '#ede9fe', border: '1px solid #ddd6fe' }}
+        >
+          <p className="text-[0.85rem] font-bold mb-0.5" style={{ color: '#7c3aed' }}>
+            This item is available for pre-order.
+          </p>
+          <p className="text-[0.82rem]" style={{ color: '#6d28d9' }}>
+            Pay now to reserve yours — item will ship in 2–3 weeks!
+          </p>
+        </div>
       )}
 
       {/* Add to Cart */}
