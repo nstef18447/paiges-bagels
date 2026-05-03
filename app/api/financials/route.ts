@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     // Fetch all confirmed/ready orders with time slots and add-ons
     const { data: orders, error: ordersError } = await supabase
       .from('orders')
-      .select('id, total_bagels, total_price, status, time_slot_id, time_slots(date), order_add_ons(quantity, add_on_type_id)')
+      .select('id, total_bagels, total_price, status, bites, time_slot_id, time_slots(date), order_add_ons(quantity, add_on_type_id)')
       .in('status', ['confirmed', 'ready'])
       .eq('is_fake', false);
 
@@ -64,13 +64,15 @@ export async function GET(request: NextRequest) {
     const dailyMap: Record<string, {
       orders: number;
       bagels_sold: number;
+      bites_sold: number;
       revenue: number;
       addon_cogs: number;
     }> = {};
 
     let grandTotalBagels = 0;
+    let grandTotalBites = 0;
 
-    for (const order of orders || []) {
+    for (const order of (orders || []) as any[]) {
       const timeSlot = order.time_slots as unknown as { date: string } | null;
       const date = timeSlot?.date;
       if (!date) continue;
@@ -80,13 +82,18 @@ export async function GET(request: NextRequest) {
       if (endDate && date > endDate) continue;
 
       if (!dailyMap[date]) {
-        dailyMap[date] = { orders: 0, bagels_sold: 0, revenue: 0, addon_cogs: 0 };
+        dailyMap[date] = { orders: 0, bagels_sold: 0, bites_sold: 0, revenue: 0, addon_cogs: 0 };
       }
+
+      const orderBites = (order as any).bites as { flavors: Record<string, number> } | null;
+      const bitesQty = orderBites?.flavors ? Object.values(orderBites.flavors).reduce((s, q) => s + q, 0) : 0;
 
       dailyMap[date].orders += 1;
       dailyMap[date].bagels_sold += order.total_bagels;
+      dailyMap[date].bites_sold += bitesQty;
       dailyMap[date].revenue += Number(order.total_price);
       grandTotalBagels += order.total_bagels;
+      grandTotalBites += bitesQty;
 
       // Calculate add-on COGS for this order
       const addOns = order.order_add_ons as unknown as { quantity: number; add_on_type_id: string }[] || [];
@@ -113,6 +120,7 @@ export async function GET(request: NextRequest) {
           date,
           orders: data.orders,
           bagels_sold: data.bagels_sold,
+          bites_sold: data.bites_sold,
           revenue: data.revenue,
           cogs,
           profit,
@@ -128,8 +136,9 @@ export async function GET(request: NextRequest) {
         total_profit: acc.total_profit + day.profit,
         total_orders: acc.total_orders + day.orders,
         total_bagels: acc.total_bagels + day.bagels_sold,
+        total_bites: acc.total_bites + day.bites_sold,
       }),
-      { total_revenue: 0, total_cogs: 0, total_profit: 0, total_orders: 0, total_bagels: 0 }
+      { total_revenue: 0, total_cogs: 0, total_profit: 0, total_orders: 0, total_bagels: 0, total_bites: 0 }
     );
 
     const avg_order_value =

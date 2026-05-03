@@ -13,6 +13,7 @@ interface FinancialsData {
     total_profit: number;
     total_orders: number;
     total_bagels: number;
+    total_bites: number;
     avg_order_value: number;
     overall_margin: number;
   };
@@ -93,7 +94,7 @@ export default function AdminFinancialsPage() {
 
       {/* Summary Cards */}
       {summary && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-7 gap-4 mb-8">
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <div className="text-sm text-gray-500 mb-1">Total Revenue</div>
             <div className="text-2xl font-bold text-green-600">{fmt(summary.total_revenue)}</div>
@@ -113,6 +114,14 @@ export default function AdminFinancialsPage() {
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <div className="text-sm text-gray-500 mb-1">Avg Order Value</div>
             <div className="text-2xl font-bold">{fmt(summary.avg_order_value)}</div>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4" style={{ borderColor: '#BFDBFE' }}>
+            <div className="text-sm text-gray-500 mb-1">Total Bagels</div>
+            <div className="text-2xl font-bold" style={{ color: '#004AAD' }}>{summary.total_bagels}</div>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4" style={{ borderColor: '#BAE6FD' }}>
+            <div className="text-sm text-gray-500 mb-1">Total Bites</div>
+            <div className="text-2xl font-bold" style={{ color: '#0369A1' }}>{summary.total_bites}</div>
           </div>
         </div>
       )}
@@ -175,6 +184,7 @@ export default function AdminFinancialsPage() {
                 <th className="py-3 px-2 font-semibold text-sm text-gray-600">Date</th>
                 <th className="py-3 px-2 font-semibold text-sm text-gray-600">Orders</th>
                 <th className="py-3 px-2 font-semibold text-sm text-gray-600">Bagels Sold</th>
+                <th className="py-3 px-2 font-semibold text-sm text-gray-600">Bites Sold</th>
                 <th className="py-3 px-2 font-semibold text-sm text-gray-600">Revenue</th>
                 <th className="py-3 px-2 font-semibold text-sm text-gray-600">COGS</th>
                 <th className="py-3 px-2 font-semibold text-sm text-gray-600">Profit</th>
@@ -187,6 +197,7 @@ export default function AdminFinancialsPage() {
                   <td className="py-2 px-2 font-medium">{day.date}</td>
                   <td className="py-2 px-2">{day.orders}</td>
                   <td className="py-2 px-2">{day.bagels_sold}</td>
+                  <td className="py-2 px-2">{(day as any).bites_sold ?? 0}</td>
                   <td className="py-2 px-2 text-green-600">{fmt(day.revenue)}</td>
                   <td className="py-2 px-2 text-red-600">{fmt(day.cogs)}</td>
                   <td className="py-2 px-2 text-[#004AAD] font-medium">{fmt(day.profit)}</td>
@@ -195,7 +206,7 @@ export default function AdminFinancialsPage() {
               ))}
               {daily.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-gray-400">
+                  <td colSpan={8} className="py-8 text-center text-gray-400">
                     No financial data found for the selected period.
                   </td>
                 </tr>
