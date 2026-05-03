@@ -144,6 +144,19 @@ export default function AdminMerchPage() {
     }
   };
 
+  const handleConfirmPayment = async (orderId: string) => {
+    try {
+      await fetch(`/api/merch/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'paid' }),
+      });
+      await fetchAll();
+    } catch {
+      alert('Failed to confirm order');
+    }
+  };
+
   const handleMarkShipped = async (orderId: string) => {
     try {
       await fetch(`/api/merch/orders/${orderId}`, {
@@ -454,13 +467,22 @@ export default function AdminMerchPage() {
                   }`}>
                     {order.status}
                   </span>
+                  {order.status === 'pending_payment' && (
+                    <button
+                      onClick={() => handleConfirmPayment(order.id)}
+                      className="px-3 py-1 text-xs rounded text-white"
+                      style={{ backgroundColor: '#16a34a' }}
+                    >
+                      Confirm Payment
+                    </button>
+                  )}
                   {order.status === 'paid' && (
                     <button
                       onClick={() => handleMarkShipped(order.id)}
                       className="px-3 py-1 text-xs rounded text-white"
                       style={{ backgroundColor: '#004AAD' }}
                     >
-                      Mark Shipped
+                      Mark Picked Up
                     </button>
                   )}
                 </div>
@@ -473,9 +495,11 @@ export default function AdminMerchPage() {
                   </span>
                 ))}
               </div>
-              <div className="text-sm text-gray-500">
-                <span>Ship to: {order.shipping_address}, {order.shipping_city}, {order.shipping_state} {order.shipping_zip}</span>
-              </div>
+              {order.shipping_address && (
+                <div className="text-sm text-gray-500">
+                  <span>Ship to: {order.shipping_address}, {order.shipping_city}, {order.shipping_state} {order.shipping_zip}</span>
+                </div>
+              )}
               <div className="flex justify-between mt-2 text-sm">
                 <span className="text-gray-500">
                   {new Date(order.created_at).toLocaleDateString()}
