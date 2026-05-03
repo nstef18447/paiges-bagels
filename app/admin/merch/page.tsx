@@ -144,6 +144,16 @@ export default function AdminMerchPage() {
     }
   };
 
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!confirm('Delete this order? This cannot be undone.')) return;
+    try {
+      await fetch(`/api/merch/orders/${orderId}`, { method: 'DELETE' });
+      await fetchAll();
+    } catch {
+      alert('Failed to delete order');
+    }
+  };
+
   const handleConfirmPayment = async (orderId: string) => {
     try {
       await fetch(`/api/merch/orders/${orderId}`, {
@@ -476,6 +486,12 @@ export default function AdminMerchPage() {
                       Confirm Payment
                     </button>
                   )}
+                  <button
+                    onClick={() => handleDeleteOrder(order.id)}
+                    className="px-3 py-1 text-xs rounded bg-red-100 text-red-700"
+                  >
+                    Delete
+                  </button>
                   {order.status === 'paid' && (
                     <button
                       onClick={() => handleMarkShipped(order.id)}

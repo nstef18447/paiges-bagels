@@ -54,3 +54,22 @@ export async function PATCH(
 
   return NextResponse.json(data);
 }
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const serviceSupabase = getServiceSupabase();
+
+  const { error } = await serviceSupabase
+    .from('merch_orders')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
+}
