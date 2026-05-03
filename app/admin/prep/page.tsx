@@ -147,14 +147,18 @@ function OvenSection({ section, color }: { section: OvenSection; color: string }
 }
 
 function OvenLoadRow({ ovenLabel, load }: { ovenLabel: string; load: OvenLoad }) {
+  const isBig = ovenLabel === 'Big Oven';
   const bagelColor = '#004AAD';
   const biteColor = '#0369A1';
   const hasBoth = !!(load.bagels && load.bites);
+  const bg = isBig ? '#FFF7ED' : '#F0FDF4';
+  const border = isBig ? '#FDBA74' : '#86EFAC';
+  const labelColor = isBig ? '#C2410C' : '#15803D';
 
   return (
-    <div className="rounded-lg px-4 py-3 space-y-3" style={{ backgroundColor: '#F8FAFF', border: '1px solid #E2E8F0' }}>
+    <div className="rounded-lg px-4 py-3 space-y-3" style={{ backgroundColor: bg, border: `1px solid ${border}` }}>
+      <div className="text-xs font-bold uppercase tracking-widest" style={{ color: labelColor }}>{ovenLabel}</div>
       <div className="flex items-center gap-2">
-        <span className="text-xs font-bold uppercase tracking-wide" style={{ color: bagelColor }}>{ovenLabel}</span>
         {load.bagels && (
           <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: '#E8F0FE', color: bagelColor }}>
             {load.bagels.total}/{ovenLabel === 'Big Oven' ? BIG_BAGEL_CAP : SMALL_BAGEL_CAP} bagels
