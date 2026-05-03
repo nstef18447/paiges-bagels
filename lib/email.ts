@@ -471,7 +471,7 @@ export async function sendMerchConfirmationEmail(
     <!-- Pickup note -->
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr><td style="padding:24px 24px 36px;">
-        <p style="margin:0;font-family:Arial,sans-serif;font-size:14px;color:${BRAND.textSec};">We'll be in touch to coordinate pickup at a bagel drop or another convenient time!</p>
+        <p style="margin:0;font-family:Arial,sans-serif;font-size:14px;color:${BRAND.textSec};">Paige will reach out to coordinate a pickup time!</p>
       </td></tr>
     </table>`;
 

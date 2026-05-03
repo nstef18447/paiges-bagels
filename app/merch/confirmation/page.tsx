@@ -172,7 +172,7 @@ function ConfirmationContent() {
             <div>
               <p className="text-[0.92rem] font-semibold" style={{ color: 'var(--text-dark)' }}>Pick up your order</p>
               <p className="text-[0.82rem]" style={{ color: 'var(--text-secondary)' }}>
-                Coordinate pickup at a bagel drop or another convenient time!
+                Paige will reach out to coordinate a pickup time!
               </p>
             </div>
           </li>
