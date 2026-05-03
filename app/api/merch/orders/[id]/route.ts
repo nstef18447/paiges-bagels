@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
+import { sendMerchConfirmationEmail } from '@/lib/email';
 
 export async function GET(
   _request: Request,
@@ -41,6 +42,14 @@ export async function PATCH(
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (body.status === 'paid') {
+    try {
+      await sendMerchConfirmationEmail(data);
+    } catch (emailError) {
+      console.error('Failed to send merch confirmation email:', emailError);
+    }
   }
 
   return NextResponse.json(data);

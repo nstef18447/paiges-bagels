@@ -455,7 +455,7 @@ export async function sendMerchConfirmationEmail(
               </tr>
               ${itemRows}
               <tr>
-                <td style="padding:10px 0;border-bottom:1px solid ${BRAND.border};font-family:Arial,sans-serif;font-size:14px;color:${BRAND.textSec};">Shipping</td>
+                <td style="padding:10px 0;border-bottom:1px solid ${BRAND.border};font-family:Arial,sans-serif;font-size:14px;color:${BRAND.textSec};">Service fee</td>
                 <td align="right" style="padding:10px 0;border-bottom:1px solid ${BRAND.border};font-family:Arial,sans-serif;font-size:14px;color:${BRAND.textSec};">$${order.shipping_cost.toFixed(2)}</td>
               </tr>
               <tr>
@@ -468,15 +468,10 @@ export async function sendMerchConfirmationEmail(
       </td></tr>
     </table>
 
-    <!-- Shipping address -->
+    <!-- Pickup note -->
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr><td style="padding:24px 24px 36px;">
-        <h3 style="margin:0 0 8px;font-family:Georgia,serif;font-size:16px;color:${BRAND.blue};">Shipping To</h3>
-        <p style="margin:0;font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.5;">
-          ${order.shipping_address}<br/>
-          ${order.shipping_city}, ${order.shipping_state} ${order.shipping_zip}
-        </p>
-        <p style="margin:12px 0 0;font-family:Arial,sans-serif;font-size:14px;color:${BRAND.textSec};">We'll ship your merch soon!</p>
+        <p style="margin:0;font-family:Arial,sans-serif;font-size:14px;color:${BRAND.textSec};">We'll be in touch to coordinate pickup at a bagel drop or another convenient time!</p>
       </td></tr>
     </table>`;
 
