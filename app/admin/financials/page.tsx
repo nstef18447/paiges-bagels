@@ -71,6 +71,30 @@ export default function AdminFinancialsPage() {
   const summary = data?.summary;
   const daily = data?.daily || [];
 
+  // Group daily data into Mon–Sun weeks
+  const weeklyRevenue = (() => {
+    const weekMap: Record<string, { revenue: number; start: string; end: string }> = {};
+    for (const day of daily) {
+      const date = new Date(day.date + 'T00:00:00');
+      const dow = date.getDay(); // 0=Sun
+      const diff = dow === 0 ? -6 : 1 - dow;
+      const monday = new Date(date);
+      monday.setDate(date.getDate() + diff);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      const key = monday.toISOString().split('T')[0];
+      if (!weekMap[key]) {
+        weekMap[key] = {
+          revenue: 0,
+          start: monday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          end: sunday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        };
+      }
+      weekMap[key].revenue += day.revenue;
+    }
+    return Object.entries(weekMap).sort(([a], [b]) => b.localeCompare(a));
+  })();
+
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="mb-8">
@@ -215,6 +239,31 @@ export default function AdminFinancialsPage() {
           </table>
         </div>
       </div>
+
+      {/* Weekly Revenue */}
+      {weeklyRevenue.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-lg p-6 mt-6">
+          <h2 className="text-2xl font-semibold mb-4">Weekly Revenue</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="py-3 px-2 font-semibold text-sm text-gray-600">Week</th>
+                  <th className="py-3 px-2 font-semibold text-sm text-gray-600">Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                {weeklyRevenue.map(([key, week]) => (
+                  <tr key={key} className="border-b border-gray-100">
+                    <td className="py-2 px-2 font-medium">Mon {week.start} – Sun {week.end}</td>
+                    <td className="py-2 px-2 text-green-600 font-semibold">{fmt(week.revenue)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
