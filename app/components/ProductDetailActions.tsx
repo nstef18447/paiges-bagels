@@ -76,13 +76,14 @@ export default function ProductDetailActions({ item }: { item: MerchItem }) {
           {qty}
         </span>
         <button
-          onClick={() => setQty(q => q + 1)}
+          onClick={() => setQty(q => item.stock !== null ? Math.min(item.stock, q + 1) : q + 1)}
+          disabled={item.stock !== null && qty >= item.stock}
           className="w-11 h-11 rounded-full flex items-center justify-center text-xl font-semibold transition-all"
           style={{
             border: '1.5px solid var(--border)',
             background: 'var(--bg-card)',
-            color: 'var(--blue)',
-            cursor: 'pointer',
+            color: item.stock !== null && qty >= item.stock ? 'var(--border)' : 'var(--blue)',
+            cursor: item.stock !== null && qty >= item.stock ? 'not-allowed' : 'pointer',
           }}
         >
           +
