@@ -48,12 +48,147 @@ interface DayPrep {
   total_bagels: number;
 }
 
+// --- Oven Plan ---
+const BIG_BAGEL_CAP = 12;
+const SMALL_BAGEL_CAP = 6;
+const BIG_BITE_CAP = 20;
+const SMALL_BITE_CAP = 15;
+
+interface OvenFlavor { name: string; qty: number; }
+interface OvenItem { label: string; flavors: OvenFlavor[]; qty: number; }
+interface OvenSection { items: OvenItem[]; total: number; }
+interface OvenLoad { bagels?: OvenSection; bites?: OvenSection; }
+interface OvenRound { big: OvenLoad | null; small: OvenLoad | null; }
+
+function takeFrom(queue: OvenItem[], capacity: number): OvenItem[] {
+  const taken: OvenItem[] = [];
+  let remaining = capacity;
+  while (remaining > 0 && queue.length > 0) {
+    const slot = queue[0];
+    const takenItem: OvenItem = { label: slot.label, flavors: [], qty: 0 };
+    while (remaining > 0 && slot.flavors.length > 0) {
+      const f = slot.flavors[0];
+      const take = Math.min(f.qty, remaining);
+      takenItem.flavors.push({ name: f.name, qty: take });
+      takenItem.qty += take;
+      f.qty -= take;
+      remaining -= take;
+      if (f.qty === 0) slot.flavors.shift();
+    }
+    slot.qty = slot.flavors.reduce((s, f) => s + f.qty, 0);
+    if (takenItem.qty > 0) taken.push(takenItem);
+    if (slot.flavors.length === 0) queue.shift();
+  }
+  return taken;
+}
+
+function computeOvenPlan(slots: SlotPrep[]): OvenRound[] {
+  const bagels: OvenItem[] = [];
+  const bites: OvenItem[] = [];
+  for (const slot of slots) {
+    if (slot.total_bagels > 0) bagels.push({ label: slot.time, qty: slot.total_bagels, flavors: slot.bagels.map(b => ({ name: b.name, qty: b.quantity })) });
+    if ((slot.total_bites || 0) > 0) bites.push({ label: slot.time, qty: slot.total_bites, flavors: (slot.bites || []).map(b => ({ name: b.name, qty: b.quantity })) });
+  }
+
+  const rounds: OvenRound[] = [];
+  while (bagels.length > 0 || bites.length > 0) {
+    const round: OvenRound = { big: null, small: null };
+
+    // Big oven: bagels first, then fill remaining space with bites
+    const bigLoad: OvenLoad = {};
+    let bigFillPct = 0;
+    if (bagels.length > 0) {
+      const items = takeFrom(bagels, BIG_BAGEL_CAP);
+      const total = items.reduce((s, i) => s + i.qty, 0);
+      bigLoad.bagels = { items, total };
+      bigFillPct = total / BIG_BAGEL_CAP;
+    }
+    const bigRemainingBites = Math.floor((1 - bigFillPct) * BIG_BITE_CAP);
+    if (bigRemainingBites > 0 && bites.length > 0) {
+      const items = takeFrom(bites, bigRemainingBites);
+      bigLoad.bites = { items, total: items.reduce((s, i) => s + i.qty, 0) };
+    }
+    round.big = (bigLoad.bagels || bigLoad.bites) ? bigLoad : null;
+
+    // Small oven: BITES first (same-slot priority), then fill remaining space with bagels
+    if (bagels.length > 0 || bites.length > 0) {
+      const smallLoad: OvenLoad = {};
+      let smallFillPct = 0;
+      if (bites.length > 0) {
+        const items = takeFrom(bites, SMALL_BITE_CAP);
+        const total = items.reduce((s, i) => s + i.qty, 0);
+        smallLoad.bites = { items, total };
+        smallFillPct = total / SMALL_BITE_CAP;
+      }
+      const smallRemainingBagels = Math.floor((1 - smallFillPct) * SMALL_BAGEL_CAP);
+      if (smallRemainingBagels > 0 && bagels.length > 0) {
+        const items = takeFrom(bagels, smallRemainingBagels);
+        smallLoad.bagels = { items, total: items.reduce((s, i) => s + i.qty, 0) };
+      }
+      round.small = (smallLoad.bagels || smallLoad.bites) ? smallLoad : null;
+    }
+
+    rounds.push(round);
+  }
+  return rounds;
+}
+
+function OvenSection({ section, color }: { section: OvenSection; color: string }) {
+  return (
+    <div className="space-y-0.5">
+      {section.items.map((item, idx) => (
+        <div key={idx} className="text-xs" style={{ color }}>
+          <span className="font-semibold mr-1">{formatTime(item.label)} pickup:</span>
+          {item.flavors.map(f => `${f.qty} ${f.name}`).join(', ')}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function OvenLoadRow({ ovenLabel, load }: { ovenLabel: string; load: OvenLoad }) {
+  const bagelColor = '#004AAD';
+  const biteColor = '#0369A1';
+  const hasBoth = !!(load.bagels && load.bites);
+
+  return (
+    <div className="rounded-lg px-4 py-3 space-y-3" style={{ backgroundColor: '#F8FAFF', border: '1px solid #E2E8F0' }}>
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-bold uppercase tracking-wide" style={{ color: bagelColor }}>{ovenLabel}</span>
+        {load.bagels && (
+          <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: '#E8F0FE', color: bagelColor }}>
+            {load.bagels.total}/{ovenLabel === 'Big Oven' ? BIG_BAGEL_CAP : SMALL_BAGEL_CAP} bagels
+          </span>
+        )}
+        {load.bites && (
+          <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: '#E0F2FE', color: biteColor }}>
+            {load.bites.total}/{ovenLabel === 'Big Oven' ? BIG_BITE_CAP : SMALL_BITE_CAP} bites
+          </span>
+        )}
+      </div>
+      {load.bagels && (
+        <div className="pl-2">
+          {hasBoth && <div className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: bagelColor }}>Bagels</div>}
+          <OvenSection section={load.bagels} color={bagelColor} />
+        </div>
+      )}
+      {load.bites && (
+        <div className="pl-2">
+          {hasBoth && <div className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: biteColor }}>Bites</div>}
+          <OvenSection section={load.bites} color={biteColor} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminPrepPage() {
   const [days, setDays] = useState<DayPrep[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPast, setShowPast] = useState(false);
   const [expandedSlots, setExpandedSlots] = useState<Set<string>>(new Set());
   const [markingReady, setMarkingReady] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState<'orders' | 'oven'>('orders');
 
   useEffect(() => {
     fetchPrep();
@@ -132,13 +267,37 @@ export default function AdminPrepPage() {
         </nav>
       </div>
 
-      <h1 className="text-3xl font-bold mb-6">Baking Prep</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">Baking Prep</h1>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setActiveTab('orders')}
+            className="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+            style={{
+              backgroundColor: activeTab === 'orders' ? '#004AAD' : '#F3F4F6',
+              color: activeTab === 'orders' ? 'white' : '#374151',
+            }}
+          >
+            Orders
+          </button>
+          <button
+            onClick={() => setActiveTab('oven')}
+            className="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+            style={{
+              backgroundColor: activeTab === 'oven' ? '#004AAD' : '#F3F4F6',
+              color: activeTab === 'oven' ? 'white' : '#374151',
+            }}
+          >
+            Oven Plan
+          </button>
+        </div>
+      </div>
 
       {upcomingDays.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-lg p-8 text-center text-gray-400">
           No upcoming orders to prep for.
         </div>
-      ) : (
+      ) : activeTab === 'orders' ? (
         <div className="space-y-6">
           {upcomingDays.map((day) => (
             <div key={day.date} className="bg-white border border-gray-200 rounded-lg p-6">
@@ -326,7 +485,6 @@ export default function AdminPrepPage() {
                   <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
                     <span className="text-sm font-semibold uppercase tracking-wide" style={{ color: '#004AAD' }}>Day Totals</span>
 
-                    {/* Bagels */}
                     {bagelTotals.length > 0 && (
                       <div>
                         <div className="flex items-center justify-between mb-1">
@@ -346,7 +504,6 @@ export default function AdminPrepPage() {
                       </div>
                     )}
 
-                    {/* Bites */}
                     {biteTotals.length > 0 && (
                       <div>
                         <div className="flex items-center justify-between mb-1">
@@ -366,7 +523,6 @@ export default function AdminPrepPage() {
                       </div>
                     )}
 
-                    {/* Butter & Schmear */}
                     {(addOnTotals['Butter'] || addOnTotals['Schmear']) && (
                       <div className="pt-3 border-t border-gray-100 flex gap-3">
                         {addOnTotals['Butter'] && (
@@ -388,6 +544,41 @@ export default function AdminPrepPage() {
               })()}
             </div>
           ))}
+        </div>
+      ) : (
+        /* Oven Plan Tab */
+        <div className="space-y-6">
+          {/* Capacity legend */}
+          <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+            <span className="px-3 py-1 rounded-full bg-gray-100">Big oven: <strong>12 bagels</strong> or <strong>20 bites</strong></span>
+            <span className="px-3 py-1 rounded-full bg-gray-100">Small oven: <strong>6 bagels</strong> or <strong>15 bites</strong></span>
+          </div>
+
+          {upcomingDays.map((day) => {
+            const rounds = computeOvenPlan(day.slots);
+            return (
+              <div key={day.date} className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="text-xl font-semibold">{formatDate(day.date)}</h2>
+                  <span className="text-sm text-gray-500">{rounds.length} round{rounds.length !== 1 ? 's' : ''}</span>
+                </div>
+
+                <div className="space-y-5">
+                  {rounds.map((round, i) => (
+                    <div key={i}>
+                      <div className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">
+                        Round {i + 1}
+                      </div>
+                      <div className="space-y-2">
+                        {round.big && <OvenLoadRow ovenLabel="Big Oven" load={round.big} />}
+                        {round.small && <OvenLoadRow ovenLabel="Small Oven" load={round.small} />}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
