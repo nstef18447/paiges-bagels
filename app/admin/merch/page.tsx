@@ -398,6 +398,17 @@ export default function AdminMerchPage() {
                     }}
                     className="w-16 px-2 py-1 border border-gray-200 rounded text-xs"
                   />
+                  <input
+                    placeholder="Description"
+                    defaultValue={item.description ?? ''}
+                    onBlur={(e) => {
+                      const val = e.target.value.trim() || null;
+                      if (val !== (item.description ?? null)) {
+                        handleUpdateItem(item.id, { description: val } as Partial<MerchItem>);
+                      }
+                    }}
+                    className="flex-1 min-w-[160px] px-2 py-1 border border-gray-200 rounded text-xs"
+                  />
                   <label className="px-3 py-1 bg-gray-600 text-white rounded text-xs cursor-pointer hover:bg-gray-700">
                     {uploadingImageId === item.id ? 'Uploading...' : 'Upload Image'}
                     <input

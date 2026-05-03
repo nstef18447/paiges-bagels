@@ -1,6 +1,26 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
 
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const serviceSupabase = getServiceSupabase();
+
+  const { data, error } = await serviceSupabase
+    .from('merch_orders')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error || !data) {
+    return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+  }
+
+  return NextResponse.json(data);
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

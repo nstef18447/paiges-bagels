@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
 import { getServiceSupabase } from '@/lib/supabase';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-01-28.clover',
-});
+import { generateVenmoNote } from '@/lib/utils';
 
 interface CartItem {
   id: string;
@@ -14,27 +10,23 @@ interface CartItem {
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const { items, customerName, customerEmail, shippingAddress, shippingCity, shippingState, shippingZip } = body as {
+  const { items, customerName, customerEmail, customerPhone } = body as {
     items: CartItem[];
     customerName: string;
     customerEmail: string;
-    shippingAddress: string;
-    shippingCity: string;
-    shippingState: string;
-    shippingZip: string;
+    customerPhone?: string;
   };
 
   if (!items || items.length === 0) {
     return NextResponse.json({ error: 'No items in cart' }, { status: 400 });
   }
 
-  if (!customerName || !customerEmail || !shippingAddress || !shippingCity || !shippingState || !shippingZip) {
-    return NextResponse.json({ error: 'Missing shipping information' }, { status: 400 });
+  if (!customerName || !customerEmail) {
+    return NextResponse.json({ error: 'Name and email are required' }, { status: 400 });
   }
 
   const serviceSupabase = getServiceSupabase();
 
-  // Fetch all merch items from DB to validate prices
   const itemIds = items.map(i => i.id);
   const { data: merchItems, error: itemsError } = await serviceSupabase
     .from('merch_items')
@@ -48,7 +40,6 @@ export async function POST(request: Request) {
 
   const itemMap = new Map(merchItems.map(i => [i.id, i]));
 
-  // Validate all items exist and check stock
   const orderItems = [];
   for (const cartItem of items) {
     const dbItem = itemMap.get(cartItem.id);
@@ -67,49 +58,37 @@ export async function POST(request: Request) {
     });
   }
 
-  // Fetch shipping cost
   const { data: settings } = await serviceSupabase
     .from('merch_settings')
     .select('shipping_cost')
     .limit(1)
     .single();
 
-  const shippingCost = settings?.shipping_cost ?? 5.00;
-
-  // Calculate total from DB prices (not client-sent prices)
+  const pickupFee = settings?.shipping_cost ?? 5.00;
   const itemsTotal = orderItems.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
-  const totalPrice = itemsTotal + shippingCost;
+  const totalPrice = itemsTotal + pickupFee;
 
-  // Decrement stock for items with limited stock
   for (const cartItem of items) {
     const dbItem = itemMap.get(cartItem.id)!;
     if (dbItem.stock !== null) {
-      const { error: stockError } = await serviceSupabase
+      await serviceSupabase
         .from('merch_items')
-        .update({
-          stock: dbItem.stock - cartItem.quantity,
-          updated_at: new Date().toISOString(),
-        })
+        .update({ stock: dbItem.stock - cartItem.quantity, updated_at: new Date().toISOString() })
         .eq('id', dbItem.id);
-
-      if (stockError) {
-        return NextResponse.json({ error: 'Failed to update stock' }, { status: 500 });
-      }
     }
   }
 
-  // Insert order as pending_payment
   const { data: order, error: orderError } = await serviceSupabase
     .from('merch_orders')
     .insert({
       customer_name: customerName,
       customer_email: customerEmail,
-      shipping_address: shippingAddress,
-      shipping_city: shippingCity,
-      shipping_state: shippingState,
-      shipping_zip: shippingZip,
+      shipping_address: '',
+      shipping_city: '',
+      shipping_state: '',
+      shipping_zip: '',
       items: orderItems,
-      shipping_cost: shippingCost,
+      shipping_cost: pickupFee,
       total_price: totalPrice,
       status: 'pending_payment',
     })
@@ -120,55 +99,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
   }
 
-  // Create Stripe Checkout Session
-  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = orderItems.map(item => ({
-    price_data: {
-      currency: 'usd',
-      product_data: {
-        name: item.size ? `${item.name} (${item.size})` : item.name,
-      },
-      unit_amount: Math.round(item.unit_price * 100),
-    },
-    quantity: item.quantity,
-  }));
+  const venmoNote = generateVenmoNote(order.id);
 
-  // Add shipping as a line item
-  lineItems.push({
-    price_data: {
-      currency: 'usd',
-      product_data: {
-        name: 'Shipping',
-      },
-      unit_amount: Math.round(shippingCost * 100),
-    },
-    quantity: 1,
-  });
-
-  try {
-    const session = await stripe.checkout.sessions.create({
-      ui_mode: 'embedded',
-      payment_method_types: ['card'],
-      line_items: lineItems,
-      mode: 'payment',
-      customer_email: customerEmail,
-      metadata: {
-        order_id: order.id,
-      },
-      return_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/merch/confirmation?session_id={CHECKOUT_SESSION_ID}`,
-    });
-
-    // Update order with stripe session ID
-    await serviceSupabase
-      .from('merch_orders')
-      .update({
-        stripe_session_id: session.id,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', order.id);
-
-    return NextResponse.json({ clientSecret: session.client_secret });
-  } catch (stripeError: unknown) {
-    const message = stripeError instanceof Error ? stripeError.message : 'Stripe error';
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+  return NextResponse.json({ orderId: order.id, venmoNote, totalPrice });
 }
