@@ -40,8 +40,8 @@ export default function CartDrawer() {
   }, [drawerOpen]);
 
   async function handleCheckout() {
-    if (!formName || !formEmail) {
-      setCheckoutError('Please enter your name and email.');
+    if (!formName || !formEmail || !formPhone) {
+      setCheckoutError('Please fill in all required fields.');
       return;
     }
 
@@ -189,7 +189,7 @@ export default function CartDrawer() {
                   />
                   <input
                     type="tel"
-                    placeholder="Phone (optional)"
+                    placeholder="Phone *"
                     value={formPhone}
                     onChange={e => setFormPhone(e.target.value)}
                     className="w-full px-4 py-3.5 text-[0.88rem] outline-none transition-all"
