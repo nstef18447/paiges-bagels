@@ -24,6 +24,7 @@ export default function AdminMerchPage() {
 
   // Active tab
   const [activeTab, setActiveTab] = useState<'items' | 'orders'>('items');
+  const [uploadingImageId, setUploadingImageId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAll();
@@ -121,6 +122,24 @@ export default function AdminMerchPage() {
       await fetchAll();
     } catch {
       alert('Failed to delete item');
+    }
+  };
+
+  const handleImageUpload = async (id: string, file: File) => {
+    setUploadingImageId(id);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch(`/api/merch/items/${id}/image`, { method: 'POST', body: formData });
+      if (response.ok) {
+        await fetchAll();
+      } else {
+        alert('Failed to upload image');
+      }
+    } catch {
+      alert('Failed to upload image');
+    } finally {
+      setUploadingImageId(null);
     }
   };
 
@@ -301,6 +320,16 @@ export default function AdminMerchPage() {
           <div className="space-y-3">
             {items.map(item => (
               <div key={item.id} className="bg-white rounded-lg p-4 border border-gray-200">
+                <div className="flex gap-4 items-start mb-2">
+                  {/* Image */}
+                  <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                    {item.image_url ? (
+                      <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-gray-400 text-xs text-center leading-tight">No image</span>
+                    )}
+                  </div>
+                <div className="flex-1">
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <span className="font-bold">{item.name}</span>
@@ -368,6 +397,22 @@ export default function AdminMerchPage() {
                     }}
                     className="w-16 px-2 py-1 border border-gray-200 rounded text-xs"
                   />
+                  <label className="px-3 py-1 bg-gray-600 text-white rounded text-xs cursor-pointer hover:bg-gray-700">
+                    {uploadingImageId === item.id ? 'Uploading...' : 'Upload Image'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingImageId === item.id}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleImageUpload(item.id, file);
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                </div>
+                </div>
                 </div>
               </div>
             ))}
