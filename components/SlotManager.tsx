@@ -13,6 +13,16 @@ const TIME_OPTIONS = Array.from({ length: 33 }, (_, i) => {
   return { label, value };
 });
 
+// Cutoff time options: 6:00 AM to 11:45 PM in 15-min steps
+const CUTOFF_TIME_OPTIONS = Array.from({ length: 72 }, (_, i) => {
+  const totalMinutes = 6 * 60 + i * 15;
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  const label = `${h % 12 === 0 ? 12 : h % 12}:${m.toString().padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
+  const value = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+  return { label, value };
+});
+
 interface SlotManagerProps {
   slots: TimeSlotWithCapacity[];
   onRefresh: () => void;
@@ -222,7 +232,18 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
                 type="date"
                 id="date"
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
+                onChange={(e) => {
+                  const selected = e.target.value;
+                  setDate(selected);
+                  if (selected) {
+                    const [y, mo, d] = selected.split('-').map(Number);
+                    const cutoff = new Date(y, mo - 1, d);
+                    cutoff.setDate(cutoff.getDate() - 2);
+                    const pad = (n: number) => String(n).padStart(2, '0');
+                    setCutoffDate(`${cutoff.getFullYear()}-${pad(cutoff.getMonth() + 1)}-${pad(cutoff.getDate())}`);
+                    setCutoffTime('20:00');
+                  }
+                }}
                 min={today}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
                 required
@@ -314,7 +335,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004AAD] focus:border-transparent text-sm bg-white"
                   >
                     <option value="">Select time</option>
-                    {TIME_OPTIONS.map((opt) => (
+                    {CUTOFF_TIME_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
                   </select>
@@ -416,7 +437,7 @@ export default function SlotManager({ slots, onRefresh }: SlotManagerProps) {
                       <label className="block text-xs text-gray-600 mb-1">Cutoff Time</label>
                       <select value={editCutoffTime} onChange={(e) => setEditCutoffTime(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-white">
                         <option value="">Select time</option>
-                        {TIME_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+                        {CUTOFF_TIME_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
                       </select>
                     </div>
                   </div>
