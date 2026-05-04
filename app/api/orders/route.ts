@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     // Determine pricing type from the time slot
     const { data: slotData, error: slotError } = await supabase
       .from('time_slots')
-      .select('is_hangover')
+      .select('is_hangover, date, time')
       .eq('id', formData.timeSlotId)
       .single();
 
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update venmo_note with order ID, and save bites if present
-    const venmoNote = generateVenmoNote(orderId);
+    const venmoNote = generateVenmoNote(orderId, slotData.date, slotData.time);
     const orderUpdate: Record<string, unknown> = { venmo_note: venmoNote };
     if (bites) {
       orderUpdate.bites = bites;

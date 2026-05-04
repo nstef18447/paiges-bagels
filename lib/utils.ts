@@ -22,8 +22,17 @@ export function isValidTotal(total: number): boolean {
   return total >= 1 && total <= 13;
 }
 
-export function generateVenmoNote(orderId: string): string {
-  return `Paige's Bagels :) 🥯 Order: ${orderId.slice(0, 8)}`;
+export function generateVenmoNote(orderId: string, date?: string, time?: string): string {
+  const base = `Paige's Bagels :) 🥯 Order: ${orderId.slice(0, 8)}`;
+  if (!date || !time) return base;
+  const [year, month, day] = date.split('-').map(Number);
+  const d = new Date(year, month - 1, day);
+  const dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const [hours] = time.split(':');
+  const hour = parseInt(hours, 10);
+  const ampm = hour >= 12 ? 'pm' : 'am';
+  const hour12 = hour % 12 || 12;
+  return `${base} | ${dateStr} @ ${hour12}${ampm}`;
 }
 
 export function formatDate(dateString: string): string {
