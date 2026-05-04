@@ -23,7 +23,7 @@ const BENEFITS = [
   },
   {
     title: 'Simple Ingredients',
-    desc: "Made with flour, water, salt, and time — nothing added that doesn't need to be there.",
+    desc: "Made with flour, water, salt, sugar, malt, and starter — nothing added that doesn't need to be there.",
   },
   {
     title: 'Better Texture & Freshness',

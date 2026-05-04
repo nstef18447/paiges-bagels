@@ -155,8 +155,8 @@ export default function Home() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {[
-            { emoji: '🫗', title: '5 Simple Ingredients', desc: 'Flour, water, salt, starter, malt. That\'s it — nothing you can\'t pronounce.' },
-            { emoji: '⏳', title: '48-Hour Ferment', desc: 'Good things take time. Our dough cold-ferments for two days for that deep, tangy flavor.' },
+            { emoji: '🫗', title: '6 Simple Ingredients', desc: 'Flour, water, salt, sugar, malt, and starter. That\'s it — nothing you can\'t pronounce.' },
+            { emoji: '⏳', title: '16-Hour Ferment', desc: 'Good things take time. Our dough cold-ferments for 16 hours for that deep, tangy flavor.' },
             { emoji: '🔥', title: 'Boiled & Baked Fresh', desc: 'Kettle-boiled, then baked on stone. Crispy outside, chewy inside — the way it should be.' },
           ].map((card) => (
             <div
