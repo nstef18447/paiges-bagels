@@ -5,7 +5,7 @@ import { TimeSlotWithCapacity } from '@/types';
 import { formatDate, formatTime } from '@/lib/utils';
 
 const TIME_OPTIONS = Array.from({ length: 33 }, (_, i) => {
-  const totalMinutes = 6 * 60 + i * 15; // 6:00 AM to 2:00 PM in 15-min steps
+  const totalMinutes = 7 * 60 + i * 15; // 7:00 AM to 3:00 PM in 15-min steps
   const h = Math.floor(totalMinutes / 60);
   const m = totalMinutes % 60;
   const label = `${h % 12 === 0 ? 12 : h % 12}:${m.toString().padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
