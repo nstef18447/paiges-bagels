@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { BagelType } from '@/types';
 import NavBar from '@/components/NavBar';
 
-const INGREDIENTS = ['Sourdough Starter', 'Bread Flour', 'Water', 'Sugar', 'Salt'];
+const INGREDIENTS = ['Sourdough Starter', 'Bread Flour', 'Water', 'Sugar', 'Salt', 'Malt'];
 
 const GALLERY_IMAGES = [
   { src: '/best-images/IMG_2113.JPEG', alt: 'Branded bagel box' },
@@ -59,7 +59,7 @@ export default function MenuPage() {
           className="text-[0.95rem] max-w-[420px] mx-auto"
           style={{ color: 'var(--text-secondary)' }}
         >
-          Handcrafted sourdough bagels made with only five simple ingredients.
+          Handcrafted sourdough bagels made with only six simple ingredients.
         </p>
       </div>
 
