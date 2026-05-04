@@ -209,8 +209,12 @@ export default function Home() {
             <div
               ref={scrollRef}
               onScroll={handleScroll}
-              className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide px-5"
+              className="overflow-x-auto pb-4 scrollbar-hide"
               style={{ WebkitOverflowScrolling: 'touch' }}
+            >
+            <div
+              className="flex gap-5 snap-x snap-mandatory px-5"
+              style={{ width: 'max-content', margin: '0 auto' }}
             >
               {bagelTypes.map((bagel) => {
                 const imgSrc = getBagelImage(bagel.name) || (bagel.image_url ? `/${bagel.image_url}` : null);
@@ -254,6 +258,7 @@ export default function Home() {
                   </div>
                 );
               })}
+            </div>
             </div>
 
             {/* Dot indicators */}
