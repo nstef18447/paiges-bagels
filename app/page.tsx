@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { BagelType } from '@/types';
+import { BagelType, BiteFlavor } from '@/types';
 import NavBar from '@/components/NavBar';
 
 /* ── Hardcoded transparent bagel images for the carousel ──
@@ -28,6 +28,7 @@ export default function Home() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [bagelTypes, setBagelTypes] = useState<BagelType[]>([]);
+  const [biteFlavors, setBiteFlavors] = useState<BiteFlavor[]>([]);
   const [activeBagel, setActiveBagel] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -44,6 +45,10 @@ export default function Home() {
     fetch('/api/bagel-types')
       .then((res) => res.json())
       .then((data) => setBagelTypes(data))
+      .catch(console.error);
+    fetch('/api/bite-flavors')
+      .then((res) => res.json())
+      .then((data) => setBiteFlavors(data))
       .catch(console.error);
   }, []);
 
@@ -283,6 +288,70 @@ export default function Home() {
               ))}
             </div>
           </>
+        )}
+
+        {/* Our Bites */}
+        {biteFlavors.length > 0 && (
+          <div className="mt-10">
+            <div className="text-center px-5 mb-7">
+              <h2
+                className="text-[1.8rem] font-black mb-1.5"
+                style={{ fontFamily: 'var(--font-playfair)', color: 'var(--blue)' }}
+              >
+                Our Bites
+              </h2>
+              <p className="text-[0.9rem]" style={{ color: '#6b7280' }}>
+                Mini sourdough bites in a variety of flavors
+              </p>
+            </div>
+            <div
+              className="overflow-x-auto pb-4 scrollbar-hide"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
+              <div
+                className="flex gap-5 snap-x snap-mandatory px-5"
+                style={{ width: 'max-content', margin: '0 auto' }}
+              >
+                {biteFlavors.map((flavor) => (
+                  <div
+                    key={flavor.id}
+                    className="flex-shrink-0 snap-center text-center cursor-pointer transition-transform hover:-translate-y-2"
+                    style={{ flex: '0 0 160px' }}
+                  >
+                    <div
+                      className="flex items-center justify-center mx-auto mb-3.5"
+                      style={{ width: 150, height: 150 }}
+                    >
+                      {(flavor.menu_image_url || flavor.image_url) ? (
+                        <img
+                          src={flavor.menu_image_url || flavor.image_url!}
+                          alt={flavor.name}
+                          className="max-w-full max-h-full object-contain transition-all"
+                          style={{ filter: 'drop-shadow(0 8px 20px rgba(0,0,0,0.15))' }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.filter = 'drop-shadow(0 12px 28px rgba(0,0,0,0.22))';
+                            e.currentTarget.style.transform = 'scale(1.06)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.filter = 'drop-shadow(0 8px 20px rgba(0,0,0,0.15))';
+                            e.currentTarget.style.transform = 'scale(1)';
+                          }}
+                        />
+                      ) : (
+                        <span className="text-6xl">🥯</span>
+                      )}
+                    </div>
+                    <p
+                      className="font-bold text-base"
+                      style={{ fontFamily: 'var(--font-playfair)', color: 'var(--blue)' }}
+                    >
+                      {flavor.name}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         )}
 
         {/* See Full Menu link */}
