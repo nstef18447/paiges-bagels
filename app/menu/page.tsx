@@ -116,67 +116,31 @@ export default function MenuPage() {
 
       {/* Bagel Carousel */}
       {!loading && bagelTypes.length > 0 && (
-        <div className="pb-4">
-          {/* Carousel header with arrows */}
-          <div className="flex justify-between items-center px-5 mb-6 max-w-[900px] mx-auto">
+        <div className="pb-10">
+          <div className="px-5 mb-6 max-w-[900px] mx-auto">
             <h2
-              className="text-[1.6rem] font-black"
+              className="text-[1.6rem] font-black mb-1"
               style={{ color: 'var(--blue)', fontFamily: 'var(--font-playfair)' }}
             >
               Our Bagels
             </h2>
-            <div className="hidden md:flex gap-2">
-              <button
-                onClick={() => scrollCarousel(-1)}
-                className="w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition-all hover:border-blue hover:bg-blue-light"
-                style={{ border: '1.5px solid var(--border)', backgroundColor: 'var(--bg-card)' }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--blue)">
-                  <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-                </svg>
-              </button>
-              <button
-                onClick={() => scrollCarousel(1)}
-                className="w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition-all hover:border-blue hover:bg-blue-light"
-                style={{ border: '1.5px solid var(--border)', backgroundColor: 'var(--bg-card)' }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--blue)">
-                  <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-                </svg>
-              </button>
-            </div>
           </div>
 
-          {/* Carousel track */}
           <div
             ref={trackRef}
             onScroll={handleScroll}
-            className="flex gap-2 px-5 pb-2 overflow-x-auto scrollbar-hide"
-            style={{
-              scrollSnapType: 'x mandatory',
-              WebkitOverflowScrolling: 'touch',
-            }}
+            className="overflow-x-auto scrollbar-hide"
+            style={{ WebkitOverflowScrolling: 'touch' }}
           >
-            {bagelTypes.map((bagel, i) => {
-              const isActive = i === activeBagel;
-              return (
+            <div
+              className="flex gap-2 px-5 pb-2 snap-x snap-mandatory"
+              style={{ width: 'max-content', margin: '0 auto' }}
+            >
+              {bagelTypes.map((bagel) => (
                 <div
                   key={bagel.id}
-                  className="flex-shrink-0 text-center cursor-pointer px-1 py-3"
-                  style={{
-                    width: '150px',
-                    scrollSnapAlign: 'center',
-                    transform: isActive ? 'translateY(-6px)' : 'none',
-                    transition: 'transform 0.3s',
-                  }}
-                  onClick={() => {
-                    setActiveBagel(i);
-                    const el = trackRef.current;
-                    if (el) {
-                      const cardWidth = el.scrollWidth / bagelTypes.length;
-                      el.scrollTo({ left: cardWidth * i, behavior: 'smooth' });
-                    }
-                  }}
+                  className="flex-shrink-0 text-center px-1 py-3"
+                  style={{ width: '160px', scrollSnapAlign: 'center' }}
                 >
                   <div className="w-[140px] h-[140px] mx-auto mb-3 flex items-center justify-center md:w-[180px] md:h-[180px]">
                     {bagel.image_url ? (
@@ -185,32 +149,22 @@ export default function MenuPage() {
                         alt={bagel.name}
                         width={180}
                         height={180}
-                        className="max-w-full max-h-full object-contain transition-all duration-300"
-                        style={{
-                          filter: isActive
-                            ? 'drop-shadow(0 10px 24px rgba(0,74,173,0.25))'
-                            : 'drop-shadow(0 6px 16px rgba(0,0,0,0.15))',
-                          transform: isActive ? 'scale(1.05)' : 'scale(1)',
-                        }}
+                        className="max-w-full max-h-full object-contain"
                       />
                     ) : (
                       <span className="text-6xl">🥯</span>
                     )}
                   </div>
                   <h3
-                    className="text-[0.95rem] font-bold transition-colors duration-300"
-                    style={{
-                      fontFamily: 'var(--font-playfair)',
-                      color: isActive ? 'var(--brown)' : 'var(--blue)',
-                    }}
+                    className="text-[0.95rem] font-bold"
+                    style={{ fontFamily: 'var(--font-playfair)', color: 'var(--blue)' }}
                   >
                     {bagel.name}
                   </h3>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
-
         </div>
       )}
 
@@ -227,7 +181,7 @@ export default function MenuPage() {
                 className="text-[1.6rem] font-black mb-1"
                 style={{ color: 'var(--blue)', fontFamily: 'var(--font-playfair)' }}
               >
-                Bagel Bites
+                Our Bites
               </h2>
               <p className="text-[0.85rem]" style={{ color: 'var(--text-secondary)' }}>
                 Mini sourdough bites — available as an add-on with your order.
