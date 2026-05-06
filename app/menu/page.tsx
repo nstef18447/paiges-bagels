@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { BagelType } from '@/types';
+import { BagelType, BiteFlavor } from '@/types';
 import NavBar from '@/components/NavBar';
 
 const INGREDIENTS = ['Sourdough Starter', 'Bread Flour', 'Water', 'Sugar', 'Salt', 'Malt'];
@@ -16,14 +16,20 @@ const GALLERY_IMAGES = [
 
 export default function MenuPage() {
   const [bagelTypes, setBagelTypes] = useState<BagelType[]>([]);
+  const [biteFlavors, setBiteFlavors] = useState<BiteFlavor[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeBagel, setActiveBagel] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch('/api/bagel-types')
-      .then(r => r.json())
-      .then(bagels => setBagelTypes(bagels))
+    Promise.all([
+      fetch('/api/bagel-types').then(r => r.json()),
+      fetch('/api/bite-flavors').then(r => r.json()),
+    ])
+      .then(([bagels, bites]) => {
+        setBagelTypes(bagels);
+        setBiteFlavors(bites);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -87,7 +93,7 @@ export default function MenuPage() {
             className="text-2xl font-bold text-white mb-5"
             style={{ fontFamily: 'var(--font-playfair)' }}
           >
-            Only 5 Ingredients
+            Only 6 Ingredients
           </h2>
           <div className="flex flex-wrap gap-2">
             {INGREDIENTS.map((ing) => (
@@ -210,6 +216,62 @@ export default function MenuPage() {
 
       {loading && (
         <div className="text-center py-16" style={{ color: 'var(--text-secondary)' }}>Loading menu...</div>
+      )}
+
+      {/* Bagel Bites Section */}
+      {!loading && biteFlavors.length > 0 && (
+        <div className="pb-10">
+          <div className="flex justify-between items-center px-5 mb-6 max-w-[900px] mx-auto">
+            <div>
+              <h2
+                className="text-[1.6rem] font-black mb-1"
+                style={{ color: 'var(--blue)', fontFamily: 'var(--font-playfair)' }}
+              >
+                Bagel Bites
+              </h2>
+              <p className="text-[0.85rem]" style={{ color: 'var(--text-secondary)' }}>
+                Mini sourdough bites — available as an add-on with your order.
+              </p>
+            </div>
+          </div>
+          <div
+            className="overflow-x-auto scrollbar-hide"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+            <div
+              className="flex gap-2 px-5 pb-2 snap-x snap-mandatory"
+              style={{ width: 'max-content', margin: '0 auto' }}
+            >
+              {biteFlavors.map((flavor) => (
+                <div
+                  key={flavor.id}
+                  className="flex-shrink-0 text-center px-1 py-3"
+                  style={{ width: '160px', scrollSnapAlign: 'center' }}
+                >
+                  <div className="w-[140px] h-[140px] mx-auto mb-3 flex items-center justify-center md:w-[180px] md:h-[180px]">
+                    {(flavor.menu_image_url || flavor.image_url) ? (
+                      <Image
+                        src={flavor.menu_image_url || flavor.image_url!}
+                        alt={flavor.name}
+                        width={180}
+                        height={180}
+                        className="max-w-full max-h-full object-contain"
+                      />
+                    ) : (
+                      <span className="text-6xl">🥯</span>
+                    )}
+                  </div>
+                  <h3
+                    className="text-[0.95rem] font-bold"
+                    style={{ fontFamily: 'var(--font-playfair)', color: 'var(--blue)' }}
+                  >
+                    {flavor.name}
+                  </h3>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Place Your Order CTA */}

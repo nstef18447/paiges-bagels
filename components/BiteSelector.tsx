@@ -104,16 +104,12 @@ export default function BiteSelector({
               }}
             >
               {/* Flavor image */}
-              <div className="flex-shrink-0 rounded-lg overflow-hidden" style={{ width: '72px', height: '72px' }}>
+              <div className="flex-shrink-0 flex items-center justify-center" style={{ width: '72px', height: '72px' }}>
                 {flavor.image_url ? (
                   <img
                     src={flavor.image_url}
                     alt={flavor.name}
-                    className="w-full h-full object-cover"
-                    style={{
-                      mixBlendMode: 'multiply',
-                      objectPosition: 'top',
-                    }}
+                    className="w-full h-full object-contain"
                   />
                 ) : (
                   <div

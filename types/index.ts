@@ -124,6 +124,7 @@ export interface BiteFlavor {
   name: string;
   slug: string;
   image_url: string | null;
+  menu_image_url: string | null;
   active: boolean;
   sort_order: number;
   created_at: string;

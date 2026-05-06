@@ -16,6 +16,7 @@ export default function BiteFlavorManager({ biteFlavors, onRefresh }: BiteFlavor
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: '', slug: '' });
   const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [uploadingMenuId, setUploadingMenuId] = useState<string | null>(null);
 
   const autoSlug = (value: string) => {
     return value.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
@@ -139,6 +140,28 @@ export default function BiteFlavorManager({ biteFlavors, onRefresh }: BiteFlavor
       alert('An error occurred uploading image');
     } finally {
       setUploadingId(null);
+    }
+  };
+
+  const handleMenuImageUpload = async (id: string, file: File) => {
+    setUploadingMenuId(id);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch(`/api/bite-flavors/${id}/menu-image`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (response.ok) {
+        onRefresh();
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Failed to upload menu image');
+      }
+    } catch {
+      alert('An error occurred uploading image');
+    } finally {
+      setUploadingMenuId(null);
     }
   };
 
@@ -317,9 +340,9 @@ export default function BiteFlavorManager({ biteFlavors, onRefresh }: BiteFlavor
                         &darr;
                       </button>
 
-                      {/* Image upload */}
+                      {/* Order image upload */}
                       <label className="px-3 py-1 bg-gray-600 text-white rounded-lg hover:bg-gray-700 cursor-pointer text-sm">
-                        {uploadingId === flavor.id ? 'Uploading...' : 'Image'}
+                        {uploadingId === flavor.id ? 'Uploading...' : 'Order Img'}
                         <input
                           type="file"
                           accept="image/*"
@@ -328,6 +351,22 @@ export default function BiteFlavorManager({ biteFlavors, onRefresh }: BiteFlavor
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) handleImageUpload(flavor.id, file);
+                            e.target.value = '';
+                          }}
+                        />
+                      </label>
+
+                      {/* Menu image upload */}
+                      <label className="px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 cursor-pointer text-sm">
+                        {uploadingMenuId === flavor.id ? 'Uploading...' : flavor.menu_image_url ? 'Menu Img ✓' : 'Menu Img'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={uploadingMenuId === flavor.id}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleMenuImageUpload(flavor.id, file);
                             e.target.value = '';
                           }}
                         />
