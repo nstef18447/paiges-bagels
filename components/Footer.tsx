@@ -67,7 +67,7 @@ export default function Footer() {
             Seriously Sourdough
           </p>
           <p className="text-[0.82rem] leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>
-            Handcrafted sourdough bagels made with five simple ingredients. Naturally fermented,
+            Handcrafted sourdough bagels made with six simple ingredients. Naturally fermented,
             boiled &amp; baked fresh.
           </p>
         </div>
