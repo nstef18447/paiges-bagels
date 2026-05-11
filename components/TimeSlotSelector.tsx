@@ -42,7 +42,7 @@ function formatCutoff(cutoffTime: string): string {
 function getSlotStatus(slot: TimeSlotWithCapacity, requiredCapacity: number) {
   if (slot.remaining <= 0) return 'sold-out';
   if (slot.remaining < requiredCapacity) return 'sold-out';
-  if (slot.remaining <= 12) return 'low';
+  if (slot.remaining <= 8) return 'low';
   return 'available';
 }
 
