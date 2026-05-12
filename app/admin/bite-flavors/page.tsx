@@ -54,6 +54,7 @@ export default function AdminBiteFlavorsPage() {
           <Link href="/admin/financials" className="hover:underline" style={{ color: '#004AAD' }}>Financials</Link>
           <Link href="/admin/prep" className="hover:underline" style={{ color: '#004AAD' }}>Prep</Link>
           <Link href="/admin/merch" className="hover:underline" style={{ color: '#004AAD' }}>Merch</Link>
+          <Link href="/admin/recipe" className="hover:underline" style={{ color: '#004AAD' }}>Recipe</Link>
         </nav>
       </div>
 
