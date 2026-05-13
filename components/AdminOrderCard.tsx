@@ -39,6 +39,12 @@ export default function AdminOrderCard({ order, onConfirm, onMarkReady, onDelete
           <h3 className="font-semibold text-lg">{order.customer_name}</h3>
           <p className="text-sm text-gray-600">{order.customer_email}</p>
           <p className="text-sm text-gray-600">{order.customer_phone}</p>
+          <p className="text-xs text-gray-400 mt-1">
+            Ordered {new Date(order.created_at).toLocaleString('en-US', {
+              month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+              hour12: true, timeZone: 'America/Chicago',
+            })}
+          </p>
         </div>
         <div className="text-right">
           <p className="font-bold text-xl">${order.total_price.toFixed(2)}</p>
