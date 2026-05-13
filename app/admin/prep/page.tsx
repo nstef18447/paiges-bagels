@@ -236,7 +236,7 @@ export default function AdminPrepPage() {
     .filter((d) => d.date >= today)
     .map((d) => ({
       ...d,
-      slots: d.slots.filter((s) => s.orders.some((o) => o.status === 'confirmed')),
+      slots: d.slots.filter((s) => s.orders.some((o) => o.status === 'confirmed' || o.status === 'ready')),
     }))
     .filter((d) => d.slots.length > 0);
 
