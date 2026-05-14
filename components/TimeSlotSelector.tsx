@@ -108,7 +108,8 @@ export default function TimeSlotSelector({
                   const biteStatus = getBiteStatus(slot, requiredBites);
                   const biteBlocked = requiredBites > 0 && biteStatus === 'sold-out';
                   const isSelected = slot.id === selectedSlotId;
-                  const isDisabled = status === 'sold-out' || biteBlocked;
+                  const bitesGone = biteStatus === 'none' || biteStatus === 'sold-out';
+                  const isDisabled = (status === 'sold-out' && bitesGone) || biteBlocked;
 
                   return (
                     <button
