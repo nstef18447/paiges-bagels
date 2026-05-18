@@ -3,195 +3,301 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Ingredient, AddOnType } from '@/types';
+import { AddOnType, Ingredient } from '@/types';
+import { supabase } from '@/lib/supabase';
 
-interface EditableIngredient {
+interface OrderStats {
+  totalOrders: number;
+  avgBagels: number;
+  avgRevenue: number;
+  containerRate: number; // fraction of orders with schmear or butter
+}
+
+// ── Recipe constants ──────────────────────────────────────────────────────────
+// Starter (100g) = 50g regular flour + 50g water. Water is free.
+// Malt powder: recipe calls for 1 tsp ≈ 3g, purchased by oz.
+const RECIPE = [
+  { name: 'Bread Flour',           amount: 500, unit: 'g', note: undefined,            purchaseUnits: ['g', 'kg', 'lb', 'oz'] },
+  { name: 'Regular Flour',         amount: 50,  unit: 'g', note: 'goes into starter',  purchaseUnits: ['g', 'kg', 'lb', 'oz'] },
+  { name: 'Salt',                  amount: 10,  unit: 'g', note: undefined,            purchaseUnits: ['g', 'kg', 'lb', 'oz'] },
+  { name: 'Sugar',                 amount: 10,  unit: 'g', note: undefined,            purchaseUnits: ['g', 'kg', 'lb', 'oz'] },
+  { name: 'Diastatic Malt Powder', amount: 3,   unit: 'g', note: '≈1 tsp per batch',  purchaseUnits: ['oz', 'g', 'lb'] },
+];
+
+const BAGELS_PER_BATCH = 890 / 110; // ~8.09
+
+const TO_BASE: Record<string, number> = {
+  g: 1, kg: 1000, lb: 453.592, oz: 28.3495,
+  tsp: 1, tbsp: 3,
+};
+
+interface Purchase { amount: string; unit: string; price: string; }
+type Purchases = Record<string, Purchase>;
+
+const LS_KEY = 'paiges-ingredient-purchases';
+const LS_PKG_KEY = 'paiges-packaging-purchases';
+
+function loadPurchases(): Purchases {
+  if (typeof window === 'undefined') return {};
+  try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch { return {}; }
+}
+function savePurchases(p: Purchases) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(LS_KEY, JSON.stringify(p));
+}
+function loadPackaging(): Purchases {
+  if (typeof window === 'undefined') return {};
+  try { return JSON.parse(localStorage.getItem(LS_PKG_KEY) || '{}'); } catch { return {}; }
+}
+function savePackaging(p: Purchases) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(LS_PKG_KEY, JSON.stringify(p));
+}
+
+const PACKAGING = [
+  { name: 'Paper Bags',              type: 'per_bagel' as const,  label: 'per bagel' },
+  { name: 'Schmear/Butter Container', type: 'per_addon' as const,  label: 'per schmear/butter sold' },
+  { name: 'Stickers',                type: 'per_order' as const,  label: 'per order' },
+];
+
+// cost per batch for one recipe ingredient given purchase inputs
+function costPerBatch(ing: typeof RECIPE[0], p: Purchase): number {
+  const purchaseAmt = parseFloat(p.amount);
+  const price = parseFloat(p.price);
+  if (!purchaseAmt || !price) return 0;
+  const purchaseInBase = purchaseAmt * (TO_BASE[p.unit] ?? 1);
+  return (price / purchaseInBase) * ing.amount;
+}
+
+// ── Add-on / fixed cost types ─────────────────────────────────────────────────
+interface EditableCost {
   id?: string;
   name: string;
   unit: string;
   cost_per_unit: string;
   units_per_bagel: string;
-  cost_type: 'per_bagel' | 'per_addon' | 'fixed';
+  cost_type: 'per_addon' | 'fixed';
   add_on_type_id: string | null;
   isNew?: boolean;
 }
 
 export default function AdminCostsPage() {
-  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [purchases, setPurchases] = useState<Purchases>({});
+  const [packaging, setPackaging] = useState<Purchases>({});
   const [addOnTypes, setAddOnTypes] = useState<AddOnType[]>([]);
-  const [edited, setEdited] = useState<{ [key: string]: EditableIngredient }>({});
+  const [otherCosts, setOtherCosts] = useState<{ [key: string]: EditableCost }>({});
+  const [pricing, setPricing] = useState<{ bagel_quantity: number; price: number; label: string }[]>([]);
+  const [orderStats, setOrderStats] = useState<OrderStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    Promise.all([fetchIngredients(), fetchAddOnTypes()]).then(() => setLoading(false));
+    setPurchases(loadPurchases());
+    setPackaging(loadPackaging());
+    Promise.all([fetchIngredients(), fetchAddOnTypes(), fetchPricing(), fetchOrderStats()]).then(() => setLoading(false));
   }, []);
 
   const fetchIngredients = async () => {
-    try {
-      const response = await fetch('/api/ingredients');
-      const data = await response.json();
-      setIngredients(data);
-      initEdited(data);
-    } catch (error) {
-      console.error('Failed to fetch ingredients:', error);
-    }
+    const res = await fetch('/api/ingredients');
+    const data: Ingredient[] = await res.json();
+    const map: { [key: string]: EditableCost } = {};
+    data
+      .filter(i => i.cost_type !== 'per_bagel')
+      .forEach(i => {
+        map[i.id] = {
+          id: i.id, name: i.name, unit: i.unit,
+          cost_per_unit: i.cost_per_unit.toString(),
+          units_per_bagel: i.units_per_bagel.toString(),
+          cost_type: i.cost_type as 'per_addon' | 'fixed',
+          add_on_type_id: i.add_on_type_id,
+        };
+      });
+    setOtherCosts(map);
   };
 
   const fetchAddOnTypes = async () => {
-    try {
-      const response = await fetch('/api/add-on-types');
-      const data = await response.json();
-      setAddOnTypes(data);
-    } catch (error) {
-      console.error('Failed to fetch add-on types:', error);
+    const res = await fetch('/api/add-on-types');
+    setAddOnTypes(await res.json());
+  };
+
+  const fetchPricing = async () => {
+    const res = await fetch('/api/pricing?type=regular');
+    const data = await res.json();
+    setPricing(data.filter((p: { pricing_type: string }) => p.pricing_type === 'regular' || !p.pricing_type));
+  };
+
+  const fetchOrderStats = async () => {
+    const { data: orders } = await supabase
+      .from('orders')
+      .select('total_price, total_bagels, order_add_ons(add_on_type:add_on_types(name))')
+      .in('status', ['confirmed', 'ready']);
+
+    if (!orders || orders.length === 0) return;
+
+    let totalBagels = 0;
+    let totalRevenue = 0;
+    let ordersWithContainer = 0;
+
+    for (const o of orders) {
+      totalBagels += o.total_bagels ?? 0;
+      totalRevenue += o.total_price ?? 0;
+      const addOns = (o.order_add_ons as unknown as { add_on_type: { name: string } | null }[]) ?? [];
+      const hasContainer = addOns.some(a => {
+        const name = a.add_on_type?.name?.toLowerCase() ?? '';
+        return name.includes('schmear') || name.includes('butter');
+      });
+      if (hasContainer) ordersWithContainer++;
     }
-  };
 
-  const initEdited = (data: Ingredient[]) => {
-    const map: { [key: string]: EditableIngredient } = {};
-    data.forEach((ing) => {
-      map[ing.id] = {
-        id: ing.id,
-        name: ing.name,
-        unit: ing.unit,
-        cost_per_unit: ing.cost_per_unit.toString(),
-        units_per_bagel: ing.units_per_bagel.toString(),
-        cost_type: ing.cost_type || 'per_bagel',
-        add_on_type_id: ing.add_on_type_id,
-      };
+    setOrderStats({
+      totalOrders: orders.length,
+      avgBagels: totalBagels / orders.length,
+      avgRevenue: totalRevenue / orders.length,
+      containerRate: ordersWithContainer / orders.length,
     });
-    setEdited(map);
   };
 
-  const handleChange = (key: string, field: keyof EditableIngredient, value: string) => {
-    setEdited((prev) => ({
-      ...prev,
-      [key]: { ...prev[key], [field]: value },
-    }));
+  // ── Purchase input handlers ───────────────────────────────────────────────
+  const updatePurchase = (name: string, field: keyof Purchase, value: string) => {
+    setPurchases(prev => {
+      const updated = {
+        ...prev,
+        [name]: { ...{ amount: '', unit: RECIPE.find(r => r.name === name)?.purchaseUnits[0] ?? 'g', price: '' }, ...prev[name], [field]: value },
+      };
+      savePurchases(updated);
+      return updated;
+    });
   };
 
-  const addRow = (costType: 'per_bagel' | 'per_addon' | 'fixed') => {
+  const updatePackaging = (name: string, field: keyof Purchase, value: string) => {
+    setPackaging(prev => {
+      const updated = { ...prev, [name]: { ...{ amount: '', unit: 'count', price: '' }, ...prev[name], [field]: value } };
+      savePackaging(updated);
+      return updated;
+    });
+  };
+
+  // ── Add-on / fixed cost handlers ──────────────────────────────────────────
+  const handleCostChange = (key: string, field: keyof EditableCost, value: string) => {
+    setOtherCosts(prev => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
+  };
+
+  const addRow = (type: 'per_addon' | 'fixed') => {
     const tempId = `new-${Date.now()}`;
-    setEdited((prev) => ({
+    setOtherCosts(prev => ({
       ...prev,
-      [tempId]: {
-        name: '',
-        unit: costType === 'per_bagel' ? '' : '',
-        cost_per_unit: '0',
-        units_per_bagel: '0',
-        cost_type: costType,
-        add_on_type_id: null,
-        isNew: true,
-      },
+      [tempId]: { name: '', unit: '', cost_per_unit: '0', units_per_bagel: '0', cost_type: type, add_on_type_id: null, isNew: true },
     }));
   };
 
   const handleDelete = async (key: string) => {
-    const item = edited[key];
+    const item = otherCosts[key];
     if (item.isNew) {
-      setEdited((prev) => {
-        const copy = { ...prev };
-        delete copy[key];
-        return copy;
-      });
+      setOtherCosts(prev => { const c = { ...prev }; delete c[key]; return c; });
       return;
     }
-
     if (!confirm('Delete this cost entry?')) return;
-
-    try {
-      const response = await fetch(`/api/ingredients?id=${key}`, { method: 'DELETE' });
-      if (response.ok) {
-        setEdited((prev) => {
-          const copy = { ...prev };
-          delete copy[key];
-          return copy;
-        });
-        setIngredients((prev) => prev.filter((i) => i.id !== key));
-      } else {
-        alert('Failed to delete');
-      }
-    } catch (error) {
-      console.error('Error deleting:', error);
-      alert('An error occurred while deleting');
+    const res = await fetch(`/api/ingredients?id=${key}`, { method: 'DELETE' });
+    if (res.ok) {
+      setOtherCosts(prev => { const c = { ...prev }; delete c[key]; return c; });
+    } else {
+      alert('Failed to delete');
     }
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      for (const [key, item] of Object.entries(edited)) {
-        const payload: Record<string, unknown> = {
-          name: item.name.trim(),
-          unit: item.unit.trim(),
+      // Save recipe ingredient costs to DB (for financials)
+      const existingRes = await fetch('/api/ingredients');
+      const existingAll: Ingredient[] = await existingRes.json();
+      const existingRecipe = existingAll.filter(i => i.cost_type === 'per_bagel');
+
+      for (const ing of RECIPE) {
+        const p = purchases[ing.name];
+        const cpb = costPerBatch(ing, p || { amount: '', unit: ing.purchaseUnits[0], price: '' });
+        const costPerUnit = cpb > 0 ? cpb / ing.amount : 0;
+        const unitsPerBagel = ing.amount / BAGELS_PER_BATCH;
+        const existing = existingRecipe.find(e => e.name === ing.name);
+
+        const payload = {
+          name: ing.name, unit: ing.unit,
+          cost_per_unit: costPerUnit,
+          units_per_bagel: unitsPerBagel,
+          cost_type: 'per_bagel',
+          add_on_type_id: null,
+        };
+
+        if (existing) {
+          await fetch('/api/ingredients', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: existing.id, ...payload }),
+          });
+        } else {
+          await fetch('/api/ingredients', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+        }
+      }
+
+      // Save add-on and fixed costs
+      for (const [key, item] of Object.entries(otherCosts)) {
+        if (!item.name.trim()) continue;
+        const payload = {
+          name: item.name.trim(), unit: item.unit.trim(),
           cost_per_unit: parseFloat(item.cost_per_unit) || 0,
           units_per_bagel: parseFloat(item.units_per_bagel) || 0,
           cost_type: item.cost_type,
           add_on_type_id: item.add_on_type_id || null,
         };
-
-        if (!payload.name) continue;
-
         if (item.isNew) {
-          const res = await fetch('/api/ingredients', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-          if (!res.ok) {
-            alert(`Failed to create: ${item.name}`);
-          }
+          await fetch('/api/ingredients', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         } else {
-          const res = await fetch('/api/ingredients', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: key, ...payload }),
-          });
-          if (!res.ok) {
-            alert(`Failed to update: ${item.name}`);
-          }
+          await fetch('/api/ingredients', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: key, ...payload }) });
         }
       }
 
       await fetchIngredients();
-      alert('Costs saved successfully!');
-    } catch (error) {
-      console.error('Error saving:', error);
-      alert('An error occurred while saving');
+      alert('Costs saved!');
+    } catch (e) {
+      console.error(e);
+      alert('Error saving costs');
     } finally {
       setSaving(false);
     }
   };
 
-  const byType = (type: string) =>
-    Object.entries(edited).filter(([, item]) => item.cost_type === type);
-
-  const costPerBagel = byType('per_bagel').reduce((sum, [, item]) => {
-    return sum + (parseFloat(item.cost_per_unit) || 0) * (parseFloat(item.units_per_bagel) || 0);
+  // ── Derived numbers ───────────────────────────────────────────────────────
+  const ingredientCostPerBagel = RECIPE.reduce((sum, ing) => {
+    const p = purchases[ing.name];
+    return sum + costPerBatch(ing, p || { amount: '', unit: ing.purchaseUnits[0], price: '' }) / BAGELS_PER_BATCH;
   }, 0);
 
-  const totalFixedCosts = byType('fixed').reduce((sum, [, item]) => {
-    return sum + (parseFloat(item.cost_per_unit) || 0);
-  }, 0);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
+  function pkgCostPer(name: string): number {
+    const p = packaging[name];
+    if (!p?.amount || !p?.price) return 0;
+    return parseFloat(p.price) / parseFloat(p.amount);
   }
+  const bagCostPerBagel = pkgCostPer('Paper Bags');
+  const stickerCostPerOrder = pkgCostPer('Stickers');
+
+  const byType = (type: string) => Object.entries(otherCosts).filter(([, i]) => i.cost_type === type);
+
+  if (loading) return <div className="flex justify-center items-center min-h-screen"><div className="text-lg">Loading...</div></div>;
 
   return (
     <div className="max-w-6xl mx-auto p-6">
+      {/* Nav */}
       <div className="mb-8">
         <div className="mb-4">
           <Link href="/admin/orders">
             <Image src="/logo.png" alt="Paige's Bagels" width={200} height={80} priority />
           </Link>
         </div>
-        <nav className="flex gap-4">
+        <nav className="flex gap-4 flex-wrap">
           <Link href="/admin/orders" className="hover:underline" style={{ color: '#004AAD' }}>Orders</Link>
           <Link href="/admin/slots" className="hover:underline" style={{ color: '#004AAD' }}>Time Slots</Link>
           <Link href="/admin/bagel-types" className="hover:underline" style={{ color: '#004AAD' }}>Bagel Types</Link>
@@ -205,261 +311,355 @@ export default function AdminCostsPage() {
         </nav>
       </div>
 
-      {/* ── Bagel Ingredients (per bagel) ── */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <h2 className="text-2xl font-semibold">Bagel Ingredients</h2>
-            <p className="text-sm text-gray-500">Cost per unit of ingredient used per bagel</p>
-          </div>
-          <button
-            onClick={() => addRow('per_bagel')}
-            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-          >
-            + Add Ingredient
-          </button>
+      {/* ── Bagel Ingredients ────────────────────────────────────────────── */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+        <div className="mb-5">
+          <h2 className="text-2xl font-bold">Bagel Ingredients</h2>
+          <p className="text-sm text-gray-500 mt-1">Based on your recipe — enter what you paid and how much you bought.</p>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="py-3 px-2 font-semibold text-sm text-gray-600">Name</th>
-                <th className="py-3 px-2 font-semibold text-sm text-gray-600">Unit</th>
-                <th className="py-3 px-2 font-semibold text-sm text-gray-600">Cost per Unit ($)</th>
-                <th className="py-3 px-2 font-semibold text-sm text-gray-600">Units per Bagel</th>
-                <th className="py-3 px-2 font-semibold text-sm text-gray-600">Cost / Bagel</th>
-                <th className="py-3 px-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {byType('per_bagel').map(([key, item]) => {
-                const contribution =
-                  (parseFloat(item.cost_per_unit) || 0) * (parseFloat(item.units_per_bagel) || 0);
-                return (
-                  <tr key={key} className="border-b border-gray-100">
-                    <td className="py-2 px-2">
-                      <input
-                        type="text"
-                        value={item.name}
-                        onChange={(e) => handleChange(key, 'name', e.target.value)}
-                        placeholder="e.g., Bread Flour"
-                        className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
-                      />
-                    </td>
-                    <td className="py-2 px-2">
-                      <input
-                        type="text"
-                        value={item.unit}
-                        onChange={(e) => handleChange(key, 'unit', e.target.value)}
-                        placeholder="e.g., lb"
-                        className="w-24 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
-                      />
-                    </td>
-                    <td className="py-2 px-2">
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={item.cost_per_unit}
-                        onChange={(e) => handleChange(key, 'cost_per_unit', e.target.value)}
-                        className="w-28 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
-                      />
-                    </td>
-                    <td className="py-2 px-2">
-                      <input
-                        type="number"
-                        step="0.0001"
-                        min="0"
-                        value={item.units_per_bagel}
-                        onChange={(e) => handleChange(key, 'units_per_bagel', e.target.value)}
-                        className="w-28 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
-                      />
-                    </td>
-                    <td className="py-2 px-2 text-gray-700">${contribution.toFixed(4)}</td>
-                    <td className="py-2 px-2">
-                      <button onClick={() => handleDelete(key)} className="text-red-500 hover:text-red-700 text-sm">
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-              {byType('per_bagel').length === 0 && (
-                <tr>
-                  <td colSpan={6} className="py-6 text-center text-gray-400">
-                    No bagel ingredients yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <div className="space-y-3">
+          {RECIPE.map((ing) => {
+            const p: Purchase = purchases[ing.name] ?? { amount: '', unit: ing.purchaseUnits[0], price: '' };
+            const batchCost = costPerBatch(ing, p);
+            const perBagel = batchCost / BAGELS_PER_BATCH;
+            const hasInput = !!p.amount && !!p.price;
 
-        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg inline-block">
-          <span className="text-sm text-blue-800 font-medium">
-            Ingredient Cost per Bagel: <strong>${costPerBagel.toFixed(4)}</strong>
-          </span>
-        </div>
-      </div>
+            return (
+              <div
+                key={ing.name}
+                className="rounded-xl p-4"
+                style={{ backgroundColor: '#F8FAFF', border: '1px solid #E8EDF8' }}
+              >
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* Ingredient name + recipe amount */}
+                  <div className="w-52 flex-shrink-0">
+                    <p className="font-semibold text-gray-800 text-sm">{ing.name}</p>
+                    <p className="text-xs text-gray-400">{ing.amount}{ing.unit} per batch</p>
+                    {ing.note && <p className="text-xs text-gray-400 italic">{ing.note}</p>}
+                  </div>
 
-      {/* ── Add-On Costs (per unit sold) ── */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <h2 className="text-2xl font-semibold">Add-On Costs</h2>
-            <p className="text-sm text-gray-500">Cost per unit of add-on sold (e.g., schmear)</p>
-          </div>
-          <button
-            onClick={() => addRow('per_addon')}
-            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-          >
-            + Add Cost
-          </button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="py-3 px-2 font-semibold text-sm text-gray-600">Name</th>
-                <th className="py-3 px-2 font-semibold text-sm text-gray-600">Add-On</th>
-                <th className="py-3 px-2 font-semibold text-sm text-gray-600">Cost per Unit ($)</th>
-                <th className="py-3 px-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {byType('per_addon').map(([key, item]) => (
-                <tr key={key} className="border-b border-gray-100">
-                  <td className="py-2 px-2">
+                  {/* Purchase inputs */}
+                  <div className="flex items-center gap-1.5 text-sm">
+                    <span className="text-gray-500">I paid</span>
+                    <span className="text-gray-400">$</span>
                     <input
-                      type="text"
-                      value={item.name}
-                      onChange={(e) => handleChange(key, 'name', e.target.value)}
-                      placeholder="e.g., Cream Cheese"
-                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={p.price}
+                      onChange={e => updatePurchase(ing.name, 'price', e.target.value)}
+                      className="w-20 px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
                     />
-                  </td>
-                  <td className="py-2 px-2">
+                    <span className="text-gray-500">for</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      placeholder="0"
+                      value={p.amount}
+                      onChange={e => updatePurchase(ing.name, 'amount', e.target.value)}
+                      className="w-20 px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
+                    />
                     <select
-                      value={item.add_on_type_id || ''}
-                      onChange={(e) => handleChange(key, 'add_on_type_id', e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
+                      value={p.unit}
+                      onChange={e => updatePurchase(ing.name, 'unit', e.target.value)}
+                      className="px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#004AAD] focus:border-transparent bg-white"
                     >
-                      <option value="">Select add-on...</option>
-                      {addOnTypes.map((a) => (
-                        <option key={a.id} value={a.id}>{a.name}</option>
-                      ))}
+                      {ing.purchaseUnits.map(u => <option key={u} value={u}>{u}</option>)}
                     </select>
-                  </td>
-                  <td className="py-2 px-2">
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={item.cost_per_unit}
-                      onChange={(e) => handleChange(key, 'cost_per_unit', e.target.value)}
-                      className="w-28 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
-                    />
-                  </td>
-                  <td className="py-2 px-2">
-                    <button onClick={() => handleDelete(key)} className="text-red-500 hover:text-red-700 text-sm">
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {byType('per_addon').length === 0 && (
-                <tr>
-                  <td colSpan={4} className="py-6 text-center text-gray-400">
-                    No add-on costs yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                  </div>
 
-      {/* ── Fixed Costs (amortized) ── */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <h2 className="text-2xl font-semibold">Fixed Costs</h2>
-            <p className="text-sm text-gray-500">Total amounts amortized across all bagels sold</p>
-          </div>
-          <button
-            onClick={() => addRow('fixed')}
-            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-          >
-            + Add Fixed Cost
-          </button>
+                  {/* Computed cost */}
+                  {hasInput && (
+                    <div className="ml-auto text-right flex-shrink-0">
+                      <p className="text-xs text-gray-400">${batchCost.toFixed(3)}/batch</p>
+                      <p className="text-sm font-bold" style={{ color: '#004AAD' }}>${perBagel.toFixed(4)}/bagel</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="py-3 px-2 font-semibold text-sm text-gray-600">Name</th>
-                <th className="py-3 px-2 font-semibold text-sm text-gray-600">Total Cost ($)</th>
-                <th className="py-3 px-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {byType('fixed').map(([key, item]) => (
-                <tr key={key} className="border-b border-gray-100">
-                  <td className="py-2 px-2">
-                    <input
-                      type="text"
-                      value={item.name}
-                      onChange={(e) => handleChange(key, 'name', e.target.value)}
-                      placeholder="e.g., Equipment, Packaging"
-                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
-                    />
-                  </td>
-                  <td className="py-2 px-2">
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={item.cost_per_unit}
-                      onChange={(e) => handleChange(key, 'cost_per_unit', e.target.value)}
-                      className="w-36 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
-                    />
-                  </td>
-                  <td className="py-2 px-2">
-                    <button onClick={() => handleDelete(key)} className="text-red-500 hover:text-red-700 text-sm">
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {byType('fixed').length === 0 && (
-                <tr>
-                  <td colSpan={3} className="py-6 text-center text-gray-400">
-                    No fixed costs yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {totalFixedCosts > 0 && (
-          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg inline-block">
-            <span className="text-sm text-amber-800 font-medium">
-              Total Fixed Costs: <strong>${totalFixedCosts.toFixed(2)}</strong>
-              <span className="text-amber-600"> — amortized over all bagels sold in financials</span>
+        {ingredientCostPerBagel > 0 && (
+          <div className="mt-5 p-3 rounded-lg inline-block" style={{ backgroundColor: '#EBF2FF', border: '1px solid #C7D9F8' }}>
+            <span className="text-sm font-medium" style={{ color: '#004AAD' }}>
+              Total ingredient cost per bagel: <strong>${ingredientCostPerBagel.toFixed(4)}</strong>
             </span>
           </div>
         )}
       </div>
 
-      {/* Save button */}
+      {/* ── Packaging ───────────────────────────────────────────────────── */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+        <div className="mb-5">
+          <h2 className="text-2xl font-bold">Packaging</h2>
+          <p className="text-sm text-gray-500 mt-1">Enter what you paid and how many you got.</p>
+        </div>
+
+        <div className="space-y-3">
+          {PACKAGING.map(item => {
+            const p: Purchase = packaging[item.name] ?? { amount: '', unit: 'count', price: '' };
+            const costPer = pkgCostPer(item.name);
+            const hasInput = !!p.amount && !!p.price;
+
+            return (
+              <div key={item.name} className="rounded-xl p-4" style={{ backgroundColor: '#F8FAFF', border: '1px solid #E8EDF8' }}>
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="w-40 flex-shrink-0">
+                    <p className="font-semibold text-gray-800 text-sm">{item.name}</p>
+                    <p className="text-xs text-gray-400">{item.label}</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-sm">
+                    <span className="text-gray-500">I paid</span>
+                    <span className="text-gray-400">$</span>
+                    <input
+                      type="number" min="0" step="0.01" placeholder="0.00" value={p.price}
+                      onChange={e => updatePackaging(item.name, 'price', e.target.value)}
+                      className="w-20 px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
+                    />
+                    <span className="text-gray-500">for</span>
+                    <input
+                      type="number" min="0" step="1" placeholder="0" value={p.amount}
+                      onChange={e => updatePackaging(item.name, 'amount', e.target.value)}
+                      className="w-24 px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
+                    />
+                    <span className="text-gray-500">units</span>
+                  </div>
+                  {hasInput && (
+                    <div className="ml-auto text-right flex-shrink-0">
+                      <p className="text-sm font-bold" style={{ color: '#004AAD' }}>${costPer.toFixed(4)}/{item.label}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Margin Summary ───────────────────────────────────────────────── */}
+      {ingredientCostPerBagel > 0 && pricing.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+          <h2 className="text-2xl font-bold mb-1">Margin by Pricing Tier</h2>
+          <p className="text-sm text-gray-500 mb-5">Ingredients + packaging. Does not include labor.</p>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="py-2 px-3 font-semibold text-gray-600">Tier</th>
+                  <th className="py-2 px-3 font-semibold text-gray-600">Revenue/bagel</th>
+                  <th className="py-2 px-3 font-semibold text-gray-600">Cost/bagel</th>
+                  <th className="py-2 px-3 font-semibold text-gray-600">Gross margin</th>
+                  <th className="py-2 px-3 font-semibold text-gray-600">Margin %</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pricing
+                  .filter((p, i, arr) => arr.findIndex(x => x.bagel_quantity === p.bagel_quantity) === i)
+                  .sort((a, b) => a.bagel_quantity - b.bagel_quantity)
+                  .map(tier => {
+                    const revenuePerBagel = tier.price / tier.bagel_quantity;
+                    const packagingPerBagel = bagCostPerBagel + (stickerCostPerOrder / tier.bagel_quantity);
+                    const totalCostPerBagel = ingredientCostPerBagel + packagingPerBagel;
+                    const grossMargin = revenuePerBagel - totalCostPerBagel;
+                    const marginPct = (grossMargin / revenuePerBagel) * 100;
+                    const isGood = marginPct >= 70;
+
+                    return (
+                      <tr key={tier.bagel_quantity} className="border-b border-gray-100">
+                        <td className="py-3 px-3 font-medium">{tier.label}</td>
+                        <td className="py-3 px-3 text-gray-700">${revenuePerBagel.toFixed(2)}</td>
+                        <td className="py-3 px-3 text-gray-500">
+                          <span className="text-gray-700">${totalCostPerBagel.toFixed(4)}</span>
+                          {packagingPerBagel > 0 && (
+                            <span className="text-xs text-gray-400 ml-1">
+                              (ing ${ingredientCostPerBagel.toFixed(3)} + pkg ${packagingPerBagel.toFixed(3)})
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-3 font-semibold" style={{ color: grossMargin >= 0 ? '#15803D' : '#DC2626' }}>
+                          ${grossMargin.toFixed(4)}
+                        </td>
+                        <td className="py-3 px-3">
+                          <span
+                            className="px-2.5 py-1 rounded-full text-xs font-bold"
+                            style={{
+                              backgroundColor: isGood ? '#DCFCE7' : '#FEF9C3',
+                              color: isGood ? '#15803D' : '#92400E',
+                            }}
+                          >
+                            {marginPct.toFixed(1)}%
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Based on actual orders */}
+          {orderStats && orderStats.totalOrders >= 3 && (
+            <div className="mt-6 pt-5 border-t border-gray-100">
+              <h3 className="text-base font-bold mb-1" style={{ color: '#004AAD' }}>
+                Based on Your {orderStats.totalOrders} Orders
+              </h3>
+              <p className="text-xs text-gray-400 mb-4">
+                Avg {orderStats.avgBagels.toFixed(1)} bagels/order &middot; {(orderStats.containerRate * 100).toFixed(0)}% include schmear/butter
+              </p>
+
+              {(() => {
+                const avgBags = orderStats.avgBagels;
+                const ingCost = ingredientCostPerBagel * avgBags;
+                const bagCost = bagCostPerBagel * avgBags;
+                const containerCost = pkgCostPer('Schmear/Butter Container') * orderStats.containerRate;
+                const stickerCost = stickerCostPerOrder;
+                const totalCost = ingCost + bagCost + containerCost + stickerCost;
+                const grossMargin = orderStats.avgRevenue - totalCost;
+                const marginPct = (grossMargin / orderStats.avgRevenue) * 100;
+                const isGood = marginPct >= 70;
+
+                return (
+                  <div className="rounded-xl p-4" style={{ backgroundColor: isGood ? '#F0FDF4' : '#FEFCE8', border: `1px solid ${isGood ? '#86EFAC' : '#FDE047'}` }}>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                      <div>
+                        <p className="text-xs text-gray-500 mb-0.5">Avg revenue/order</p>
+                        <p className="text-lg font-bold text-gray-800">${orderStats.avgRevenue.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-0.5">Avg cost/order</p>
+                        <p className="text-lg font-bold text-gray-800">${totalCost.toFixed(2)}</p>
+                        <p className="text-[0.65rem] text-gray-400 leading-tight mt-0.5">
+                          ing ${ingCost.toFixed(2)} · bags ${bagCost.toFixed(2)} · container ${containerCost.toFixed(2)} · sticker ${stickerCost.toFixed(2)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-0.5">Gross margin/order</p>
+                        <p className="text-lg font-bold" style={{ color: grossMargin >= 0 ? '#15803D' : '#DC2626' }}>${grossMargin.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-0.5">Margin %</p>
+                        <p className="text-lg font-bold" style={{ color: isGood ? '#15803D' : '#92400E' }}>{marginPct.toFixed(1)}%</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {orderStats && orderStats.totalOrders < 3 && (
+            <p className="text-xs text-gray-400 mt-4">Not enough order history yet for actual margin calculation.</p>
+          )}
+        </div>
+      )}
+
+      {/* ── Add-On Costs ─────────────────────────────────────────────────── */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h2 className="text-2xl font-bold">Add-On Costs</h2>
+            <p className="text-sm text-gray-500">Cost per unit sold (e.g., schmear, butter)</p>
+          </div>
+          <button onClick={() => addRow('per_addon')} className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm">
+            + Add Cost
+          </button>
+        </div>
+
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="border-b border-gray-200">
+              <th className="py-2 px-2 font-semibold text-gray-600">Name</th>
+              <th className="py-2 px-2 font-semibold text-gray-600">Add-On</th>
+              <th className="py-2 px-2 font-semibold text-gray-600">Cost per unit ($)</th>
+              <th className="py-2 px-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {byType('per_addon').map(([key, item]) => (
+              <tr key={key} className="border-b border-gray-100">
+                <td className="py-2 px-2">
+                  <input type="text" value={item.name} onChange={e => handleCostChange(key, 'name', e.target.value)}
+                    placeholder="e.g., Cream Cheese" className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD]" />
+                </td>
+                <td className="py-2 px-2">
+                  <select value={item.add_on_type_id || ''} onChange={e => handleCostChange(key, 'add_on_type_id', e.target.value)}
+                    className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD] bg-white">
+                    <option value="">Select add-on...</option>
+                    {addOnTypes.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                  </select>
+                </td>
+                <td className="py-2 px-2">
+                  <input type="number" step="0.01" min="0" value={item.cost_per_unit}
+                    onChange={e => handleCostChange(key, 'cost_per_unit', e.target.value)}
+                    className="w-28 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD]" />
+                </td>
+                <td className="py-2 px-2">
+                  <button onClick={() => handleDelete(key)} className="text-red-500 hover:text-red-700 text-sm">Delete</button>
+                </td>
+              </tr>
+            ))}
+            {byType('per_addon').length === 0 && (
+              <tr><td colSpan={4} className="py-6 text-center text-gray-400">No add-on costs yet.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ── Fixed Costs ──────────────────────────────────────────────────── */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h2 className="text-2xl font-bold">Fixed Costs</h2>
+            <p className="text-sm text-gray-500">One-time or recurring costs amortized across all bagels</p>
+          </div>
+          <button onClick={() => addRow('fixed')} className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm">
+            + Add Fixed Cost
+          </button>
+        </div>
+
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="border-b border-gray-200">
+              <th className="py-2 px-2 font-semibold text-gray-600">Name</th>
+              <th className="py-2 px-2 font-semibold text-gray-600">Total Cost ($)</th>
+              <th className="py-2 px-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {byType('fixed').map(([key, item]) => (
+              <tr key={key} className="border-b border-gray-100">
+                <td className="py-2 px-2">
+                  <input type="text" value={item.name} onChange={e => handleCostChange(key, 'name', e.target.value)}
+                    placeholder="e.g., Packaging, Equipment" className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD]" />
+                </td>
+                <td className="py-2 px-2">
+                  <input type="number" step="0.01" min="0" value={item.cost_per_unit}
+                    onChange={e => handleCostChange(key, 'cost_per_unit', e.target.value)}
+                    className="w-36 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-[#004AAD]" />
+                </td>
+                <td className="py-2 px-2">
+                  <button onClick={() => handleDelete(key)} className="text-red-500 hover:text-red-700 text-sm">Delete</button>
+                </td>
+              </tr>
+            ))}
+            {byType('fixed').length === 0 && (
+              <tr><td colSpan={3} className="py-6 text-center text-gray-400">No fixed costs yet.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
       <button
         onClick={handleSave}
         disabled={saving}
-        className="w-full py-3 px-6 bg-[#004AAD] text-white font-semibold rounded-lg hover:bg-[#003A8C] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+        className="w-full py-3 px-6 font-semibold rounded-xl text-white disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+        style={{ backgroundColor: saving ? undefined : '#004AAD' }}
       >
         {saving ? 'Saving...' : 'Save All Costs'}
       </button>
