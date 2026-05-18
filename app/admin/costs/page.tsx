@@ -54,6 +54,22 @@ function savePackaging(p: Purchases) {
   localStorage.setItem(LS_PKG_KEY, JSON.stringify(p));
 }
 
+const LS_ADDON_KEY = 'paiges-addon-ingredient-purchases';
+function loadAddonIngredients(): Purchases {
+  if (typeof window === 'undefined') return {};
+  try { return JSON.parse(localStorage.getItem(LS_ADDON_KEY) || '{}'); } catch { return {}; }
+}
+function saveAddonIngredients(p: Purchases) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(LS_ADDON_KEY, JSON.stringify(p));
+}
+
+const ADDON_INGREDIENTS = [
+  { name: 'Cream Cheese', purchaseUnits: ['g', 'kg', 'lb', 'oz'] },
+  { name: 'Butter',       purchaseUnits: ['g', 'kg', 'lb', 'oz'] },
+];
+const SERVING_G = 75;
+
 const PACKAGING = [
   { name: 'Paper Bags',              type: 'per_bagel' as const,  label: 'per bagel' },
   { name: 'Schmear/Butter Container', type: 'per_addon' as const,  label: 'per schmear/butter sold' },
@@ -84,6 +100,7 @@ interface EditableCost {
 export default function AdminCostsPage() {
   const [purchases, setPurchases] = useState<Purchases>({});
   const [packaging, setPackaging] = useState<Purchases>({});
+  const [addonIngredients, setAddonIngredients] = useState<Purchases>({});
   const [addOnTypes, setAddOnTypes] = useState<AddOnType[]>([]);
   const [otherCosts, setOtherCosts] = useState<{ [key: string]: EditableCost }>({});
   const [pricing, setPricing] = useState<{ bagel_quantity: number; price: number; label: string }[]>([]);
@@ -94,6 +111,7 @@ export default function AdminCostsPage() {
   useEffect(() => {
     setPurchases(loadPurchases());
     setPackaging(loadPackaging());
+    setAddonIngredients(loadAddonIngredients());
     Promise.all([fetchIngredients(), fetchAddOnTypes(), fetchPricing(), fetchOrderStats()]).then(() => setLoading(false));
   }, []);
 
@@ -165,6 +183,15 @@ export default function AdminCostsPage() {
         [name]: { ...{ amount: '', unit: RECIPE.find(r => r.name === name)?.purchaseUnits[0] ?? 'g', price: '' }, ...prev[name], [field]: value },
       };
       savePurchases(updated);
+      return updated;
+    });
+  };
+
+  const updateAddonIngredient = (name: string, field: keyof Purchase, value: string) => {
+    setAddonIngredients(prev => {
+      const defaultUnit = ADDON_INGREDIENTS.find(a => a.name === name)?.purchaseUnits[0] ?? 'g';
+      const updated = { ...prev, [name]: { ...{ amount: '', unit: defaultUnit, price: '' }, ...prev[name], [field]: value } };
+      saveAddonIngredients(updated);
       return updated;
     });
   };
@@ -283,6 +310,18 @@ export default function AdminCostsPage() {
   }
   const bagCostPerBagel = pkgCostPer('Paper Bags');
   const stickerCostPerOrder = pkgCostPer('Stickers');
+
+  function addonCostPerServing(name: string): number {
+    const p = addonIngredients[name];
+    if (!p?.amount || !p?.price) return 0;
+    const purchaseInG = parseFloat(p.amount) * (TO_BASE[p.unit] ?? 1);
+    return (parseFloat(p.price) / purchaseInG) * SERVING_G;
+  }
+  const creamCheeseCostPerServing = addonCostPerServing('Cream Cheese');
+  const butterCostPerServing = addonCostPerServing('Butter');
+  // Weighted avg ingredient cost per schmear/butter order (assume 50/50 split if both entered)
+  const addonIngCosts = [creamCheeseCostPerServing, butterCostPerServing].filter(c => c > 0);
+  const avgAddonIngCostPerServing = addonIngCosts.length > 0 ? addonIngCosts.reduce((a, b) => a + b, 0) / addonIngCosts.length : 0;
 
   const byType = (type: string) => Object.entries(otherCosts).filter(([, i]) => i.cost_type === type);
 
@@ -441,6 +480,58 @@ export default function AdminCostsPage() {
         </div>
       </div>
 
+      {/* ── Schmear & Butter ────────────────────────────────────────────── */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+        <div className="mb-5">
+          <h2 className="text-2xl font-bold">Schmear & Butter</h2>
+          <p className="text-sm text-gray-500 mt-1">75g per serving. Enter tub size and price.</p>
+        </div>
+        <div className="space-y-3">
+          {ADDON_INGREDIENTS.map(item => {
+            const p: Purchase = addonIngredients[item.name] ?? { amount: '', unit: item.purchaseUnits[0], price: '' };
+            const costPerServing = addonCostPerServing(item.name);
+            const hasInput = !!p.amount && !!p.price;
+            return (
+              <div key={item.name} className="rounded-xl p-4" style={{ backgroundColor: '#F8FAFF', border: '1px solid #E8EDF8' }}>
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="w-36 flex-shrink-0">
+                    <p className="font-semibold text-gray-800 text-sm">{item.name}</p>
+                    <p className="text-xs text-gray-400">75g per serving</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-sm">
+                    <span className="text-gray-500">I paid</span>
+                    <span className="text-gray-400">$</span>
+                    <input
+                      type="number" min="0" step="0.01" placeholder="0.00" value={p.price}
+                      onChange={e => updateAddonIngredient(item.name, 'price', e.target.value)}
+                      className="w-20 px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
+                    />
+                    <span className="text-gray-500">for</span>
+                    <input
+                      type="number" min="0" step="any" placeholder="0" value={p.amount}
+                      onChange={e => updateAddonIngredient(item.name, 'amount', e.target.value)}
+                      className="w-20 px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#004AAD] focus:border-transparent"
+                    />
+                    <select
+                      value={p.unit}
+                      onChange={e => updateAddonIngredient(item.name, 'unit', e.target.value)}
+                      className="px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#004AAD] focus:border-transparent bg-white"
+                    >
+                      {item.purchaseUnits.map(u => <option key={u} value={u}>{u}</option>)}
+                    </select>
+                  </div>
+                  {hasInput && (
+                    <div className="ml-auto text-right flex-shrink-0">
+                      <p className="text-sm font-bold" style={{ color: '#004AAD' }}>${costPerServing.toFixed(4)}/serving</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* ── Margin Summary ───────────────────────────────────────────────── */}
       {ingredientCostPerBagel > 0 && pricing.length > 0 && (
         <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
@@ -518,8 +609,9 @@ export default function AdminCostsPage() {
                 const ingCost = ingredientCostPerBagel * avgBags;
                 const bagCost = bagCostPerBagel * avgBags;
                 const containerCost = pkgCostPer('Schmear/Butter Container') * orderStats.containerRate;
+                const addonIngCost = avgAddonIngCostPerServing * orderStats.containerRate;
                 const stickerCost = stickerCostPerOrder;
-                const totalCost = ingCost + bagCost + containerCost + stickerCost;
+                const totalCost = ingCost + bagCost + containerCost + addonIngCost + stickerCost;
                 const grossMargin = orderStats.avgRevenue - totalCost;
                 const marginPct = (grossMargin / orderStats.avgRevenue) * 100;
                 const isGood = marginPct >= 70;
@@ -535,7 +627,7 @@ export default function AdminCostsPage() {
                         <p className="text-xs text-gray-500 mb-0.5">Avg cost/order</p>
                         <p className="text-lg font-bold text-gray-800">${totalCost.toFixed(2)}</p>
                         <p className="text-[0.65rem] text-gray-400 leading-tight mt-0.5">
-                          ing ${ingCost.toFixed(2)} · bags ${bagCost.toFixed(2)} · container ${containerCost.toFixed(2)} · sticker ${stickerCost.toFixed(2)}
+                          ing ${ingCost.toFixed(2)} · bags ${bagCost.toFixed(2)} · schmear/butter ${(containerCost + addonIngCost).toFixed(2)} · sticker ${stickerCost.toFixed(2)}
                         </p>
                       </div>
                       <div>
