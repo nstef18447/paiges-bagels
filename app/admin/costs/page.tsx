@@ -10,8 +10,13 @@ interface OrderStats {
   totalOrders: number;
   avgBagels: number;
   avgRevenue: number;
-  containerRate: number; // fraction of orders with schmear or butter
+  containerRate: number;
   quantityBreakdown: { quantity: number; count: number }[];
+}
+
+interface BiteStats {
+  totalBiteOrders: number;
+  packBreakdown: { packSize: number; count: number }[];
 }
 
 // ── Recipe constants ──────────────────────────────────────────────────────────
@@ -106,6 +111,8 @@ export default function AdminCostsPage() {
   const [otherCosts, setOtherCosts] = useState<{ [key: string]: EditableCost }>({});
   const [pricing, setPricing] = useState<{ bagel_quantity: number; price: number; label: string }[]>([]);
   const [orderStats, setOrderStats] = useState<OrderStats | null>(null);
+  const [biteStats, setBiteStats] = useState<BiteStats | null>(null);
+  const [bitePricing, setBitePricing] = useState<{ pack_size: number; price: number; active: boolean }[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -113,7 +120,7 @@ export default function AdminCostsPage() {
     setPurchases(loadPurchases());
     setPackaging(loadPackaging());
     setAddonIngredients(loadAddonIngredients());
-    Promise.all([fetchIngredients(), fetchAddOnTypes(), fetchPricing(), fetchOrderStats()]).then(() => setLoading(false));
+    Promise.all([fetchIngredients(), fetchAddOnTypes(), fetchPricing(), fetchOrderStats(), fetchBiteStats()]).then(() => setLoading(false));
   }, []);
 
   const fetchIngredients = async () => {
@@ -181,6 +188,37 @@ export default function AdminCostsPage() {
       avgRevenue: totalRevenue / orders.length,
       containerRate: ordersWithContainer / orders.length,
       quantityBreakdown,
+    });
+  };
+
+  const fetchBiteStats = async () => {
+    const [pricingRes, ordersRes] = await Promise.all([
+      fetch('/api/bite-pricing').then(r => r.json()),
+      supabase
+        .from('orders')
+        .select('bites')
+        .in('status', ['confirmed', 'ready'])
+        .not('bites', 'is', null),
+    ]);
+
+    setBitePricing(pricingRes);
+
+    const orders = ordersRes.data ?? [];
+    if (orders.length === 0) return;
+
+    const packCounts: Record<number, number> = {};
+    for (const o of orders) {
+      const bite = o.bites as { pack_size?: number } | null;
+      if (bite?.pack_size) {
+        packCounts[bite.pack_size] = (packCounts[bite.pack_size] ?? 0) + 1;
+      }
+    }
+
+    setBiteStats({
+      totalBiteOrders: orders.length,
+      packBreakdown: Object.entries(packCounts)
+        .map(([ps, count]) => ({ packSize: Number(ps), count }))
+        .sort((a, b) => a.packSize - b.packSize),
     });
   };
 
@@ -331,6 +369,9 @@ export default function AdminCostsPage() {
   // Weighted avg ingredient cost per schmear/butter order (assume 50/50 split if both entered)
   const addonIngCosts = [creamCheeseCostPerServing, butterCostPerServing].filter(c => c > 0);
   const avgAddonIngCostPerServing = addonIngCosts.length > 0 ? addonIngCosts.reduce((a, b) => a + b, 0) / addonIngCosts.length : 0;
+
+  // Same recipe, 50g per bite vs 110g per bagel
+  const ingredientCostPerBite = ingredientCostPerBagel * (50 / 110);
 
   const byType = (type: string) => Object.entries(otherCosts).filter(([, i]) => i.cost_type === type);
 
@@ -615,7 +656,7 @@ export default function AdminCostsPage() {
 
               {/* Order quantity breakdown */}
               <div className="flex flex-wrap gap-2 mb-5">
-                {orderStats.quantityBreakdown.map(({ quantity, count }) => {
+                {orderStats.quantityBreakdown.filter(({ quantity }) => quantity > 0 && quantity <= 13).map(({ quantity, count }) => {
                   const pct = (count / orderStats.totalOrders) * 100;
                   return (
                     <div key={quantity} className="rounded-lg px-3 py-2 text-center min-w-[72px]" style={{ backgroundColor: '#F8FAFF', border: '1px solid #E8EDF8' }}>
@@ -670,6 +711,79 @@ export default function AdminCostsPage() {
 
           {orderStats && orderStats.totalOrders < 3 && (
             <p className="text-xs text-gray-400 mt-4">Not enough order history yet for actual margin calculation.</p>
+          )}
+        </div>
+      )}
+
+      {/* ── Bites Margin ────────────────────────────────────────────────── */}
+      {ingredientCostPerBite > 0 && bitePricing.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+          <h2 className="text-2xl font-bold mb-1">Bites Margin</h2>
+          <p className="text-sm text-gray-500 mb-1">Same recipe, 50g dough per bite.</p>
+          <p className="text-sm mb-5" style={{ color: '#004AAD' }}>
+            Ingredient cost per bite: <strong>${ingredientCostPerBite.toFixed(4)}</strong>
+          </p>
+
+          {/* Margin by pack size */}
+          <div className="overflow-x-auto mb-6">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="py-2 px-3 font-semibold text-gray-600">Pack</th>
+                  <th className="py-2 px-3 font-semibold text-gray-600">Price</th>
+                  <th className="py-2 px-3 font-semibold text-gray-600">Revenue/bite</th>
+                  <th className="py-2 px-3 font-semibold text-gray-600">Cost/bite</th>
+                  <th className="py-2 px-3 font-semibold text-gray-600">Gross margin</th>
+                  <th className="py-2 px-3 font-semibold text-gray-600">Margin %</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bitePricing.filter(p => p.active !== false).sort((a, b) => a.pack_size - b.pack_size).map(tier => {
+                  const revenuePerBite = tier.price / tier.pack_size;
+                  const grossMargin = revenuePerBite - ingredientCostPerBite;
+                  const marginPct = (grossMargin / revenuePerBite) * 100;
+                  const isGood = marginPct >= 70;
+                  return (
+                    <tr key={tier.pack_size} className="border-b border-gray-100">
+                      <td className="py-3 px-3 font-medium">{tier.pack_size} bites</td>
+                      <td className="py-3 px-3 text-gray-700">${tier.price.toFixed(2)}</td>
+                      <td className="py-3 px-3 text-gray-700">${revenuePerBite.toFixed(3)}</td>
+                      <td className="py-3 px-3 text-gray-700">${ingredientCostPerBite.toFixed(4)}</td>
+                      <td className="py-3 px-3 font-semibold" style={{ color: grossMargin >= 0 ? '#15803D' : '#DC2626' }}>
+                        ${grossMargin.toFixed(4)}
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className="px-2.5 py-1 rounded-full text-xs font-bold"
+                          style={{ backgroundColor: isGood ? '#DCFCE7' : '#FEF9C3', color: isGood ? '#15803D' : '#92400E' }}>
+                          {marginPct.toFixed(1)}%
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Bite pack size distribution */}
+          {biteStats && biteStats.totalBiteOrders >= 3 && (
+            <div className="pt-5 border-t border-gray-100">
+              <h3 className="text-base font-bold mb-1" style={{ color: '#004AAD' }}>
+                Based on Your {biteStats.totalBiteOrders} Bite Orders
+              </h3>
+              <div className="flex flex-wrap gap-2 mt-3">
+                {biteStats.packBreakdown.map(({ packSize, count }) => {
+                  const pct = (count / biteStats.totalBiteOrders) * 100;
+                  return (
+                    <div key={packSize} className="rounded-lg px-3 py-2 text-center min-w-[72px]" style={{ backgroundColor: '#F8FAFF', border: '1px solid #E8EDF8' }}>
+                      <p className="text-base font-bold" style={{ color: '#004AAD' }}>{count}</p>
+                      <p className="text-xs text-gray-500">{packSize} bites</p>
+                      <p className="text-[0.68rem] text-gray-400">{pct.toFixed(0)}%</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           )}
         </div>
       )}
