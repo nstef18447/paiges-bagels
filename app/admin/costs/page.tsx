@@ -17,6 +17,9 @@ interface OrderStats {
 interface BiteStats {
   totalBiteOrders: number;
   packBreakdown: { packSize: number; count: number }[];
+  avgRevenue: number;
+  combined: { count: number; avgBagels: number; avgPackSize: number; avgRevenue: number } | null;
+  biteOnly: { count: number; avgPackSize: number; avgRevenue: number } | null;
 }
 
 // ── Recipe constants ──────────────────────────────────────────────────────────
@@ -196,7 +199,7 @@ export default function AdminCostsPage() {
       fetch('/api/bite-pricing').then(r => r.json()),
       supabase
         .from('orders')
-        .select('bites')
+        .select('bites, total_bagels, total_price')
         .in('status', ['confirmed', 'ready'])
         .not('bites', 'is', null),
     ]);
@@ -207,18 +210,44 @@ export default function AdminCostsPage() {
     if (orders.length === 0) return;
 
     const packCounts: Record<number, number> = {};
+    let totalRevenue = 0;
+    const combinedOrders: { bagels: number; packSize: number; revenue: number }[] = [];
+    const biteOnlyOrders: { packSize: number; revenue: number }[] = [];
+
     for (const o of orders) {
       const bite = o.bites as { pack_size?: number } | null;
-      if (bite?.pack_size) {
-        packCounts[bite.pack_size] = (packCounts[bite.pack_size] ?? 0) + 1;
+      const packSize = bite?.pack_size ?? 0;
+      if (!packSize) continue;
+
+      packCounts[packSize] = (packCounts[packSize] ?? 0) + 1;
+      totalRevenue += o.total_price ?? 0;
+
+      if ((o.total_bagels ?? 0) > 0) {
+        combinedOrders.push({ bagels: o.total_bagels, packSize, revenue: o.total_price });
+      } else {
+        biteOnlyOrders.push({ packSize, revenue: o.total_price });
       }
     }
 
+    const avg = (arr: number[]) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+
     setBiteStats({
       totalBiteOrders: orders.length,
+      avgRevenue: totalRevenue / orders.length,
       packBreakdown: Object.entries(packCounts)
         .map(([ps, count]) => ({ packSize: Number(ps), count }))
         .sort((a, b) => a.packSize - b.packSize),
+      combined: combinedOrders.length > 0 ? {
+        count: combinedOrders.length,
+        avgBagels: avg(combinedOrders.map(o => o.bagels)),
+        avgPackSize: avg(combinedOrders.map(o => o.packSize)),
+        avgRevenue: avg(combinedOrders.map(o => o.revenue)),
+      } : null,
+      biteOnly: biteOnlyOrders.length > 0 ? {
+        count: biteOnlyOrders.length,
+        avgPackSize: avg(biteOnlyOrders.map(o => o.packSize)),
+        avgRevenue: avg(biteOnlyOrders.map(o => o.revenue)),
+      } : null,
     });
   };
 
@@ -765,24 +794,120 @@ export default function AdminCostsPage() {
             </table>
           </div>
 
-          {/* Bite pack size distribution */}
+          {/* Bite order stats */}
           {biteStats && biteStats.totalBiteOrders >= 3 && (
-            <div className="pt-5 border-t border-gray-100">
-              <h3 className="text-base font-bold mb-1" style={{ color: '#004AAD' }}>
-                Based on Your {biteStats.totalBiteOrders} Bite Orders
-              </h3>
-              <div className="flex flex-wrap gap-2 mt-3">
-                {biteStats.packBreakdown.map(({ packSize, count }) => {
-                  const pct = (count / biteStats.totalBiteOrders) * 100;
-                  return (
-                    <div key={packSize} className="rounded-lg px-3 py-2 text-center min-w-[72px]" style={{ backgroundColor: '#F8FAFF', border: '1px solid #E8EDF8' }}>
-                      <p className="text-base font-bold" style={{ color: '#004AAD' }}>{count}</p>
-                      <p className="text-xs text-gray-500">{packSize} bites</p>
-                      <p className="text-[0.68rem] text-gray-400">{pct.toFixed(0)}%</p>
-                    </div>
-                  );
-                })}
+            <div className="pt-5 border-t border-gray-100 space-y-5">
+              <div>
+                <h3 className="text-base font-bold mb-1" style={{ color: '#004AAD' }}>
+                  Based on Your {biteStats.totalBiteOrders} Bite Orders
+                </h3>
+                <p className="text-xs text-gray-400 mb-3">Avg revenue/bite order: <strong className="text-gray-600">${biteStats.avgRevenue.toFixed(2)}</strong></p>
+
+                {/* Pack size breakdown */}
+                <div className="flex flex-wrap gap-2">
+                  {biteStats.packBreakdown.map(({ packSize, count }) => {
+                    const pct = (count / biteStats.totalBiteOrders) * 100;
+                    return (
+                      <div key={packSize} className="rounded-lg px-3 py-2 text-center min-w-[72px]" style={{ backgroundColor: '#F8FAFF', border: '1px solid #E8EDF8' }}>
+                        <p className="text-base font-bold" style={{ color: '#004AAD' }}>{count}</p>
+                        <p className="text-xs text-gray-500">{packSize} bites</p>
+                        <p className="text-[0.68rem] text-gray-400">{pct.toFixed(0)}%</p>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
+
+              {/* Bagels + bites combined */}
+              {biteStats.combined && (
+                <div className="rounded-xl p-4" style={{ backgroundColor: '#F0F9FF', border: '1px solid #BAE6FD' }}>
+                  <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#0369A1' }}>
+                    Bagels + Bites ({biteStats.combined.count} orders)
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-0.5">Avg bagels</p>
+                      <p className="text-lg font-bold text-gray-800">{biteStats.combined.avgBagels.toFixed(1)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-0.5">Avg bite pack</p>
+                      <p className="text-lg font-bold text-gray-800">{biteStats.combined.avgPackSize.toFixed(1)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-0.5">Avg revenue</p>
+                      <p className="text-lg font-bold text-gray-800">${biteStats.combined.avgRevenue.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-0.5">Avg cost</p>
+                      <p className="text-lg font-bold text-gray-800">
+                        ${(ingredientCostPerBagel * biteStats.combined.avgBagels + ingredientCostPerBite * biteStats.combined.avgPackSize + bagCostPerBagel * biteStats.combined.avgBagels + stickerCostPerOrder).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                  {(() => {
+                    const cost = ingredientCostPerBagel * biteStats.combined.avgBagels
+                      + ingredientCostPerBite * biteStats.combined.avgPackSize
+                      + bagCostPerBagel * biteStats.combined.avgBagels
+                      + stickerCostPerOrder;
+                    const margin = biteStats.combined.avgRevenue - cost;
+                    const pct = (margin / biteStats.combined.avgRevenue) * 100;
+                    const isGood = pct >= 70;
+                    return (
+                      <div className="mt-3 flex gap-4 justify-center">
+                        <span className="text-sm font-semibold" style={{ color: margin >= 0 ? '#15803D' : '#DC2626' }}>
+                          ${margin.toFixed(2)} margin/order
+                        </span>
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold"
+                          style={{ backgroundColor: isGood ? '#DCFCE7' : '#FEF9C3', color: isGood ? '#15803D' : '#92400E' }}>
+                          {pct.toFixed(1)}%
+                        </span>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* Bites only */}
+              {biteStats.biteOnly && (
+                <div className="rounded-xl p-4" style={{ backgroundColor: '#F8FAFF', border: '1px solid #E8EDF8' }}>
+                  <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#004AAD' }}>
+                    Bites Only ({biteStats.biteOnly.count} orders)
+                  </p>
+                  <div className="grid grid-cols-3 gap-3 text-center">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-0.5">Avg pack size</p>
+                      <p className="text-lg font-bold text-gray-800">{biteStats.biteOnly.avgPackSize.toFixed(1)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-0.5">Avg revenue</p>
+                      <p className="text-lg font-bold text-gray-800">${biteStats.biteOnly.avgRevenue.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-0.5">Avg cost</p>
+                      <p className="text-lg font-bold text-gray-800">
+                        ${(ingredientCostPerBite * biteStats.biteOnly.avgPackSize + stickerCostPerOrder).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                  {(() => {
+                    const cost = ingredientCostPerBite * biteStats.biteOnly.avgPackSize + stickerCostPerOrder;
+                    const margin = biteStats.biteOnly.avgRevenue - cost;
+                    const pct = (margin / biteStats.biteOnly.avgRevenue) * 100;
+                    const isGood = pct >= 70;
+                    return (
+                      <div className="mt-3 flex gap-4 justify-center">
+                        <span className="text-sm font-semibold" style={{ color: margin >= 0 ? '#15803D' : '#DC2626' }}>
+                          ${margin.toFixed(2)} margin/order
+                        </span>
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold"
+                          style={{ backgroundColor: isGood ? '#DCFCE7' : '#FEF9C3', color: isGood ? '#15803D' : '#92400E' }}>
+                          {pct.toFixed(1)}%
+                        </span>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
           )}
         </div>
