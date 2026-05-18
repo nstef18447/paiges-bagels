@@ -614,7 +614,10 @@ export default function AdminCostsPage() {
       {/* ── Margin Summary ───────────────────────────────────────────────── */}
       {ingredientCostPerBagel > 0 && pricing.length > 0 && (
         <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
-          <h2 className="text-2xl font-bold mb-1">Margin by Pricing Tier</h2>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded" style={{ backgroundColor: '#E8F0FE', color: '#004AAD' }}>Bagels</span>
+            <h2 className="text-2xl font-bold">Margin by Pricing Tier</h2>
+          </div>
           <p className="text-sm text-gray-500 mb-5">Ingredients + packaging. Does not include labor.</p>
 
           <div className="overflow-x-auto">
@@ -747,11 +750,11 @@ export default function AdminCostsPage() {
       {/* ── Bites Margin ────────────────────────────────────────────────── */}
       {ingredientCostPerBite > 0 && bitePricing.length > 0 && (
         <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
-          <h2 className="text-2xl font-bold mb-1">Bites Margin</h2>
-          <p className="text-sm text-gray-500 mb-1">Same recipe, 50g dough per bite.</p>
-          <p className="text-sm mb-5" style={{ color: '#004AAD' }}>
-            Ingredient cost per bite: <strong>${ingredientCostPerBite.toFixed(4)}</strong>
-          </p>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded" style={{ backgroundColor: '#E0F2FE', color: '#0369A1' }}>Bites</span>
+            <h2 className="text-2xl font-bold">Margin by Pack Size</h2>
+          </div>
+          <p className="text-sm text-gray-500 mb-5">Same recipe, 50g dough per bite. Sticker cost split across pack size.</p>
 
           {/* Margin by pack size */}
           <div className="overflow-x-auto mb-6">
@@ -762,24 +765,29 @@ export default function AdminCostsPage() {
                   <th className="py-2 px-3 font-semibold text-gray-600">Price</th>
                   <th className="py-2 px-3 font-semibold text-gray-600">Revenue/bite</th>
                   <th className="py-2 px-3 font-semibold text-gray-600">Cost/bite</th>
-                  <th className="py-2 px-3 font-semibold text-gray-600">Gross margin</th>
+                  <th className="py-2 px-3 font-semibold text-gray-600">Margin/pack</th>
                   <th className="py-2 px-3 font-semibold text-gray-600">Margin %</th>
                 </tr>
               </thead>
               <tbody>
                 {bitePricing.filter(p => p.active !== false).sort((a, b) => a.pack_size - b.pack_size).map(tier => {
                   const revenuePerBite = tier.price / tier.pack_size;
-                  const grossMargin = revenuePerBite - ingredientCostPerBite;
-                  const marginPct = (grossMargin / revenuePerBite) * 100;
+                  const stickerPerBite = stickerCostPerOrder / tier.pack_size;
+                  const totalCostPerBite = ingredientCostPerBite + stickerPerBite;
+                  const marginPerPack = tier.price - totalCostPerBite * tier.pack_size;
+                  const marginPct = (marginPerPack / tier.price) * 100;
                   const isGood = marginPct >= 70;
                   return (
                     <tr key={tier.pack_size} className="border-b border-gray-100">
                       <td className="py-3 px-3 font-medium">{tier.pack_size} bites</td>
                       <td className="py-3 px-3 text-gray-700">${tier.price.toFixed(2)}</td>
                       <td className="py-3 px-3 text-gray-700">${revenuePerBite.toFixed(3)}</td>
-                      <td className="py-3 px-3 text-gray-700">${ingredientCostPerBite.toFixed(4)}</td>
-                      <td className="py-3 px-3 font-semibold" style={{ color: grossMargin >= 0 ? '#15803D' : '#DC2626' }}>
-                        ${grossMargin.toFixed(4)}
+                      <td className="py-3 px-3 text-gray-500">
+                        <span className="text-gray-700">${totalCostPerBite.toFixed(4)}</span>
+                        {stickerPerBite > 0 && <span className="text-xs text-gray-400 ml-1">(ing ${ingredientCostPerBite.toFixed(3)} + sticker ${stickerPerBite.toFixed(3)})</span>}
+                      </td>
+                      <td className="py-3 px-3 font-semibold" style={{ color: marginPerPack >= 0 ? '#15803D' : '#DC2626' }}>
+                        ${marginPerPack.toFixed(3)}
                       </td>
                       <td className="py-3 px-3">
                         <span className="px-2.5 py-1 rounded-full text-xs font-bold"
@@ -819,95 +827,90 @@ export default function AdminCostsPage() {
               </div>
 
               {/* Bagels + bites combined */}
-              {biteStats.combined && (
-                <div className="rounded-xl p-4" style={{ backgroundColor: '#F0F9FF', border: '1px solid #BAE6FD' }}>
-                  <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#0369A1' }}>
-                    Bagels + Bites ({biteStats.combined.count} orders)
-                  </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-0.5">Avg bagels</p>
-                      <p className="text-lg font-bold text-gray-800">{biteStats.combined.avgBagels.toFixed(1)}</p>
+              {biteStats.combined && (() => {
+                const ingCost = ingredientCostPerBagel * biteStats.combined.avgBagels + ingredientCostPerBite * biteStats.combined.avgPackSize;
+                const pkgCost = bagCostPerBagel * biteStats.combined.avgBagels + pkgCostPer('Schmear/Butter Container') * (orderStats?.containerRate ?? 0) + stickerCostPerOrder;
+                const totalCost = ingCost + pkgCost;
+                const margin = biteStats.combined.avgRevenue - totalCost;
+                const pct = (margin / biteStats.combined.avgRevenue) * 100;
+                const isGood = pct >= 70;
+                return (
+                  <div className="rounded-xl p-4" style={{ backgroundColor: '#F0F9FF', border: '1px solid #BAE6FD' }}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded" style={{ backgroundColor: '#E8F0FE', color: '#004AAD' }}>Bagels</span>
+                      <span className="text-xs text-gray-400">+</span>
+                      <span className="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded" style={{ backgroundColor: '#E0F2FE', color: '#0369A1' }}>Bites</span>
+                      <span className="text-xs text-gray-500 ml-1">{biteStats.combined.count} orders</span>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-0.5">Avg bite pack</p>
-                      <p className="text-lg font-bold text-gray-800">{biteStats.combined.avgPackSize.toFixed(1)}</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center mb-3">
+                      <div>
+                        <p className="text-xs text-gray-500 mb-0.5">Avg bagels</p>
+                        <p className="text-lg font-bold text-gray-800">{biteStats.combined.avgBagels.toFixed(1)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-0.5">Avg bites</p>
+                        <p className="text-lg font-bold text-gray-800">{biteStats.combined.avgPackSize.toFixed(1)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-0.5">Avg revenue</p>
+                        <p className="text-lg font-bold text-gray-800">${biteStats.combined.avgRevenue.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-0.5">Avg cost</p>
+                        <p className="text-lg font-bold text-gray-800">${totalCost.toFixed(2)}</p>
+                        <p className="text-[0.65rem] text-gray-400 leading-tight mt-0.5">ing ${ingCost.toFixed(2)} · pkg ${pkgCost.toFixed(2)}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-0.5">Avg revenue</p>
-                      <p className="text-lg font-bold text-gray-800">${biteStats.combined.avgRevenue.toFixed(2)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-0.5">Avg cost</p>
-                      <p className="text-lg font-bold text-gray-800">
-                        ${(ingredientCostPerBagel * biteStats.combined.avgBagels + ingredientCostPerBite * biteStats.combined.avgPackSize + bagCostPerBagel * biteStats.combined.avgBagels + stickerCostPerOrder).toFixed(2)}
-                      </p>
+                    <div className="flex gap-4 justify-center">
+                      <span className="text-sm font-semibold" style={{ color: margin >= 0 ? '#15803D' : '#DC2626' }}>${margin.toFixed(2)} margin/order</span>
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold"
+                        style={{ backgroundColor: isGood ? '#DCFCE7' : '#FEF9C3', color: isGood ? '#15803D' : '#92400E' }}>
+                        {pct.toFixed(1)}%
+                      </span>
                     </div>
                   </div>
-                  {(() => {
-                    const cost = ingredientCostPerBagel * biteStats.combined.avgBagels
-                      + ingredientCostPerBite * biteStats.combined.avgPackSize
-                      + bagCostPerBagel * biteStats.combined.avgBagels
-                      + stickerCostPerOrder;
-                    const margin = biteStats.combined.avgRevenue - cost;
-                    const pct = (margin / biteStats.combined.avgRevenue) * 100;
-                    const isGood = pct >= 70;
-                    return (
-                      <div className="mt-3 flex gap-4 justify-center">
-                        <span className="text-sm font-semibold" style={{ color: margin >= 0 ? '#15803D' : '#DC2626' }}>
-                          ${margin.toFixed(2)} margin/order
-                        </span>
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold"
-                          style={{ backgroundColor: isGood ? '#DCFCE7' : '#FEF9C3', color: isGood ? '#15803D' : '#92400E' }}>
-                          {pct.toFixed(1)}%
-                        </span>
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
+                );
+              })()}
 
               {/* Bites only */}
-              {biteStats.biteOnly && (
-                <div className="rounded-xl p-4" style={{ backgroundColor: '#F8FAFF', border: '1px solid #E8EDF8' }}>
-                  <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: '#004AAD' }}>
-                    Bites Only ({biteStats.biteOnly.count} orders)
-                  </p>
-                  <div className="grid grid-cols-3 gap-3 text-center">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-0.5">Avg pack size</p>
-                      <p className="text-lg font-bold text-gray-800">{biteStats.biteOnly.avgPackSize.toFixed(1)}</p>
+              {biteStats.biteOnly && (() => {
+                const ingCost = ingredientCostPerBite * biteStats.biteOnly.avgPackSize;
+                const pkgCost = stickerCostPerOrder;
+                const totalCost = ingCost + pkgCost;
+                const margin = biteStats.biteOnly.avgRevenue - totalCost;
+                const pct = (margin / biteStats.biteOnly.avgRevenue) * 100;
+                const isGood = pct >= 70;
+                return (
+                  <div className="rounded-xl p-4" style={{ backgroundColor: '#F8FAFF', border: '1px solid #E8EDF8' }}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded" style={{ backgroundColor: '#E0F2FE', color: '#0369A1' }}>Bites Only</span>
+                      <span className="text-xs text-gray-500 ml-1">{biteStats.biteOnly.count} orders</span>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-0.5">Avg revenue</p>
-                      <p className="text-lg font-bold text-gray-800">${biteStats.biteOnly.avgRevenue.toFixed(2)}</p>
+                    <div className="grid grid-cols-3 gap-3 text-center mb-3">
+                      <div>
+                        <p className="text-xs text-gray-500 mb-0.5">Avg pack size</p>
+                        <p className="text-lg font-bold text-gray-800">{biteStats.biteOnly.avgPackSize.toFixed(1)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-0.5">Avg revenue</p>
+                        <p className="text-lg font-bold text-gray-800">${biteStats.biteOnly.avgRevenue.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-0.5">Avg cost</p>
+                        <p className="text-lg font-bold text-gray-800">${totalCost.toFixed(2)}</p>
+                        <p className="text-[0.65rem] text-gray-400 leading-tight mt-0.5">ing ${ingCost.toFixed(2)} · sticker ${pkgCost.toFixed(2)}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-0.5">Avg cost</p>
-                      <p className="text-lg font-bold text-gray-800">
-                        ${(ingredientCostPerBite * biteStats.biteOnly.avgPackSize + stickerCostPerOrder).toFixed(2)}
-                      </p>
+                    <div className="flex gap-4 justify-center">
+                      <span className="text-sm font-semibold" style={{ color: margin >= 0 ? '#15803D' : '#DC2626' }}>${margin.toFixed(2)} margin/order</span>
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold"
+                        style={{ backgroundColor: isGood ? '#DCFCE7' : '#FEF9C3', color: isGood ? '#15803D' : '#92400E' }}>
+                        {pct.toFixed(1)}%
+                      </span>
                     </div>
                   </div>
-                  {(() => {
-                    const cost = ingredientCostPerBite * biteStats.biteOnly.avgPackSize + stickerCostPerOrder;
-                    const margin = biteStats.biteOnly.avgRevenue - cost;
-                    const pct = (margin / biteStats.biteOnly.avgRevenue) * 100;
-                    const isGood = pct >= 70;
-                    return (
-                      <div className="mt-3 flex gap-4 justify-center">
-                        <span className="text-sm font-semibold" style={{ color: margin >= 0 ? '#15803D' : '#DC2626' }}>
-                          ${margin.toFixed(2)} margin/order
-                        </span>
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold"
-                          style={{ backgroundColor: isGood ? '#DCFCE7' : '#FEF9C3', color: isGood ? '#15803D' : '#92400E' }}>
-                          {pct.toFixed(1)}%
-                        </span>
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
+                );
+              })()}
             </div>
           )}
         </div>
