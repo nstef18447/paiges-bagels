@@ -11,6 +11,7 @@ interface OrderStats {
   avgBagels: number;
   avgRevenue: number;
   containerRate: number; // fraction of orders with schmear or butter
+  quantityBreakdown: { quantity: number; count: number }[];
 }
 
 // ── Recipe constants ──────────────────────────────────────────────────────────
@@ -155,10 +156,13 @@ export default function AdminCostsPage() {
     let totalBagels = 0;
     let totalRevenue = 0;
     let ordersWithContainer = 0;
+    const qtyCounts: Record<number, number> = {};
 
     for (const o of orders) {
-      totalBagels += o.total_bagels ?? 0;
+      const qty = o.total_bagels ?? 0;
+      totalBagels += qty;
       totalRevenue += o.total_price ?? 0;
+      qtyCounts[qty] = (qtyCounts[qty] ?? 0) + 1;
       const addOns = (o.order_add_ons as unknown as { add_on_type: { name: string } | null }[]) ?? [];
       const hasContainer = addOns.some(a => {
         const name = a.add_on_type?.name?.toLowerCase() ?? '';
@@ -167,11 +171,16 @@ export default function AdminCostsPage() {
       if (hasContainer) ordersWithContainer++;
     }
 
+    const quantityBreakdown = Object.entries(qtyCounts)
+      .map(([q, count]) => ({ quantity: Number(q), count }))
+      .sort((a, b) => a.quantity - b.quantity);
+
     setOrderStats({
       totalOrders: orders.length,
       avgBagels: totalBagels / orders.length,
       avgRevenue: totalRevenue / orders.length,
       containerRate: ordersWithContainer / orders.length,
+      quantityBreakdown,
     });
   };
 
@@ -603,6 +612,20 @@ export default function AdminCostsPage() {
               <p className="text-xs text-gray-400 mb-4">
                 Avg {orderStats.avgBagels.toFixed(1)} bagels/order &middot; {(orderStats.containerRate * 100).toFixed(0)}% include schmear/butter
               </p>
+
+              {/* Order quantity breakdown */}
+              <div className="flex flex-wrap gap-2 mb-5">
+                {orderStats.quantityBreakdown.map(({ quantity, count }) => {
+                  const pct = (count / orderStats.totalOrders) * 100;
+                  return (
+                    <div key={quantity} className="rounded-lg px-3 py-2 text-center min-w-[72px]" style={{ backgroundColor: '#F8FAFF', border: '1px solid #E8EDF8' }}>
+                      <p className="text-base font-bold" style={{ color: '#004AAD' }}>{count}</p>
+                      <p className="text-xs text-gray-500">{quantity === 1 ? '1 bagel' : `${quantity} bagels`}</p>
+                      <p className="text-[0.68rem] text-gray-400">{pct.toFixed(0)}%</p>
+                    </div>
+                  );
+                })}
+              </div>
 
               {(() => {
                 const avgBags = orderStats.avgBagels;
