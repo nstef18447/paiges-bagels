@@ -829,7 +829,8 @@ export default function AdminCostsPage() {
               {/* Bagels + bites combined */}
               {biteStats.combined && (() => {
                 const ingCost = ingredientCostPerBagel * biteStats.combined.avgBagels + ingredientCostPerBite * biteStats.combined.avgPackSize;
-                const pkgCost = bagCostPerBagel * biteStats.combined.avgBagels + pkgCostPer('Schmear/Butter Container') * (orderStats?.containerRate ?? 0) + stickerCostPerOrder;
+                const schmearRate = orderStats?.containerRate ?? 0;
+                const pkgCost = bagCostPerBagel * biteStats.combined.avgBagels + (pkgCostPer('Schmear/Butter Container') + avgAddonIngCostPerServing) * schmearRate + stickerCostPerOrder;
                 const totalCost = ingCost + pkgCost;
                 const margin = biteStats.combined.avgRevenue - totalCost;
                 const pct = (margin / biteStats.combined.avgRevenue) * 100;
@@ -858,7 +859,7 @@ export default function AdminCostsPage() {
                       <div>
                         <p className="text-xs text-gray-500 mb-0.5">Avg cost</p>
                         <p className="text-lg font-bold text-gray-800">${totalCost.toFixed(2)}</p>
-                        <p className="text-[0.65rem] text-gray-400 leading-tight mt-0.5">ing ${ingCost.toFixed(2)} · pkg ${pkgCost.toFixed(2)}</p>
+                        <p className="text-[0.65rem] text-gray-400 leading-tight mt-0.5">ing ${ingCost.toFixed(2)} · bags+sticker+schmear(×{(schmearRate*100).toFixed(0)}%) ${pkgCost.toFixed(2)}</p>
                       </div>
                     </div>
                     <div className="flex gap-4 justify-center">
