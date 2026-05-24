@@ -164,27 +164,26 @@ function computeDaySchedule(slots: SlotPrep[], date: string): RoundTiming[] {
   const rounds = computeOvenPlan(slots);
   if (rounds.length === 0) return [];
 
-  const schedule: RoundTiming[] = rounds.map((round, i) => {
+  // Pre-compute per-round constants
+  const meta = rounds.map((round, i) => {
     const pickupTime = getRoundReadyBy(round, date);
     const readyBy = new Date(pickupTime.getTime() - (COOK_COOL_MINS + COOK_BAG_MINS) * 60000);
     const loads = (round.big ? 1 : 0) + (round.small ? 1 : 0);
     const prepMins = loads * (COOK_BOIL_MINS + COOK_TRANSFER_MINS);
-    const ovenIn = new Date(readyBy.getTime() - COOK_BAKE_MINS * 60000);
-    const prepStart = new Date(ovenIn.getTime() - prepMins * 60000);
-    return { roundNum: i + 1, loads, readyBy, pickupTime, prepStart, ovenIn, ovenOut: new Date(readyBy) };
+    return { roundNum: i + 1, loads, readyBy, pickupTime, prepMins };
   });
 
-  // Enforce sequential ordering — round i cannot start before round i-1 finishes baking
-  for (let i = 1; i < schedule.length; i++) {
-    const prevEnd = schedule[i - 1].ovenOut;
-    if (schedule[i].prepStart < prevEnd) {
-      const loads = schedule[i].loads;
-      const prepMins = loads * (COOK_BOIL_MINS + COOK_TRANSFER_MINS);
-      const prepStart = new Date(prevEnd);
-      const ovenIn = new Date(prepStart.getTime() + prepMins * 60000);
-      const ovenOut = new Date(ovenIn.getTime() + COOK_BAKE_MINS * 60000);
-      schedule[i] = { ...schedule[i], prepStart, ovenIn, ovenOut };
-    }
+  // Backward cascade: each round's ovenOut is the earlier of its own deadline
+  // and the next round's prepStart, so earlier rounds shift left automatically.
+  const schedule: RoundTiming[] = new Array(meta.length);
+  for (let i = meta.length - 1; i >= 0; i--) {
+    const { roundNum, loads, readyBy, pickupTime, prepMins } = meta[i];
+    const ovenOut = i < meta.length - 1
+      ? new Date(Math.min(readyBy.getTime(), schedule[i + 1].prepStart.getTime()))
+      : new Date(readyBy);
+    const ovenIn = new Date(ovenOut.getTime() - COOK_BAKE_MINS * 60000);
+    const prepStart = new Date(ovenIn.getTime() - prepMins * 60000);
+    schedule[i] = { roundNum, loads, readyBy, pickupTime, prepStart, ovenIn, ovenOut };
   }
 
   return schedule;
