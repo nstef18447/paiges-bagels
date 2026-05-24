@@ -20,6 +20,67 @@ A sourdough bagel ordering system for Paige's Bagels at Kellogg (Northwestern bu
 - Logo: `/public/logo.svg` (customer pages) and `/public/logo.png` (admin + emails)
 - Instagram: @paigesbagels
 
+## Active Task — Migrate Bite Flavor Images Off Supabase Storage
+
+**Why this needs doing**: Paige got a notification that her Supabase cached egress limit (5 GB/month on the free tier) was hit. The cause is the **bite flavor images**, which are stored in the Supabase `bites` storage bucket and served from Supabase's CDN every time the order form loads. Every page view counts against the quota.
+
+Bagel images don't have this problem — they're already static files in `/public/` (e.g. `plaintrans.png`, `sesametrans.png`) served by Vercel's CDN, which is effectively unlimited on her plan.
+
+**Goal**: Move bite flavor images into `/public/bites/` so they're served the same way as bagel images. After this is done, the Supabase `bites` storage bucket will be unused and cached egress will drop to near zero.
+
+### Step-by-step (for the next Claude Code session)
+
+The previous Claude already explored the code, so the relevant files are:
+- `app/api/bite-flavors/[id]/image/route.ts` — uploads to Supabase Storage (will need replacing or removal)
+- `components/BiteFlavorManager.tsx` — has the "Image" upload button in admin
+- `components/BiteSelector.tsx` — renders `flavor.image_url` on the order form
+- `database/bites-schema.sql` — `bite_flavors.image_url` column (will continue to be used, just with a different URL format)
+
+**1. Pull current bite flavor data from Supabase.** Ask Paige to run this in Supabase SQL editor and paste the result:
+```sql
+select id, name, slug, image_url, sort_order, active from bite_flavors order by sort_order;
+```
+This tells you which flavors exist and what their current Supabase image URLs are.
+
+**2. Download the existing images from Supabase Storage.** For each flavor's `image_url`, download the file and save it to `/public/bites/<slug>.jpg` (or `.png` — whatever the source is). Ask Paige to either:
+   - (a) download them herself from the Supabase dashboard → Storage → `bites` bucket and drop them in `/public/bites/`, or
+   - (b) let you write a one-off Node script using `SUPABASE_SERVICE_KEY` from `.env.local` to fetch each file and write it locally.
+
+**3. Compress them before committing.** Phone-camera images are often 2-5 MB; that's wasteful even on Vercel. Target ~100 KB per image, max 800px wide. Recommend [squoosh.app](https://squoosh.app) for a manual pass, or use `sharp` in a script. JPG quality 80 is fine — these display at 72px so quality loss is invisible.
+
+**4. Update the database.** For each flavor, set `image_url` to the static path. Easiest via Supabase SQL editor:
+```sql
+update bite_flavors set image_url = '/bites/everything.jpg' where slug = 'everything';
+-- repeat per flavor
+```
+Confirm with Paige before running these — she should approve the slug → filename mapping.
+
+**5. Rewrite the upload endpoint to write to `/public/bites/` instead of Supabase Storage.** In `app/api/bite-flavors/[id]/image/route.ts`:
+   - Remove the `supabase.storage.from('bites').upload(...)` call
+   - Write the file to `public/bites/<slug>.<ext>` using `fs/promises` (`writeFile`)
+   - Set `image_url` to `/bites/<slug>.<ext>` (with leading slash, no `public/` prefix — that's how Next.js serves it)
+   - **Important caveat**: writing to `/public/` at runtime does **not** work on Vercel (serverless filesystem is read-only). So in production, the admin "Image" upload button won't work — Paige will need to add new bite images by committing files to the repo. Two options:
+     - **(a)** Keep the upload endpoint working in local dev only (write to disk), and tell Paige she needs to `git commit + push` after uploading locally. Show a warning in the admin UI on the button.
+     - **(b)** Disable the upload button entirely in the admin and write a short note in `CLAUDE.md` / this PLAN.md explaining the new flow: "To add a bite flavor image: drop the file in `/public/bites/`, commit, push to a feature branch, get a preview URL, then merge. Then in `/admin/bite-flavors` set the image_url manually via DB or add an `image_url` text field to the form."
+   - **Recommended**: option (b) — simpler, no surprise breakage. Add a text input on `BiteFlavorManager.tsx` for `image_url` so Paige can paste `/bites/everything.jpg` directly when creating a flavor.
+
+**6. Delete the Supabase storage bucket** (only after verifying everything works in production). In Supabase dashboard → Storage → delete the `bites` bucket. This is the step that actually stops the egress.
+
+**7. Verify the fix.**
+   - Local: `npm run dev`, go to `/order`, check that bite flavor images render correctly with the `mix-blend-mode: multiply` effect (white backgrounds should still drop out).
+   - Push to a feature branch, get a Vercel preview URL, verify there too.
+   - In Supabase dashboard, watch cached egress over the next day — should drop to near zero.
+
+### Questions to ask Paige before starting
+- How many bite flavors does she have, and is she okay with the admin upload button being replaced with a "paste image URL" text field?
+- Does she want help compressing the existing images, or will she do it manually in Squoosh?
+- Confirm she wants to delete the Supabase `bites` bucket at the end (the storage costs nothing, but it's clutter — and any leftover image_url pointing at it would silently keep eating egress).
+
+### Out of scope (do not do these)
+- Don't touch the `bagel_types.image_url` flow — bagel images already live in `/public/` and work correctly. The current admin form just stores a filename string and renders it as `/{filename}`; that pattern is fine.
+- Don't add Cloudinary, Vercel Blob, or other external image services. The simplest answer is static files in the repo.
+- Don't migrate to Supabase Pro ($25/mo). The free tier is fine once the images are out.
+
 ## Current State — What's Built
 
 ### Customer-Facing Pages
