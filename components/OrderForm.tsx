@@ -96,7 +96,11 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [isDelivery, setIsDelivery] = useState(false);
+  const [deliveryAddress, setDeliveryAddress] = useState('');
   const [error, setError] = useState('');
+
+  const DELIVERY_FEE = 20;
 
   const bagelsRef = useRef<HTMLElement>(null);
   const checkoutRef = useRef<HTMLElement>(null);
@@ -165,7 +169,8 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
   const bitesStarted = biteTotalSelected > 0;
   const bitesValid = !bitesStarted || activePackSizes.includes(biteTotalSelected);
 
-  const price = calculatePrice(total) + addOnSubtotal + biteSubtotal;
+  const deliveryFee = isDelivery ? DELIVERY_FEE : 0;
+  const price = calculatePrice(total) + addOnSubtotal + biteSubtotal + deliveryFee;
 
   // Order is valid if they have bagels, valid bites, or both
   const hasBagels = total > 0 && isValidTotal(total);
@@ -198,6 +203,11 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
 
     if (!customerName || !customerEmail || !customerPhone) {
       setError('Please fill in all customer information');
+      return;
+    }
+
+    if (isDelivery && !deliveryAddress.trim()) {
+      setError('Please enter your delivery address');
       return;
     }
 
@@ -237,6 +247,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
           bagelCounts,
           addOnCounts,
           bites: bitesPayload,
+          delivery: isDelivery ? { address: deliveryAddress.trim(), fee: DELIVERY_FEE } : null,
         }),
       });
 
@@ -483,6 +494,84 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
             </section>
           )}
 
+          {/* Delivery Option */}
+          <section className="mt-10">
+            <h2
+              className="text-lg font-bold mb-4 pb-2"
+              style={{
+                color: 'var(--blue)',
+                fontFamily: 'var(--font-playfair)',
+                borderBottom: `2px solid ${accent}`
+              }}
+            >
+              Delivery
+            </h2>
+
+            <button
+              type="button"
+              onClick={() => { setIsDelivery(!isDelivery); setDeliveryAddress(''); }}
+              className="w-full text-left rounded-[10px] p-4 md:p-5 transition-all duration-200 cursor-pointer active:scale-[0.98]"
+              style={{
+                background: isDelivery ? 'var(--blue-light)' : 'var(--bg-card)',
+                border: isDelivery ? '1.5px solid var(--blue)' : '1.5px solid var(--border)',
+                boxShadow: isDelivery ? '0 0 0 3px rgba(0, 74, 173, 0.12)' : 'none',
+              }}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-[1.05rem] font-bold" style={{ color: 'var(--blue)' }}>
+                    Chicago Delivery
+                  </div>
+                  <div className="text-[0.82rem] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                    We&apos;ll Uber your bagels right to you · +$20.00
+                  </div>
+                </div>
+                {isDelivery ? (
+                  <span
+                    className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: 'var(--blue)' }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
+                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                    </svg>
+                  </span>
+                ) : (
+                  <span
+                    className="w-5 h-5 rounded-full flex-shrink-0"
+                    style={{ border: '2px solid var(--border)' }}
+                  />
+                )}
+              </div>
+            </button>
+
+            {isDelivery && (
+              <div className="mt-4">
+                <label
+                  htmlFor="deliveryAddress"
+                  className="block text-sm font-medium mb-2"
+                  style={{ color: 'var(--text-medium)' }}
+                >
+                  Delivery Address
+                </label>
+                <input
+                  type="text"
+                  id="deliveryAddress"
+                  value={deliveryAddress}
+                  onChange={(e) => setDeliveryAddress(e.target.value)}
+                  placeholder="123 W Main St, Chicago, IL 60601"
+                  className="w-full px-4 py-3 rounded-lg transition-all"
+                  style={{
+                    border: '1px solid var(--border)',
+                    backgroundColor: 'var(--bg-card)',
+                    outline: 'none'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = focusBorder}
+                  onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
+                />
+              </div>
+            )}
+          </section>
+
           {/* Step 3: Customer Information */}
           <section ref={checkoutRef} className="mt-10">
             <h2
@@ -583,6 +672,12 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
                 border: '1px solid #C8DFC9'
               }}
             >
+              {isDelivery && (
+                <div className="flex justify-between items-center mb-2 pb-2" style={{ borderBottom: '1px solid #C8DFC9' }}>
+                  <span className="text-sm" style={{ color: '#2D5A3D' }}>Chicago Delivery</span>
+                  <span className="text-sm font-semibold" style={{ color: '#2D5A3D' }}>+$20.00</span>
+                </div>
+              )}
               <div className="flex justify-between items-center">
                 <span
                   className="text-lg"

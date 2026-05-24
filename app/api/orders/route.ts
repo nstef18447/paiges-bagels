@@ -5,7 +5,7 @@ import { calculateTotal, isValidTotal, calculateBundlePrice, generateVenmoNote }
 
 export async function POST(request: NextRequest) {
   try {
-    const { bites, ...formData }: OrderFormData & { bites?: unknown } = await request.json();
+    const { bites, delivery, ...formData }: OrderFormData & { bites?: unknown; delivery?: { address: string; fee: number } | null } = await request.json();
 
     const total = calculateTotal(formData.bagelCounts);
 
@@ -89,7 +89,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Calculate price
-    const price = calculateBundlePrice(total, pricingTiers) + addOnTotal + bitesPrice;
+    const deliveryFee = delivery?.fee ?? 0;
+    const price = calculateBundlePrice(total, pricingTiers) + addOnTotal + bitesPrice + deliveryFee;
 
     // Atomic order creation — locks the slot, checks capacity, and inserts in one transaction
     const { data: orderId, error: insertError } = await supabase.rpc(
@@ -131,6 +132,9 @@ export async function POST(request: NextRequest) {
     const orderUpdate: Record<string, unknown> = { venmo_note: venmoNote };
     if (bites) {
       orderUpdate.bites = bites;
+    }
+    if (delivery) {
+      orderUpdate.delivery = delivery;
     }
     const serviceSupabase = getServiceSupabase();
     await serviceSupabase

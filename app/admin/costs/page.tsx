@@ -74,8 +74,8 @@ function saveAddonIngredients(p: Purchases) {
 }
 
 const ADDON_INGREDIENTS = [
-  { name: 'Cream Cheese', purchaseUnits: ['g', 'kg', 'lb', 'oz'] },
-  { name: 'Butter',       purchaseUnits: ['g', 'kg', 'lb', 'oz'] },
+  { name: 'Cream Cheese', purchaseUnits: ['g', 'kg', 'lb', 'oz'], addonMatch: 'schmear' },
+  { name: 'Butter',       purchaseUnits: ['g', 'kg', 'lb', 'oz'], addonMatch: 'butter' },
 ];
 const SERVING_G = 75;
 
@@ -609,6 +609,64 @@ export default function AdminCostsPage() {
             );
           })}
         </div>
+
+        {/* Margin per add-on */}
+        {(creamCheeseCostPerServing > 0 || butterCostPerServing > 0) && (() => {
+          const containerCost = pkgCostPer('Schmear/Butter Container');
+          const rows = ADDON_INGREDIENTS.map(item => {
+            const ingCost = addonCostPerServing(item.name);
+            if (!ingCost) return null;
+            const addOnType = addOnTypes.find(a => a.name.toLowerCase().includes(item.addonMatch));
+            const sellPrice = addOnType?.price ?? 0;
+            const totalCost = ingCost + containerCost;
+            const margin = sellPrice - totalCost;
+            const marginPct = sellPrice > 0 ? (margin / sellPrice) * 100 : 0;
+            const isGood = marginPct >= 70;
+            return { name: item.name, ingCost, containerCost, totalCost, sellPrice, margin, marginPct, isGood };
+          }).filter(Boolean);
+
+          if (rows.length === 0) return null;
+          return (
+            <div className="mt-5 pt-5 border-t border-gray-100">
+              <h3 className="text-base font-bold mb-4">Margin per Add-On</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="py-2 px-3 font-semibold text-gray-600">Add-On</th>
+                      <th className="py-2 px-3 font-semibold text-gray-600">Sell price</th>
+                      <th className="py-2 px-3 font-semibold text-gray-600">Ingredient</th>
+                      <th className="py-2 px-3 font-semibold text-gray-600">Container</th>
+                      <th className="py-2 px-3 font-semibold text-gray-600">Total cost</th>
+                      <th className="py-2 px-3 font-semibold text-gray-600">Margin</th>
+                      <th className="py-2 px-3 font-semibold text-gray-600">Margin %</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map(row => row && (
+                      <tr key={row.name} className="border-b border-gray-100">
+                        <td className="py-3 px-3 font-medium">{row.name}</td>
+                        <td className="py-3 px-3 text-gray-700">${row.sellPrice.toFixed(2)}</td>
+                        <td className="py-3 px-3 text-gray-700">${row.ingCost.toFixed(4)}</td>
+                        <td className="py-3 px-3 text-gray-700">${row.containerCost.toFixed(4)}</td>
+                        <td className="py-3 px-3 text-gray-700">${row.totalCost.toFixed(4)}</td>
+                        <td className="py-3 px-3 font-semibold" style={{ color: row.margin >= 0 ? '#15803D' : '#DC2626' }}>
+                          ${row.margin.toFixed(4)}
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className="px-2.5 py-1 rounded-full text-xs font-bold"
+                            style={{ backgroundColor: row.isGood ? '#DCFCE7' : '#FEF9C3', color: row.isGood ? '#15803D' : '#92400E' }}>
+                            {row.marginPct.toFixed(1)}%
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* ── Margin Summary ───────────────────────────────────────────────── */}

@@ -21,14 +21,28 @@ export default function AdminOrderCard({ order, onConfirm, onMarkReady, onDelete
         order.sesame_count > 0 && `${order.sesame_count} Sesame`,
       ].filter(Boolean);
 
+  const delivery = (order as unknown as Record<string, unknown>).delivery as { address: string; fee: number } | null;
+
   return (
     <div
       className="rounded-lg p-4 shadow-sm"
       style={{
         backgroundColor: order.is_fake ? '#FFF7ED' : '#FFFFFF',
-        border: order.is_fake ? '2px solid #F59E0B' : '1px solid #E5E7EB',
+        border: order.is_fake ? '2px solid #F59E0B' : delivery ? '2px solid #000000' : '1px solid #E5E7EB',
       }}
     >
+      {delivery && (
+        <div className="mb-3 rounded-lg overflow-hidden" style={{ border: '1px solid #000' }}>
+          <div className="px-3 py-2 flex items-center gap-2" style={{ backgroundColor: '#000000' }}>
+            <span className="text-base font-black tracking-tight" style={{ color: '#FFFFFF', fontStyle: 'italic' }}>Uber</span>
+            <span className="text-[0.65rem] font-black uppercase tracking-[0.15em] text-white opacity-70">Delivery</span>
+          </div>
+          <div className="px-3 py-2 text-xs text-gray-700 flex items-start gap-1.5" style={{ backgroundColor: '#F9F9F9' }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="#555" className="mt-0.5 flex-shrink-0"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>
+            <span className="font-medium">{delivery.address}</span>
+          </div>
+        </div>
+      )}
       {order.is_fake && (
         <div className="mb-2 px-2 py-1 rounded text-xs font-bold text-center" style={{ backgroundColor: '#FEF3C7', color: '#92400E' }}>
           FAKE ORDER — Holding capacity, $0 revenue

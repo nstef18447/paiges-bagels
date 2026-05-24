@@ -54,11 +54,28 @@ const SMALL_BAGEL_CAP = 6;
 const BIG_BITE_CAP = 20;
 const SMALL_BITE_CAP = 15;
 
+// --- Cook Schedule ---
+const COOK_BOIL_MINS = 2;
+const COOK_TRANSFER_MINS = 5;
+const COOK_BAKE_MINS = 26;
+const COOK_COOL_MINS = 30;
+const COOK_BAG_MINS = 10;
+
 interface OvenFlavor { name: string; qty: number; }
 interface OvenItem { label: string; flavors: OvenFlavor[]; qty: number; }
 interface OvenSection { items: OvenItem[]; total: number; }
 interface OvenLoad { bagels?: OvenSection; bites?: OvenSection; }
 interface OvenRound { big: OvenLoad | null; small: OvenLoad | null; }
+
+interface RoundTiming {
+  roundNum: number;
+  loads: number;
+  readyBy: Date;    // oven must finish by this time (= pickupTime - cool - bag)
+  pickupTime: Date; // actual pickup time for display
+  prepStart: Date;
+  ovenIn: Date;
+  ovenOut: Date;
+}
 
 function takeFrom(queue: OvenItem[], capacity: number): OvenItem[] {
   const taken: OvenItem[] = [];
@@ -133,6 +150,55 @@ function computeOvenPlan(slots: SlotPrep[]): OvenRound[] {
   return rounds;
 }
 
+function getRoundReadyBy(round: OvenRound, date: string): Date {
+  const times: string[] = [];
+  round.big?.bagels?.items.forEach(i => times.push(i.label));
+  round.big?.bites?.items.forEach(i => times.push(i.label));
+  round.small?.bagels?.items.forEach(i => times.push(i.label));
+  round.small?.bites?.items.forEach(i => times.push(i.label));
+  const latest = [...times].sort().at(-1) ?? '23:59:00';
+  return new Date(`${date}T${latest}`);
+}
+
+function computeDaySchedule(slots: SlotPrep[], date: string): RoundTiming[] {
+  const rounds = computeOvenPlan(slots);
+  if (rounds.length === 0) return [];
+
+  const schedule: RoundTiming[] = rounds.map((round, i) => {
+    const pickupTime = getRoundReadyBy(round, date);
+    const readyBy = new Date(pickupTime.getTime() - (COOK_COOL_MINS + COOK_BAG_MINS) * 60000);
+    const loads = (round.big ? 1 : 0) + (round.small ? 1 : 0);
+    const prepMins = loads * (COOK_BOIL_MINS + COOK_TRANSFER_MINS);
+    const ovenIn = new Date(readyBy.getTime() - COOK_BAKE_MINS * 60000);
+    const prepStart = new Date(ovenIn.getTime() - prepMins * 60000);
+    return { roundNum: i + 1, loads, readyBy, pickupTime, prepStart, ovenIn, ovenOut: new Date(readyBy) };
+  });
+
+  // Enforce sequential ordering — round i cannot start before round i-1 finishes baking
+  for (let i = 1; i < schedule.length; i++) {
+    const prevEnd = schedule[i - 1].ovenOut;
+    if (schedule[i].prepStart < prevEnd) {
+      const loads = schedule[i].loads;
+      const prepMins = loads * (COOK_BOIL_MINS + COOK_TRANSFER_MINS);
+      const prepStart = new Date(prevEnd);
+      const ovenIn = new Date(prepStart.getTime() + prepMins * 60000);
+      const ovenOut = new Date(ovenIn.getTime() + COOK_BAKE_MINS * 60000);
+      schedule[i] = { ...schedule[i], prepStart, ovenIn, ovenOut };
+    }
+  }
+
+  return schedule;
+}
+
+function fmtScheduleTime(d: Date): string {
+  return d.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'America/Chicago',
+  });
+}
+
 function OvenSection({ section, color }: { section: OvenSection; color: string }) {
   return (
     <div className="space-y-0.5">
@@ -192,7 +258,7 @@ export default function AdminPrepPage() {
   const [showPast, setShowPast] = useState(false);
   const [expandedSlots, setExpandedSlots] = useState<Set<string>>(new Set());
   const [markingReady, setMarkingReady] = useState<Set<string>>(new Set());
-  const [activeTab, setActiveTab] = useState<'orders' | 'oven'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'oven' | 'schedule'>('orders');
 
   useEffect(() => {
     fetchPrep();
@@ -294,6 +360,16 @@ export default function AdminPrepPage() {
             }}
           >
             Oven Plan
+          </button>
+          <button
+            onClick={() => setActiveTab('schedule')}
+            className="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+            style={{
+              backgroundColor: activeTab === 'schedule' ? '#004AAD' : '#F3F4F6',
+              color: activeTab === 'schedule' ? 'white' : '#374151',
+            }}
+          >
+            Cook Schedule
           </button>
         </div>
       </div>
@@ -550,7 +626,7 @@ export default function AdminPrepPage() {
             </div>
           ))}
         </div>
-      ) : (
+      ) : activeTab === 'oven' ? (
         /* Oven Plan Tab */
         <div className="space-y-6">
           {/* Capacity legend */}
@@ -580,6 +656,116 @@ export default function AdminPrepPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* Cook Schedule Tab */
+        <div className="space-y-6">
+          <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+            <span className="px-3 py-1 rounded-full bg-gray-100">Boil: <strong>{COOK_BOIL_MINS} min/load</strong></span>
+            <span className="px-3 py-1 rounded-full bg-gray-100">Transfer &amp; seed: <strong>{COOK_TRANSFER_MINS} min/load</strong></span>
+            <span className="px-3 py-1 rounded-full bg-gray-100">Bake: <strong>{COOK_BAKE_MINS} min</strong></span>
+            <span className="px-3 py-1 rounded-full bg-gray-100">Cool: <strong>{COOK_COOL_MINS} min</strong></span>
+            <span className="px-3 py-1 rounded-full bg-gray-100">Bag: <strong>{COOK_BAG_MINS} min</strong></span>
+          </div>
+
+          {upcomingDays.map((day) => {
+            const schedule = computeDaySchedule(day.slots, day.date);
+            if (schedule.length === 0) return null;
+            const startTime = schedule[0].prepStart;
+            const totalBites = day.slots.reduce((s, sl) => s + (sl.total_bites || 0), 0);
+
+            return (
+              <div key={day.date} className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="flex items-start justify-between mb-5 flex-wrap gap-3">
+                  <div>
+                    <h2 className="text-xl font-semibold">{formatDate(day.date)}</h2>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                      {day.total_bagels} bagel{day.total_bagels !== 1 ? 's' : ''}
+                      {totalBites > 0 && ` · ${totalBites} bite${totalBites !== 1 ? 's' : ''}`}
+                      {' · '}{schedule.length} oven round{schedule.length !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">Start cooking by</div>
+                    <div className="text-3xl font-black" style={{ color: '#004AAD' }}>{fmtScheduleTime(startTime)}</div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  {schedule.map((r) => {
+                    const isLate = r.ovenOut > r.readyBy;
+                    const lateMins = isLate ? Math.round((r.ovenOut.getTime() - r.readyBy.getTime()) / 60000) : 0;
+                    const prepMins = r.loads * (COOK_BOIL_MINS + COOK_TRANSFER_MINS);
+                    return (
+                      <div
+                        key={r.roundNum}
+                        className="rounded-lg px-4 py-3"
+                        style={{ backgroundColor: '#F8FAFF', border: '1px solid #E8EDF8' }}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-xs font-bold uppercase tracking-widest text-gray-400">
+                            Round {r.roundNum}
+                            <span className="normal-case font-normal ml-1">
+                              ({r.loads === 2 ? 'big + small oven' : 'one oven'})
+                            </span>
+                          </div>
+                          {isLate && (
+                            <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: '#FEE2E2', color: '#991B1B' }}>
+                              ⚠ {lateMins} min late — won&apos;t cool in time
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                          <span className="font-bold" style={{ color: '#004AAD' }}>{fmtScheduleTime(r.prepStart)}</span>
+                          <span className="text-gray-400 text-xs">boil &amp; prep ({prepMins} min)</span>
+                          <span className="text-gray-300 font-bold">→</span>
+                          <span className="font-bold" style={{ color: '#004AAD' }}>{fmtScheduleTime(r.ovenIn)}</span>
+                          <span className="text-gray-400 text-xs">into oven ({COOK_BAKE_MINS} min)</span>
+                          <span className="text-gray-300 font-bold">→</span>
+                          <span className="font-bold" style={{ color: isLate ? '#DC2626' : '#004AAD' }}>
+                            {fmtScheduleTime(r.ovenOut)}
+                          </span>
+                          <span className="text-xs text-gray-400">out of oven</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Cool + bag chain for the final batch */}
+                  {(() => {
+                    const last = schedule[schedule.length - 1];
+                    const coolEnd = new Date(last.ovenOut.getTime() + COOK_COOL_MINS * 60000);
+                    const bagEnd = new Date(coolEnd.getTime() + COOK_BAG_MINS * 60000);
+                    const onTime = bagEnd <= last.pickupTime;
+                    return (
+                      <div
+                        className="rounded-lg px-4 py-3"
+                        style={{ backgroundColor: onTime ? '#F0FDF4' : '#FEF2F2', border: `1px solid ${onTime ? '#86EFAC' : '#FECACA'}` }}
+                      >
+                        <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: onTime ? '#15803D' : '#991B1B' }}>
+                          After baking
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                          <span className="font-bold" style={{ color: onTime ? '#15803D' : '#DC2626' }}>{fmtScheduleTime(last.ovenOut)}</span>
+                          <span className="text-gray-400 text-xs">cool ({COOK_COOL_MINS} min)</span>
+                          <span className="text-gray-300 font-bold">→</span>
+                          <span className="font-bold" style={{ color: onTime ? '#15803D' : '#DC2626' }}>{fmtScheduleTime(coolEnd)}</span>
+                          <span className="text-gray-400 text-xs">bag ({COOK_BAG_MINS} min)</span>
+                          <span className="text-gray-300 font-bold">→</span>
+                          <span className="font-bold" style={{ color: onTime ? '#15803D' : '#DC2626' }}>{fmtScheduleTime(bagEnd)}</span>
+                          <span className="text-xs font-medium" style={{ color: onTime ? '#15803D' : '#DC2626' }}>
+                            {onTime
+                              ? `✓ ready for ${fmtScheduleTime(last.pickupTime)} pickup`
+                              : `⚠ ${Math.round((bagEnd.getTime() - last.pickupTime.getTime()) / 60000)} min late for ${fmtScheduleTime(last.pickupTime)} pickup`}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             );
