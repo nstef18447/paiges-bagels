@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
+const FLOUR_G_PER_BATCH = 500;
+const G_PER_LB = 453.592;
+
 const BASE_RECIPE = [
   { name: 'Active Sourdough Starter', amount: 100, unit: 'g' },
   { name: 'Bread Flour', amount: 500, unit: 'g' },
@@ -162,6 +165,15 @@ export default function RecipePage() {
 
         {!loadingSlots && dayPlans.length > 0 && (
           <div className="space-y-4">
+            {(() => {
+              const totalFlourLbs = dayPlans.reduce((sum, d) => sum + d.multiplier * FLOUR_G_PER_BATCH, 0) / G_PER_LB;
+              return (
+                <div className="rounded-xl px-5 py-4 flex items-center justify-between" style={{ backgroundColor: '#EFF6FF', border: '1.5px solid #BFDBFE' }}>
+                  <span className="text-sm font-semibold text-gray-700">Total bread flour needed</span>
+                  <span className="text-lg font-black" style={{ color: '#004AAD' }}>{totalFlourLbs.toFixed(1)} lbs</span>
+                </div>
+              );
+            })()}
             {dayPlans.map((day) => (
               <div
                 key={day.date}
@@ -186,6 +198,13 @@ export default function RecipePage() {
                     </span>
                     <p className="text-xs text-gray-400 mt-1">batch size</p>
                   </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-gray-200 flex items-center gap-2">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#6B7280"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.36C18 2.06 15.96 0 13.64 0c-1.26 0-2.37.57-3.14 1.47L10 2l-.5-.53C8.73.57 7.62 0 6.36 0 4.04 0 2 2.06 2 4.64c0 .48.11.92.18 1.36H0v2h20V6zm-9.14-1.26c.35-.43.87-.74 1.78-.74C13.96 4 15 5.02 15 6H9.94l.92-1.26zM4.64 4C4.64 3.12 5.34 2 6.36 2c.91 0 1.43.31 1.78.74L9.06 4H4.64zm-2.64 4h20v12H2V8zm9 5V9H9v4H7l5 5 5-5h-2v-4z"/></svg>
+                  <span className="text-sm font-semibold text-gray-700">
+                    Bread flour: <span style={{ color: '#004AAD' }}>{(day.multiplier * FLOUR_G_PER_BATCH / G_PER_LB).toFixed(1)} lbs</span>
+                  </span>
+                  <span className="text-xs text-gray-400">({day.multiplier * FLOUR_G_PER_BATCH}g)</span>
                 </div>
               </div>
             ))}
