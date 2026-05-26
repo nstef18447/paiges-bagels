@@ -205,6 +205,7 @@ export interface MerchOrder {
   id: string;
   customer_name: string;
   customer_email: string;
+  customer_phone: string | null;
   shipping_address: string;
   shipping_city: string;
   shipping_state: string;

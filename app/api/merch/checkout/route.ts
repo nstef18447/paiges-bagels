@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     items: CartItem[];
     customerName: string;
     customerEmail: string;
-    customerPhone?: string;
+    customerPhone: string;
   };
 
   if (!items || items.length === 0) {
@@ -84,6 +84,7 @@ export async function POST(request: Request) {
     .insert({
       customer_name: customerName,
       customer_email: customerEmail,
+      customer_phone: customerPhone || null,
       shipping_address: '',
       shipping_city: '',
       shipping_state: '',

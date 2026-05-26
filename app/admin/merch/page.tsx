@@ -482,7 +482,12 @@ export default function AdminMerchPage() {
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <span className="font-bold">{order.customer_name}</span>
-                  <span className="ml-2 text-sm text-gray-500">{order.customer_email}</span>
+                  <div className="flex flex-wrap gap-x-3 mt-0.5">
+                    <span className="text-sm text-gray-500">{order.customer_email}</span>
+                    {order.customer_phone && (
+                      <span className="text-sm text-gray-500">{order.customer_phone}</span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`px-2 py-0.5 text-xs rounded font-semibold ${
@@ -519,6 +524,11 @@ export default function AdminMerchPage() {
                   )}
                 </div>
               </div>
+              {order.items.some(i => i.is_preorder) && (
+                <span className="inline-block mb-2 px-2 py-0.5 text-xs font-semibold rounded" style={{ backgroundColor: '#EDE9FE', color: '#6D28D9' }}>
+                  PRE-ORDER
+                </span>
+              )}
               <div className="text-sm text-gray-600 mb-2">
                 {order.items.map((item, i) => (
                   <span key={i}>
