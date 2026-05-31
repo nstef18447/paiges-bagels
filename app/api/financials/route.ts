@@ -108,11 +108,14 @@ export async function GET(request: NextRequest) {
       .sort(([a], [b]) => b.localeCompare(a)) // newest first
       .map(([date, data]) => {
         const bagelCogs = data.bagels_sold * costPerBagelFromIngredients;
-        // Amortize fixed costs proportionally by bagels sold this day
-        const fixedCogsPortion = grandTotalBagels > 0
-          ? totalFixedCosts * (data.bagels_sold / grandTotalBagels)
+        const biteCogs = data.bites_sold * costPerBagelFromIngredients * (50 / 110);
+        // Amortize fixed costs proportionally by bagel-equivalent units sold this day
+        const totalUnits = grandTotalBagels + grandTotalBites * (50 / 110);
+        const dayUnits = data.bagels_sold + data.bites_sold * (50 / 110);
+        const fixedCogsPortion = totalUnits > 0
+          ? totalFixedCosts * (dayUnits / totalUnits)
           : 0;
-        const cogs = bagelCogs + data.addon_cogs + fixedCogsPortion;
+        const cogs = bagelCogs + biteCogs + data.addon_cogs + fixedCogsPortion;
         const profit = data.revenue - cogs;
         const profit_margin = data.revenue > 0 ? (profit / data.revenue) * 100 : 0;
 
