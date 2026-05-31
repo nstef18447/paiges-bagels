@@ -14,7 +14,7 @@ export default function AdminOrdersPage() {
   const [activeTab, setActiveTab] = useState<'pending' | 'confirmed' | 'completed' | 'history'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCustomForm, setShowCustomForm] = useState(false);
-  const [customOrder, setCustomOrder] = useState({ date: '', totalBagels: '', totalPrice: '', customerName: '' });
+  const [customOrder, setCustomOrder] = useState({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '' });
   const [customSubmitting, setCustomSubmitting] = useState(false);
 
   useEffect(() => {
@@ -128,14 +128,15 @@ export default function AdminOrdersPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           date: customOrder.date,
-          totalBagels: parseInt(customOrder.totalBagels),
+          totalBagels: parseInt(customOrder.totalBagels) || 0,
+          totalBites: parseInt(customOrder.totalBites) || 0,
           totalPrice: parseFloat(customOrder.totalPrice),
           customerName: customOrder.customerName || undefined,
         }),
       });
 
       if (response.ok) {
-        setCustomOrder({ date: '', totalBagels: '', totalPrice: '', customerName: '' });
+        setCustomOrder({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '' });
         setShowCustomForm(false);
         fetchOrders();
       } else {
@@ -179,6 +180,7 @@ export default function AdminOrdersPage() {
           <Link href="/admin/prep" className="hover:underline" style={{ color: '#004AAD' }}>Prep</Link>
           <Link href="/admin/merch" className="hover:underline" style={{ color: '#004AAD' }}>Merch</Link>
           <Link href="/admin/recipe" className="hover:underline" style={{ color: '#004AAD' }}>Recipe</Link>
+          <Link href="/admin/lapsed" className="hover:underline" style={{ color: '#004AAD' }}>Lapsed</Link>
         </nav>
       </div>
 
@@ -218,10 +220,19 @@ export default function AdminOrdersPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Total Bagels</label>
                 <input
                   type="number"
-                  required
-                  min="1"
+                  min="0"
                   value={customOrder.totalBagels}
                   onChange={(e) => setCustomOrder({ ...customOrder, totalBagels: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004AAD]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Total Bites</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={customOrder.totalBites}
+                  onChange={(e) => setCustomOrder({ ...customOrder, totalBites: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004AAD]"
                 />
               </div>

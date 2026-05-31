@@ -3,11 +3,11 @@ import { getServiceSupabase } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
-    const { date, totalBagels, totalPrice, customerName } = await request.json();
+    const { date, totalBagels, totalBites, totalPrice, customerName } = await request.json();
 
-    if (!date || !totalBagels || totalPrice == null) {
+    if (!date || totalPrice == null) {
       return NextResponse.json(
-        { error: 'Date, total bagels, and total price are required' },
+        { error: 'Date and total price are required' },
         { status: 400 }
       );
     }
@@ -55,8 +55,9 @@ export async function POST(request: NextRequest) {
         customer_name: customerName || 'Corporate Order',
         customer_email: 'custom@paigesbagels.com',
         customer_phone: '',
-        total_bagels: totalBagels,
+        total_bagels: totalBagels || 0,
         total_price: totalPrice,
+        bites: totalBites > 0 ? { pack_size: totalBites, flavors: { custom: totalBites }, flavor_names: { custom: 'Bites' } } : null,
         status: 'confirmed',
         venmo_note: 'Custom order',
       })

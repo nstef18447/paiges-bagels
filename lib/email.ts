@@ -495,3 +495,153 @@ export async function sendMerchConfirmationEmail(
     html: emailHtml,
   });
 }
+
+export async function sendLastChicagoEmail(
+  customerName: string,
+  customerEmail: string,
+  slots: { date: string; time: string }[]
+): Promise<void> {
+  const firstName = customerName.split(' ')[0];
+
+  const byDate = new Map<string, string[]>();
+  for (const s of slots) {
+    if (!byDate.has(s.date)) byDate.set(s.date, []);
+    byDate.get(s.date)!.push(formatTime(s.time));
+  }
+
+  const slotRows = Array.from(byDate.entries())
+    .map(
+      ([date, times]) => `
+    <tr>
+      <td style="padding:10px 0;border-bottom:1px solid ${BRAND.border};font-family:Arial,sans-serif;font-size:14px;color:#333;">
+        <strong>${formatDate(date)}</strong><br/>
+        <span style="color:${BRAND.textSec};font-size:13px;">${times.join(' &nbsp;·&nbsp; ')}</span>
+      </td>
+    </tr>`
+    )
+    .join('');
+
+  const content = `
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr><td align="center" style="padding:36px 24px 8px;">
+        <div style="font-size:40px;line-height:1;">🥯</div>
+      </td></tr>
+      <tr><td align="center" style="padding:12px 24px 4px;">
+        <h1 style="margin:0;font-family:Georgia,serif;font-size:24px;font-weight:bold;color:${BRAND.blue};">Last Chicago Orders</h1>
+      </td></tr>
+      <tr><td align="center" style="padding:8px 24px 28px;">
+        <p style="margin:0;font-family:Arial,sans-serif;font-size:15px;color:${BRAND.textSec};">Hey ${firstName} — these are my last bagel slots in Chicago before I'm in NYC for the summer. Don't miss out!</p>
+      </td></tr>
+    </table>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="padding:0 24px;">
+      <tr><td>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND.card};border:1px solid ${BRAND.border};border-radius:12px;overflow:hidden;">
+          <tr><td style="padding:20px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="font-family:Arial,sans-serif;font-size:12px;color:${BRAND.textSec};text-transform:uppercase;letter-spacing:0.05em;padding-bottom:8px;">Remaining Slots</td>
+              </tr>
+              ${slotRows}
+              <tr>
+                <td style="padding-top:20px;">
+                  <a href="https://paigesbagels.com/order" style="display:inline-block;background-color:${BRAND.blue};color:#ffffff;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;text-decoration:none;padding:12px 28px;border-radius:8px;">
+                    Grab Your Bagels
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td></tr>
+        </table>
+      </td></tr>
+    </table>
+
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr><td style="padding:24px 24px 36px;">
+        <p style="margin:0;font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;">
+          It's been a while and I'd love to see you one more time before I go. Slots are limited so grab yours while you can — and if you know anyone who loves sourdough bagels in NYC this summer... stay tuned. 👀
+        </p>
+        <p style="margin:12px 0 0;font-family:Georgia,serif;font-size:14px;color:#333;">— Paige</p>
+      </td></tr>
+    </table>`;
+
+  const emailHtml = emailWrapper(content);
+
+  await resend.emails.send({
+    from: "Paige's Bagels <orders@paigesbagels.com>",
+    to: customerEmail,
+    subject: `Last Chicago bagel orders — don't miss out, ${firstName}! 🥯`,
+    html: emailHtml,
+  });
+}
+
+export async function sendWinbackEmail(
+  customerName: string,
+  customerEmail: string,
+  nextSlot: { date: string; time: string }
+): Promise<void> {
+  const slotDate = formatDate(nextSlot.date);
+  const slotTime = formatTime(nextSlot.time);
+
+  const content = `
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr><td align="center" style="padding:36px 24px 8px;">
+        <div style="font-size:40px;line-height:1;">🥯</div>
+      </td></tr>
+      <tr><td align="center" style="padding:12px 24px 4px;">
+        <h1 style="margin:0;font-family:Georgia,serif;font-size:24px;font-weight:bold;color:${BRAND.blue};">We miss you, ${customerName.split(' ')[0]}!</h1>
+      </td></tr>
+      <tr><td align="center" style="padding:0 24px 28px;">
+        <p style="margin:0;font-family:Arial,sans-serif;font-size:15px;color:${BRAND.textSec};">It's been a while since your last order — we'd love to see you again.</p>
+      </td></tr>
+    </table>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="padding:0 24px;">
+      <tr><td>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND.card};border:1px solid ${BRAND.border};border-radius:12px;overflow:hidden;">
+          <tr><td style="padding:20px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="font-family:Arial,sans-serif;font-size:12px;color:${BRAND.textSec};text-transform:uppercase;letter-spacing:0.05em;padding-bottom:4px;">Next Available Slot</td>
+              </tr>
+              <tr>
+                <td style="font-family:Arial,sans-serif;font-size:18px;font-weight:bold;color:#333;padding-bottom:4px;">
+                  ${slotDate}
+                </td>
+              </tr>
+              <tr>
+                <td style="font-family:Arial,sans-serif;font-size:14px;color:${BRAND.textSec};padding-bottom:20px;">
+                  Pickup at ${slotTime}
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a href="https://paigesbagels.com/order" style="display:inline-block;background-color:${BRAND.blue};color:#ffffff;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;text-decoration:none;padding:12px 28px;border-radius:8px;">
+                    Order Now
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td></tr>
+        </table>
+      </td></tr>
+    </table>
+
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr><td style="padding:24px 24px 36px;">
+        <p style="margin:0;font-family:Arial,sans-serif;font-size:14px;color:${BRAND.textSec};line-height:1.6;">
+          Slots fill up fast — snag yours before it's gone. Can't wait to see you!
+        </p>
+        <p style="margin:12px 0 0;font-family:Georgia,serif;font-size:14px;color:#333;">— Paige</p>
+      </td></tr>
+    </table>`;
+
+  const emailHtml = emailWrapper(content);
+
+  await resend.emails.send({
+    from: "Paige's Bagels <orders@paigesbagels.com>",
+    to: customerEmail,
+    subject: `We miss you, ${customerName.split(' ')[0]}! 🥯 New slot available`,
+    html: emailHtml,
+  });
+}
