@@ -3,7 +3,7 @@ import { getServiceSupabase } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
-    const { date, totalBagels, totalBites, totalPrice, customerName, isGifted, deliveryAddress } = await request.json();
+    const { date, totalBagels, totalBites, totalPrice, customerName, isGifted, deliveryAddress, bagelBreakdown } = await request.json();
 
     if (!date || totalPrice == null) {
       return NextResponse.json(
@@ -72,6 +72,17 @@ export async function POST(request: NextRequest) {
         { error: `Failed to create order: ${orderError.message}` },
         { status: 500 }
       );
+    }
+
+    // Insert order_items so bagel breakdown flows into the prep plan
+    if (bagelBreakdown && typeof bagelBreakdown === 'object') {
+      const items = Object.entries(bagelBreakdown as Record<string, number>)
+        .filter(([, qty]) => qty > 0)
+        .map(([bagel_type_id, quantity]) => ({ order_id: order.id, bagel_type_id, quantity }));
+
+      if (items.length > 0) {
+        await supabase.from('order_items').insert(items);
+      }
     }
 
     return NextResponse.json({ order });

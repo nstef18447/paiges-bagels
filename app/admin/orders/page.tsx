@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
-import { OrderWithDetails } from '@/types';
+import { OrderWithDetails, BagelType } from '@/types';
 import AdminOrderCard from '@/components/AdminOrderCard';
 import { formatDate, formatTime } from '@/lib/utils';
 
@@ -15,7 +15,20 @@ export default function AdminOrdersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showCustomForm, setShowCustomForm] = useState(false);
   const [customOrder, setCustomOrder] = useState({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '', isGifted: false, deliveryAddress: '' });
+  const [bagelTypes, setBagelTypes] = useState<BagelType[]>([]);
+  const [bagelBreakdown, setBagelBreakdown] = useState<Record<string, number>>({});
   const [customSubmitting, setCustomSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (showCustomForm && bagelTypes.length === 0) {
+      supabase
+        .from('bagel_types')
+        .select('*')
+        .eq('active', true)
+        .order('display_order')
+        .then(({ data }) => { if (data) setBagelTypes(data as BagelType[]); });
+    }
+  }, [showCustomForm]);
 
   useEffect(() => {
     fetchOrders();
@@ -122,23 +135,26 @@ export default function AdminOrdersPage() {
   const handleCustomOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setCustomSubmitting(true);
+    const breakdownTotal = Object.values(bagelBreakdown).reduce((s, n) => s + n, 0);
     try {
       const response = await fetch('/api/orders/custom', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           date: customOrder.date,
-          totalBagels: parseInt(customOrder.totalBagels) || 0,
+          totalBagels: breakdownTotal > 0 ? breakdownTotal : (parseInt(customOrder.totalBagels) || 0),
           totalBites: parseInt(customOrder.totalBites) || 0,
           totalPrice: customOrder.isGifted ? 0 : parseFloat(customOrder.totalPrice),
           customerName: customOrder.customerName || undefined,
           isGifted: customOrder.isGifted,
           deliveryAddress: customOrder.deliveryAddress || undefined,
+          bagelBreakdown: Object.keys(bagelBreakdown).length > 0 ? bagelBreakdown : undefined,
         }),
       });
 
       if (response.ok) {
         setCustomOrder({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '', isGifted: false, deliveryAddress: '' });
+        setBagelBreakdown({});
         setShowCustomForm(false);
         fetchOrders();
       } else {
@@ -251,13 +267,23 @@ export default function AdminOrdersPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Total Bagels</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Total Bagels
+                  {Object.values(bagelBreakdown).reduce((s, n) => s + n, 0) > 0 && (
+                    <span className="ml-2 text-[#004AAD] font-bold">
+                      ({Object.values(bagelBreakdown).reduce((s, n) => s + n, 0)} from breakdown)
+                    </span>
+                  )}
+                </label>
                 <input
                   type="number"
                   min="0"
-                  value={customOrder.totalBagels}
+                  value={Object.values(bagelBreakdown).reduce((s, n) => s + n, 0) > 0
+                    ? Object.values(bagelBreakdown).reduce((s, n) => s + n, 0)
+                    : customOrder.totalBagels}
+                  disabled={Object.values(bagelBreakdown).reduce((s, n) => s + n, 0) > 0}
                   onChange={(e) => setCustomOrder({ ...customOrder, totalBagels: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004AAD]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004AAD] disabled:bg-gray-100 disabled:text-gray-500"
                 />
               </div>
               <div>
@@ -286,6 +312,32 @@ export default function AdminOrdersPage() {
                 />
               </div>
             </div>
+            {bagelTypes.length > 0 && (
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Bagel Breakdown <span className="text-gray-400 font-normal">(for prep plan)</span>
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {bagelTypes.map((bt) => (
+                    <div key={bt.id} className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600 w-24 truncate">{bt.name}</span>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="0"
+                        value={bagelBreakdown[bt.id] || ''}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 0;
+                          setBagelBreakdown(prev => ({ ...prev, [bt.id]: val }));
+                        }}
+                        className="w-16 px-2 py-1 border border-gray-300 rounded text-sm text-center focus:outline-none focus:ring-2 focus:ring-[#004AAD]"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={customSubmitting}
