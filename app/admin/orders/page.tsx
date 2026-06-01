@@ -14,7 +14,7 @@ export default function AdminOrdersPage() {
   const [activeTab, setActiveTab] = useState<'pending' | 'confirmed' | 'completed' | 'history'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCustomForm, setShowCustomForm] = useState(false);
-  const [customOrder, setCustomOrder] = useState({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '' });
+  const [customOrder, setCustomOrder] = useState({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '', isGifted: false });
   const [customSubmitting, setCustomSubmitting] = useState(false);
 
   useEffect(() => {
@@ -130,13 +130,14 @@ export default function AdminOrdersPage() {
           date: customOrder.date,
           totalBagels: parseInt(customOrder.totalBagels) || 0,
           totalBites: parseInt(customOrder.totalBites) || 0,
-          totalPrice: parseFloat(customOrder.totalPrice),
+          totalPrice: customOrder.isGifted ? 0 : parseFloat(customOrder.totalPrice),
           customerName: customOrder.customerName || undefined,
+          isGifted: customOrder.isGifted,
         }),
       });
 
       if (response.ok) {
-        setCustomOrder({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '' });
+        setCustomOrder({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '', isGifted: false });
         setShowCustomForm(false);
         fetchOrders();
       } else {
@@ -195,6 +196,26 @@ export default function AdminOrdersPage() {
 
         {showCustomForm && (
           <form onSubmit={handleCustomOrder} className="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-200 max-w-lg">
+            <label className="flex items-center gap-3 mb-4 cursor-pointer w-fit">
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={customOrder.isGifted}
+                  onChange={(e) => setCustomOrder({ ...customOrder, isGifted: e.target.checked, totalPrice: e.target.checked ? '0' : '' })}
+                />
+                <div className={`w-10 h-6 rounded-full transition-colors ${customOrder.isGifted ? 'bg-[#004AAD]' : 'bg-gray-300'}`} />
+                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${customOrder.isGifted ? 'translate-x-5' : 'translate-x-1'}`} />
+              </div>
+              <span className="text-sm font-semibold text-gray-700">🎁 Gifted / PR order</span>
+            </label>
+
+            {customOrder.isGifted && (
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3">
+                $0 revenue · ingredient cost counts as marketing expense
+              </p>
+            )}
+
             <div className="grid grid-cols-2 gap-3 mb-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
@@ -237,15 +258,18 @@ export default function AdminOrdersPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Total Revenue ($)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Total Revenue ($)
+                </label>
                 <input
                   type="number"
                   required
                   min="0"
                   step="0.01"
-                  value={customOrder.totalPrice}
+                  value={customOrder.isGifted ? '0' : customOrder.totalPrice}
+                  disabled={customOrder.isGifted}
                   onChange={(e) => setCustomOrder({ ...customOrder, totalPrice: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004AAD]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004AAD] disabled:bg-gray-100 disabled:text-gray-400"
                 />
               </div>
             </div>
