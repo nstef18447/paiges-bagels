@@ -156,8 +156,9 @@ function getRoundReadyBy(round: OvenRound, date: string): Date {
   round.big?.bites?.items.forEach(i => times.push(i.label));
   round.small?.bagels?.items.forEach(i => times.push(i.label));
   round.small?.bites?.items.forEach(i => times.push(i.label));
-  const latest = [...times].sort().at(-1) ?? '23:59:00';
-  return new Date(`${date}T${latest}`);
+  // Use the EARLIEST slot time — everything in this round must be ready by the first pickup
+  const earliest = [...times].sort()[0] ?? '00:00:00';
+  return new Date(`${date}T${earliest}`);
 }
 
 function computeDaySchedule(slots: SlotPrep[], date: string): RoundTiming[] {
@@ -699,72 +700,51 @@ export default function AdminPrepPage() {
                     const isLate = r.ovenOut > r.readyBy;
                     const lateMins = isLate ? Math.round((r.ovenOut.getTime() - r.readyBy.getTime()) / 60000) : 0;
                     const prepMins = r.loads * (COOK_BOIL_MINS + COOK_TRANSFER_MINS);
+                    const coolEnd = new Date(r.ovenOut.getTime() + COOK_COOL_MINS * 60000);
+                    const bagEnd = new Date(coolEnd.getTime() + COOK_BAG_MINS * 60000);
+                    const onTime = !isLate && bagEnd <= r.pickupTime;
                     return (
                       <div
                         key={r.roundNum}
-                        className="rounded-lg px-4 py-3"
-                        style={{ backgroundColor: '#F8FAFF', border: '1px solid #E8EDF8' }}
+                        className="rounded-lg px-4 py-3 space-y-2"
+                        style={{ backgroundColor: isLate ? '#FEF2F2' : '#F8FAFF', border: `1px solid ${isLate ? '#FECACA' : '#E8EDF8'}` }}
                       >
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center justify-between">
                           <div className="text-xs font-bold uppercase tracking-widest text-gray-400">
                             Round {r.roundNum}
                             <span className="normal-case font-normal ml-1">
                               ({r.loads === 2 ? 'big + small oven' : 'one oven'})
                             </span>
                           </div>
-                          {isLate && (
-                            <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: '#FEE2E2', color: '#991B1B' }}>
-                              ⚠ {lateMins} min late — won&apos;t cool in time
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                          <span className="font-bold" style={{ color: '#004AAD' }}>{fmtScheduleTime(r.prepStart)}</span>
-                          <span className="text-gray-400 text-xs">boil &amp; prep ({prepMins} min)</span>
-                          <span className="text-gray-300 font-bold">→</span>
-                          <span className="font-bold" style={{ color: '#004AAD' }}>{fmtScheduleTime(r.ovenIn)}</span>
-                          <span className="text-gray-400 text-xs">into oven ({COOK_BAKE_MINS} min)</span>
-                          <span className="text-gray-300 font-bold">→</span>
-                          <span className="font-bold" style={{ color: isLate ? '#DC2626' : '#004AAD' }}>
-                            {fmtScheduleTime(r.ovenOut)}
+                          <span className="text-xs font-semibold" style={{ color: '#004AAD' }}>
+                            needs to be ready for {fmtScheduleTime(r.pickupTime)} pickup
                           </span>
-                          <span className="text-xs text-gray-400">out of oven</span>
+                        </div>
+
+                        {/* Baking chain */}
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                          <span className="font-bold" style={{ color: '#004AAD' }}>{fmtScheduleTime(r.prepStart)}</span>
+                          <span className="text-gray-400 text-xs">boil ({prepMins} min)</span>
+                          <span className="text-gray-300">→</span>
+                          <span className="font-bold" style={{ color: '#004AAD' }}>{fmtScheduleTime(r.ovenIn)}</span>
+                          <span className="text-gray-400 text-xs">oven ({COOK_BAKE_MINS} min)</span>
+                          <span className="text-gray-300">→</span>
+                          <span className="font-bold" style={{ color: isLate ? '#DC2626' : '#004AAD' }}>{fmtScheduleTime(r.ovenOut)}</span>
+                          <span className="text-gray-400 text-xs">out · cool ({COOK_COOL_MINS} min)</span>
+                          <span className="text-gray-300">→</span>
+                          <span className="font-bold" style={{ color: isLate ? '#DC2626' : '#004AAD' }}>{fmtScheduleTime(coolEnd)}</span>
+                          <span className="text-gray-400 text-xs">bag ({COOK_BAG_MINS} min)</span>
+                          <span className="text-gray-300">→</span>
+                          <span className="font-bold" style={{ color: onTime ? '#15803D' : '#DC2626' }}>{fmtScheduleTime(bagEnd)}</span>
+                          <span className="text-xs font-medium" style={{ color: onTime ? '#15803D' : '#DC2626' }}>
+                            {isLate
+                              ? `⚠ ${lateMins} min late`
+                              : onTime ? '✓ on time' : `⚠ ${Math.round((bagEnd.getTime() - r.pickupTime.getTime()) / 60000)} min late`}
+                          </span>
                         </div>
                       </div>
                     );
                   })}
-
-                  {/* Cool + bag chain for the final batch */}
-                  {(() => {
-                    const last = schedule[schedule.length - 1];
-                    const coolEnd = new Date(last.ovenOut.getTime() + COOK_COOL_MINS * 60000);
-                    const bagEnd = new Date(coolEnd.getTime() + COOK_BAG_MINS * 60000);
-                    const onTime = bagEnd <= last.pickupTime;
-                    return (
-                      <div
-                        className="rounded-lg px-4 py-3"
-                        style={{ backgroundColor: onTime ? '#F0FDF4' : '#FEF2F2', border: `1px solid ${onTime ? '#86EFAC' : '#FECACA'}` }}
-                      >
-                        <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: onTime ? '#15803D' : '#991B1B' }}>
-                          After baking
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                          <span className="font-bold" style={{ color: onTime ? '#15803D' : '#DC2626' }}>{fmtScheduleTime(last.ovenOut)}</span>
-                          <span className="text-gray-400 text-xs">cool ({COOK_COOL_MINS} min)</span>
-                          <span className="text-gray-300 font-bold">→</span>
-                          <span className="font-bold" style={{ color: onTime ? '#15803D' : '#DC2626' }}>{fmtScheduleTime(coolEnd)}</span>
-                          <span className="text-gray-400 text-xs">bag ({COOK_BAG_MINS} min)</span>
-                          <span className="text-gray-300 font-bold">→</span>
-                          <span className="font-bold" style={{ color: onTime ? '#15803D' : '#DC2626' }}>{fmtScheduleTime(bagEnd)}</span>
-                          <span className="text-xs font-medium" style={{ color: onTime ? '#15803D' : '#DC2626' }}>
-                            {onTime
-                              ? `✓ ready for ${fmtScheduleTime(last.pickupTime)} pickup`
-                              : `⚠ ${Math.round((bagEnd.getTime() - last.pickupTime.getTime()) / 60000)} min late for ${fmtScheduleTime(last.pickupTime)} pickup`}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })()}
                 </div>
               </div>
             );
