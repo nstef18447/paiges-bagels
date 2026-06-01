@@ -14,7 +14,7 @@ export default function AdminOrdersPage() {
   const [activeTab, setActiveTab] = useState<'pending' | 'confirmed' | 'completed' | 'history'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCustomForm, setShowCustomForm] = useState(false);
-  const [customOrder, setCustomOrder] = useState({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '', isGifted: false });
+  const [customOrder, setCustomOrder] = useState({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '', isGifted: false, deliveryAddress: '' });
   const [customSubmitting, setCustomSubmitting] = useState(false);
 
   useEffect(() => {
@@ -133,11 +133,12 @@ export default function AdminOrdersPage() {
           totalPrice: customOrder.isGifted ? 0 : parseFloat(customOrder.totalPrice),
           customerName: customOrder.customerName || undefined,
           isGifted: customOrder.isGifted,
+          deliveryAddress: customOrder.deliveryAddress || undefined,
         }),
       });
 
       if (response.ok) {
-        setCustomOrder({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '', isGifted: false });
+        setCustomOrder({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '', isGifted: false, deliveryAddress: '' });
         setShowCustomForm(false);
         fetchOrders();
       } else {
@@ -211,9 +212,21 @@ export default function AdminOrdersPage() {
             </label>
 
             {customOrder.isGifted && (
-              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3">
-                $0 revenue · ingredient cost counts as marketing expense
-              </p>
+              <>
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3">
+                  $0 revenue · ingredient cost counts as marketing expense
+                </p>
+                <div className="mb-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Address</label>
+                  <input
+                    type="text"
+                    placeholder="123 Main St, Chicago, IL 60601"
+                    value={customOrder.deliveryAddress}
+                    onChange={(e) => setCustomOrder({ ...customOrder, deliveryAddress: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004AAD]"
+                  />
+                </div>
+              </>
             )}
 
             <div className="grid grid-cols-2 gap-3 mb-3">
