@@ -57,8 +57,8 @@ const SMALL_BITE_CAP = 15;
 // --- Cook Schedule ---
 const COOK_BOIL_MINS = 2;
 const COOK_TRANSFER_MINS = 5;
-const COOK_BAKE_MINS = 26;
-const COOK_COOL_MINS = 30;
+const COOK_BAKE_MINS = 30;
+const COOK_COOL_MINS = 20;
 const COOK_BAG_MINS = 10;
 
 interface OvenFlavor { name: string; qty: number; }
