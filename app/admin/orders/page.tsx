@@ -17,16 +17,28 @@ export default function AdminOrdersPage() {
   const [customOrder, setCustomOrder] = useState({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '', isGifted: false, deliveryAddress: '' });
   const [bagelTypes, setBagelTypes] = useState<BagelType[]>([]);
   const [bagelBreakdown, setBagelBreakdown] = useState<Record<string, number>>({});
+  const [biteFlavors, setBiteFlavors] = useState<{ id: string; slug: string; name: string }[]>([]);
+  const [bitesBreakdown, setBitesBreakdown] = useState<Record<string, number>>({});
   const [customSubmitting, setCustomSubmitting] = useState(false);
 
   useEffect(() => {
-    if (showCustomForm && bagelTypes.length === 0) {
-      supabase
-        .from('bagel_types')
-        .select('*')
-        .eq('active', true)
-        .order('display_order')
-        .then(({ data }) => { if (data) setBagelTypes(data as BagelType[]); });
+    if (showCustomForm) {
+      if (bagelTypes.length === 0) {
+        supabase
+          .from('bagel_types')
+          .select('*')
+          .eq('active', true)
+          .order('display_order')
+          .then(({ data }) => { if (data) setBagelTypes(data as BagelType[]); });
+      }
+      if (biteFlavors.length === 0) {
+        supabase
+          .from('bite_flavors')
+          .select('id, slug, name')
+          .eq('active', true)
+          .order('sort_order')
+          .then(({ data }) => { if (data) setBiteFlavors(data as { id: string; slug: string; name: string }[]); });
+      }
     }
   }, [showCustomForm]);
 
@@ -136,6 +148,7 @@ export default function AdminOrdersPage() {
     e.preventDefault();
     setCustomSubmitting(true);
     const breakdownTotal = Object.values(bagelBreakdown).reduce((s, n) => s + n, 0);
+    const bitesBreakdownTotal = Object.values(bitesBreakdown).reduce((s, n) => s + n, 0);
     try {
       const response = await fetch('/api/orders/custom', {
         method: 'POST',
@@ -143,18 +156,21 @@ export default function AdminOrdersPage() {
         body: JSON.stringify({
           date: customOrder.date,
           totalBagels: breakdownTotal > 0 ? breakdownTotal : (parseInt(customOrder.totalBagels) || 0),
-          totalBites: parseInt(customOrder.totalBites) || 0,
+          totalBites: bitesBreakdownTotal > 0 ? bitesBreakdownTotal : (parseInt(customOrder.totalBites) || 0),
           totalPrice: customOrder.isGifted ? 0 : parseFloat(customOrder.totalPrice),
           customerName: customOrder.customerName || undefined,
           isGifted: customOrder.isGifted,
           deliveryAddress: customOrder.deliveryAddress || undefined,
           bagelBreakdown: Object.keys(bagelBreakdown).length > 0 ? bagelBreakdown : undefined,
+          bitesBreakdown: Object.keys(bitesBreakdown).length > 0 ? bitesBreakdown : undefined,
+          biteFlavorNames: Object.fromEntries(biteFlavors.map(f => [f.slug, f.name])),
         }),
       });
 
       if (response.ok) {
         setCustomOrder({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '', isGifted: false, deliveryAddress: '' });
         setBagelBreakdown({});
+        setBitesBreakdown({});
         setShowCustomForm(false);
         fetchOrders();
       } else {
@@ -291,9 +307,12 @@ export default function AdminOrdersPage() {
                 <input
                   type="number"
                   min="0"
-                  value={customOrder.totalBites}
+                  value={Object.values(bitesBreakdown).reduce((s, n) => s + n, 0) > 0
+                    ? Object.values(bitesBreakdown).reduce((s, n) => s + n, 0)
+                    : customOrder.totalBites}
+                  disabled={Object.values(bitesBreakdown).reduce((s, n) => s + n, 0) > 0}
                   onChange={(e) => setCustomOrder({ ...customOrder, totalBites: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004AAD]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004AAD] disabled:bg-gray-100 disabled:text-gray-500"
                 />
               </div>
               <div>
@@ -329,6 +348,32 @@ export default function AdminOrdersPage() {
                         onChange={(e) => {
                           const val = parseInt(e.target.value) || 0;
                           setBagelBreakdown(prev => ({ ...prev, [bt.id]: val }));
+                        }}
+                        className="w-16 px-2 py-1 border border-gray-300 rounded text-sm text-center focus:outline-none focus:ring-2 focus:ring-[#004AAD]"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {biteFlavors.length > 0 && (
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Bites Breakdown <span className="text-gray-400 font-normal">(for prep plan)</span>
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {biteFlavors.map((bf) => (
+                    <div key={bf.slug} className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600 w-24 truncate">{bf.name}</span>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="0"
+                        value={bitesBreakdown[bf.slug] || ''}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 0;
+                          setBitesBreakdown(prev => ({ ...prev, [bf.slug]: val }));
                         }}
                         className="w-16 px-2 py-1 border border-gray-300 rounded text-sm text-center focus:outline-none focus:ring-2 focus:ring-[#004AAD]"
                       />

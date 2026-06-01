@@ -3,7 +3,7 @@ import { getServiceSupabase } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
-    const { date, totalBagels, totalBites, totalPrice, customerName, isGifted, deliveryAddress, bagelBreakdown } = await request.json();
+    const { date, totalBagels, totalBites, totalPrice, customerName, isGifted, deliveryAddress, bagelBreakdown, bitesBreakdown, biteFlavorNames } = await request.json();
 
     if (!date || totalPrice == null) {
       return NextResponse.json(
@@ -57,7 +57,15 @@ export async function POST(request: NextRequest) {
         customer_phone: '',
         total_bagels: totalBagels || 0,
         total_price: isGifted ? 0 : totalPrice,
-        bites: totalBites > 0 ? { pack_size: totalBites, flavors: { custom: totalBites }, flavor_names: { custom: 'Bites' } } : null,
+        bites: (() => {
+          if (bitesBreakdown && typeof bitesBreakdown === 'object' && Object.keys(bitesBreakdown).length > 0) {
+            const flavors = Object.fromEntries(Object.entries(bitesBreakdown as Record<string, number>).filter(([, q]) => q > 0));
+            const flavorNames = Object.fromEntries(Object.keys(flavors).map(slug => [slug, (biteFlavorNames?.[slug] || slug)]));
+            const total = Object.values(flavors).reduce((s, n) => s + n, 0);
+            return total > 0 ? { pack_size: total, flavors, flavor_names: flavorNames } : null;
+          }
+          return totalBites > 0 ? { pack_size: totalBites, flavors: { custom: totalBites }, flavor_names: { custom: 'Bites' } } : null;
+        })(),
         status: 'confirmed',
         venmo_note: isGifted
           ? `Gifted - PR / Influencer${deliveryAddress ? ` · ${deliveryAddress}` : ''}`
