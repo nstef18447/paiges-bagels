@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     // Fetch all confirmed/ready orders with time slots and add-ons
     const { data: orders, error: ordersError } = await supabase
       .from('orders')
-      .select('id, total_bagels, total_price, status, bites, time_slot_id, time_slots(date), order_add_ons(quantity, add_on_type_id)')
+      .select('id, total_bagels, total_price, status, bites, delivery, time_slot_id, time_slots(date), order_add_ons(quantity, add_on_type_id)')
       .in('status', ['confirmed', 'ready'])
       .eq('is_fake', false);
 
@@ -88,10 +88,12 @@ export async function GET(request: NextRequest) {
       const orderBites = (order as any).bites as { flavors: Record<string, number> } | null;
       const bitesQty = orderBites?.flavors ? Object.values(orderBites.flavors).reduce((s, q) => s + q, 0) : 0;
 
+      const deliveryFee = (order.delivery as { fee?: number } | null)?.fee ?? 0;
+
       dailyMap[date].orders += 1;
       dailyMap[date].bagels_sold += order.total_bagels;
       dailyMap[date].bites_sold += bitesQty;
-      dailyMap[date].revenue += Number(order.total_price);
+      dailyMap[date].revenue += Number(order.total_price) - deliveryFee;
       grandTotalBagels += order.total_bagels;
       grandTotalBites += bitesQty;
 
