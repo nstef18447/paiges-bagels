@@ -30,10 +30,14 @@ interface DayPlan {
 
 function formatAmount(amount: number, unit: string): string {
   if (unit === 'tsp') {
-    if (amount >= 3) return `${amount / 3} tbsp`;
+    if (amount >= 3) {
+      const tbsp = amount / 3;
+      return `${Number.isInteger(tbsp) ? tbsp : tbsp.toFixed(1)} tbsp`;
+    }
+    if (amount === 0.5) return '½ tsp';
     return `${amount} tsp`;
   }
-  return `${amount}${unit}`;
+  return `${Number.isInteger(amount) ? amount : amount}g`;
 }
 
 function formatDate(dateString: string): string {
@@ -71,7 +75,8 @@ export default function RecipePage() {
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([date, { bagels, bites }]) => {
             const totalDough = bagels * BAGEL_DOUGH_G + bites * BITE_DOUGH_G;
-            const multiplier = Math.ceil(totalDough / BASE_DOUGH_WEIGHT);
+            // Round up to nearest half-batch (0.5 increments)
+            const multiplier = Math.ceil((totalDough / BASE_DOUGH_WEIGHT) * 2) / 2;
             return { date, bagels, bites, totalDough, multiplier };
           });
 
@@ -108,7 +113,7 @@ export default function RecipePage() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">Bagel Recipe</h2>
           <div className="flex gap-2">
-            {[1, 2, 3].map((x) => (
+            {[0.5, 1, 2, 3].map((x) => (
               <button
                 key={x}
                 onClick={() => setMultiplier(x)}
@@ -119,7 +124,7 @@ export default function RecipePage() {
                   border: multiplier === x ? '2px solid #004AAD' : '2px solid #E5E7EB',
                 }}
               >
-                {x}×
+                {x === 0.5 ? '½×' : `${x}×`}
               </button>
             ))}
           </div>
@@ -191,7 +196,7 @@ export default function RecipePage() {
                   </div>
                   <div className="text-right">
                     <span
-                      className="inline-flex items-center justify-center w-16 h-16 rounded-xl text-2xl font-black text-white"
+                      className="inline-flex items-center justify-center min-w-16 h-16 px-3 rounded-xl text-2xl font-black text-white"
                       style={{ backgroundColor: '#004AAD' }}
                     >
                       {day.multiplier}×
