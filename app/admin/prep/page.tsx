@@ -180,7 +180,7 @@ function computeDaySchedule(slots: SlotPrep[], date: string): RoundTiming[] {
   for (let i = meta.length - 1; i >= 0; i--) {
     const { roundNum, loads, readyBy, pickupTime, prepMins } = meta[i];
     const ovenOut = i < meta.length - 1
-      ? new Date(Math.min(readyBy.getTime(), schedule[i + 1].prepStart.getTime()))
+      ? new Date(Math.min(readyBy.getTime(), schedule[i + 1].ovenIn.getTime()))
       : new Date(readyBy);
     const ovenIn = new Date(ovenOut.getTime() - COOK_BAKE_MINS * 60000);
     const prepStart = new Date(ovenIn.getTime() - prepMins * 60000);
