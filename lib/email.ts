@@ -183,7 +183,7 @@ export async function sendConfirmationEmail(
           </tr>
           <tr>
             <td style="padding:0 8px 8px 0;font-size:14px;vertical-align:top;">&#x2022;</td>
-            <td style="padding:0 0 8px;font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.5;">Pickup at <strong>1881 Oak Avenue Apt 1510W, Evanston IL 60201</strong></td>
+            <td style="padding:0 0 8px;font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.5;">Pickup at <strong>56 7th Ave, NYC NY</strong></td>
           </tr>
           <tr>
             <td style="padding:0 8px 0 0;font-size:14px;vertical-align:top;">&#x2022;</td>
@@ -242,7 +242,7 @@ export async function sendReadyEmail(
               </tr>
               <tr>
                 <td style="font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#333;">
-                  1881 Oak Avenue Apt 1510W, Evanston IL 60201
+                  56 7th Ave, NYC NY
                 </td>
               </tr>
             </table>
@@ -393,7 +393,7 @@ export async function sendPickupReminderEmail(
           </tr>
           <tr>
             <td style="padding:0 8px 8px 0;font-size:14px;vertical-align:top;">&#x2022;</td>
-            <td style="padding:0 0 8px;font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.5;">Pickup at <strong>1881 Oak Avenue Apt 1510W, Evanston IL 60201</strong></td>
+            <td style="padding:0 0 8px;font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.5;">Pickup at <strong>56 7th Ave, NYC NY</strong></td>
           </tr>
           <tr>
             <td style="padding:0 8px 0 0;font-size:14px;vertical-align:top;">&#x2022;</td>

@@ -252,7 +252,7 @@ export default function AdminOrdersPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Address</label>
                   <input
                     type="text"
-                    placeholder="123 Main St, Chicago, IL 60601"
+                    placeholder="123 Main St, New York, NY 10012"
                     value={customOrder.deliveryAddress}
                     onChange={(e) => setCustomOrder({ ...customOrder, deliveryAddress: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004AAD]"

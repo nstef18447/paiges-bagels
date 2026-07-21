@@ -134,7 +134,7 @@ function ConfirmationContent() {
               {formatDate(order.time_slot.date)} at {formatTime(order.time_slot.time)}
             </p>
             <p className="text-[0.82rem] mt-1.5" style={{ color: 'var(--text-secondary)' }}>
-              1881 Oak Avenue Apt 1510W, Evanston IL 60201. Bagels will be outside! Please use call box to call Paige Tuchner to be let upstairs if needed.
+              56 7th Ave, NYC NY. Bagels will be outside! Please use call box to call Paige Tuchner to be let upstairs if needed.
             </p>
           </div>
 
