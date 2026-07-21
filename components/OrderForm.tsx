@@ -367,6 +367,11 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
         className="text-center px-5 py-8 md:py-12"
         style={{ borderBottom: '1px solid var(--border)' }}
       >
+        {!isHangover && (
+          <p className="text-xs sm:text-sm font-bold uppercase tracking-[0.22em] mb-2" style={{ color: 'var(--blue)' }}>
+            🗽 Hey NYC
+          </p>
+        )}
         <h1
           className="text-[2rem] md:text-[2.5rem] font-black mb-2"
           style={{ color: 'var(--blue)', fontFamily: 'var(--font-playfair)' }}

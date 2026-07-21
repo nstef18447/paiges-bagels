@@ -82,6 +82,18 @@ export default function Home() {
       <NavBar />
 
       {/* ═══════════════════════════════════════════════
+          0. NYC ANNOUNCEMENT BANNER
+      ═══════════════════════════════════════════════ */}
+      <div
+        className="w-full text-center px-4 py-2.5"
+        style={{ backgroundColor: 'var(--blue)' }}
+      >
+        <p className="text-xs sm:text-sm font-bold uppercase tracking-[0.18em] text-white">
+          🗽 Hey NYC — we&apos;re finally here 🥯
+        </p>
+      </div>
+
+      {/* ═══════════════════════════════════════════════
           1. HERO — kept as-is
       ═══════════════════════════════════════════════ */}
       <div
