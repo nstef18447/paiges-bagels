@@ -100,7 +100,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [error, setError] = useState('');
 
-  const DELIVERY_FEE = 20;
+  const DELIVERY_FEE = 25;
 
   const bagelsRef = useRef<HTMLElement>(null);
   const checkoutRef = useRef<HTMLElement>(null);
@@ -528,7 +528,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
                     Delivery
                   </div>
                   <div className="text-[0.82rem] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                    We&apos;ll get your bagels right to your door · from $20.00
+                    We&apos;ll get your bagels right to your door · from $25.00
                   </div>
                 </div>
                 {isDelivery ? (
@@ -574,7 +574,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
                   onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
                 />
                 <p className="text-[0.78rem] mt-2" style={{ color: 'var(--text-secondary)' }}>
-                  Delivery starts at $20.00. Paige will confirm the final delivery price with you based on your address.
+                  Delivery starts at $25.00. Paige will confirm the final delivery price with you based on your address.
                 </p>
               </div>
             )}
@@ -683,7 +683,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
               {isDelivery && (
                 <div className="flex justify-between items-center mb-2 pb-2" style={{ borderBottom: '1px solid #C8DFC9' }}>
                   <span className="text-sm" style={{ color: '#2D5A3D' }}>Delivery (from)</span>
-                  <span className="text-sm font-semibold" style={{ color: '#2D5A3D' }}>+$20.00</span>
+                  <span className="text-sm font-semibold" style={{ color: '#2D5A3D' }}>+$25.00</span>
                 </div>
               )}
               <div className="flex justify-between items-center">
