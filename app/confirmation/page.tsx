@@ -284,6 +284,21 @@ function ConfirmationContent() {
               Pay ${order.total_price.toFixed(2)} on Venmo
             </a>
 
+            {/* Manual payment fallback — in case the Venmo button doesn't open */}
+            <div
+              className="mt-4 p-4 rounded-lg text-[0.82rem]"
+              style={{ backgroundColor: 'var(--blue-light)', color: 'var(--text-medium)' }}
+            >
+              <p className="mb-2" style={{ fontWeight: 600 }}>
+                Button not opening? Pay manually on Venmo:
+              </p>
+              <ul className="space-y-1">
+                <li>To: <strong>@{venmoUsername}</strong></li>
+                <li>Amount: <strong>${order.total_price.toFixed(2)}</strong></li>
+                <li>Note: <strong>{order.venmo_note}</strong></li>
+              </ul>
+            </div>
+
             <p className="text-center text-[0.82rem] mt-4" style={{ color: 'var(--text-secondary)' }}>
               Please allow some time for confirmation as we personally review each order. Thank you for your patience!
             </p>

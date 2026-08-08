@@ -61,5 +61,6 @@ export function generateVenmoLink(
   note: string
 ): string {
   const encodedNote = encodeURIComponent(note);
-  return `https://venmo.com/${username}?txn=pay&amount=${amount}&note=${encodedNote}`;
+  const formattedAmount = amount.toFixed(2);
+  return `https://venmo.com/${username}?txn=pay&amount=${formattedAmount}&note=${encodedNote}`;
 }

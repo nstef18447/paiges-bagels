@@ -116,6 +116,16 @@ export async function sendConfirmationEmail(
     </td></tr>`).join('')
     : '';
 
+  // Delivery vs pickup (delivery is a JSONB column not in the Order type)
+  const delivery = (order as unknown as Record<string, unknown>).delivery as { address: string; fee: number } | null;
+  const fulfillmentLabel = delivery ? 'Delivery' : 'Pickup';
+  const whereLine = delivery
+    ? `Your bagels will be delivered to <strong>${delivery.address}</strong>`
+    : `Pickup at <strong>56 7th Ave, NYC NY</strong>`;
+  const finalNote = delivery
+    ? `We&rsquo;ll text you when your bagels are on the way!`
+    : `Bagels will be outside! Use call box if needed.`;
+
   const content = `
     <!-- Success icon + heading -->
     <table width="100%" cellpadding="0" cellspacing="0">
@@ -140,7 +150,7 @@ export async function sendConfirmationEmail(
             <!-- Pickup -->
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
-                <td style="font-family:Arial,sans-serif;font-size:12px;color:${BRAND.textSec};text-transform:uppercase;letter-spacing:0.05em;padding:16px 0 4px;">Pickup</td>
+                <td style="font-family:Arial,sans-serif;font-size:12px;color:${BRAND.textSec};text-transform:uppercase;letter-spacing:0.05em;padding:16px 0 4px;">${fulfillmentLabel}</td>
               </tr>
               <tr>
                 <td style="font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#333;padding-bottom:16px;border-bottom:1px solid ${BRAND.border};">
@@ -183,11 +193,11 @@ export async function sendConfirmationEmail(
           </tr>
           <tr>
             <td style="padding:0 8px 8px 0;font-size:14px;vertical-align:top;">&#x2022;</td>
-            <td style="padding:0 0 8px;font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.5;">Pickup at <strong>56 7th Ave, NYC NY</strong></td>
+            <td style="padding:0 0 8px;font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.5;">${whereLine}</td>
           </tr>
           <tr>
             <td style="padding:0 8px 0 0;font-size:14px;vertical-align:top;">&#x2022;</td>
-            <td style="padding:0;font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.5;">Bagels will be outside! Use call box if needed.</td>
+            <td style="padding:0;font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.5;">${finalNote}</td>
           </tr>
         </table>
       </td></tr>
@@ -207,6 +217,10 @@ export async function sendReadyEmail(
   order: Order,
   timeSlot: TimeSlot
 ): Promise<void> {
+  // Delivery vs pickup (delivery is a JSONB column not in the Order type)
+  const delivery = (order as unknown as Record<string, unknown>).delivery as { address: string; fee: number } | null;
+  const fulfillmentLabel = delivery ? 'Delivery' : 'Pickup';
+
   const content = `
     <!-- Success icon + heading -->
     <table width="100%" cellpadding="0" cellspacing="0">
@@ -216,10 +230,10 @@ export async function sendReadyEmail(
         </div>
       </td></tr>
       <tr><td align="center" style="padding:12px 24px 4px;">
-        <h1 style="margin:0;font-family:Georgia,serif;font-size:24px;font-weight:bold;color:${BRAND.blue};">Your Bagels are Ready!</h1>
+        <h1 style="margin:0;font-family:Georgia,serif;font-size:24px;font-weight:bold;color:${BRAND.blue};">${delivery ? 'Your Bagels are On the Way!' : 'Your Bagels are Ready!'}</h1>
       </td></tr>
       <tr><td align="center" style="padding:0 24px 28px;">
-        <p style="margin:0;font-family:Arial,sans-serif;font-size:15px;color:${BRAND.textSec};">Hi ${order.customer_name}, come grab your bagels!</p>
+        <p style="margin:0;font-family:Arial,sans-serif;font-size:15px;color:${BRAND.textSec};">${delivery ? `Hi ${order.customer_name}, your bagels are on their way!` : `Hi ${order.customer_name}, come grab your bagels!`}</p>
       </td></tr>
     </table>
 
@@ -230,7 +244,7 @@ export async function sendReadyEmail(
           <tr><td style="padding:20px;">
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
-                <td style="font-family:Arial,sans-serif;font-size:12px;color:${BRAND.textSec};text-transform:uppercase;letter-spacing:0.05em;padding-bottom:4px;">Pickup</td>
+                <td style="font-family:Arial,sans-serif;font-size:12px;color:${BRAND.textSec};text-transform:uppercase;letter-spacing:0.05em;padding-bottom:4px;">${fulfillmentLabel}</td>
               </tr>
               <tr>
                 <td style="font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#333;padding-bottom:16px;border-bottom:1px solid ${BRAND.border};">
@@ -238,11 +252,11 @@ export async function sendReadyEmail(
                 </td>
               </tr>
               <tr>
-                <td style="font-family:Arial,sans-serif;font-size:12px;color:${BRAND.textSec};text-transform:uppercase;letter-spacing:0.05em;padding:16px 0 4px;">Location</td>
+                <td style="font-family:Arial,sans-serif;font-size:12px;color:${BRAND.textSec};text-transform:uppercase;letter-spacing:0.05em;padding:16px 0 4px;">${delivery ? 'Delivery Address' : 'Location'}</td>
               </tr>
               <tr>
                 <td style="font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#333;">
-                  56 7th Ave, NYC NY
+                  ${delivery ? delivery.address : '56 7th Ave, NYC NY'}
                 </td>
               </tr>
             </table>
@@ -254,7 +268,7 @@ export async function sendReadyEmail(
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr><td style="padding:24px 24px 36px;">
         <p style="margin:0;font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.5;">
-          Bagels will be outside! Please use the call box to call Paige Tuchner to be let upstairs if needed.
+          ${delivery ? 'Your bagels are on their way to you now! Keep an eye out — we&rsquo;ll text you if we need anything.' : 'Bagels will be outside! Please use the call box to call Paige Tuchner to be let upstairs if needed.'}
         </p>
       </td></tr>
     </table>`;
@@ -328,6 +342,16 @@ export async function sendPickupReminderEmail(
     </td></tr>`).join('')
     : '';
 
+  // Delivery vs pickup (delivery is a JSONB column not in the Order type)
+  const delivery = (order as unknown as Record<string, unknown>).delivery as { address: string; fee: number } | null;
+  const fulfillmentLabel = delivery ? 'Delivery' : 'Pickup';
+  const whereLine = delivery
+    ? `Your bagels will be delivered to <strong>${delivery.address}</strong>`
+    : `Pickup at <strong>56 7th Ave, NYC NY</strong>`;
+  const finalNote = delivery
+    ? `We&rsquo;ll text you when your bagels are on the way!`
+    : `Bagels will be outside! Use call box if needed.`;
+
   const content = `
     <!-- Clock icon + heading -->
     <table width="100%" cellpadding="0" cellspacing="0">
@@ -350,7 +374,7 @@ export async function sendPickupReminderEmail(
             <!-- Pickup -->
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
-                <td style="font-family:Arial,sans-serif;font-size:12px;color:${BRAND.textSec};text-transform:uppercase;letter-spacing:0.05em;padding:16px 0 4px;">Pickup</td>
+                <td style="font-family:Arial,sans-serif;font-size:12px;color:${BRAND.textSec};text-transform:uppercase;letter-spacing:0.05em;padding:16px 0 4px;">${fulfillmentLabel}</td>
               </tr>
               <tr>
                 <td style="font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#333;padding-bottom:16px;border-bottom:1px solid ${BRAND.border};">
@@ -385,7 +409,7 @@ export async function sendPickupReminderEmail(
     <!-- Pickup instructions -->
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr><td style="padding:28px 24px 36px;">
-        <h3 style="margin:0 0 12px;font-family:Georgia,serif;font-size:16px;color:${BRAND.blue};">Pickup Info</h3>
+        <h3 style="margin:0 0 12px;font-family:Georgia,serif;font-size:16px;color:${BRAND.blue};">${delivery ? 'Delivery' : 'Pickup'} Info</h3>
         <table cellpadding="0" cellspacing="0">
           <tr>
             <td style="padding:0 8px 8px 0;font-size:14px;vertical-align:top;">&#x2022;</td>
@@ -393,11 +417,11 @@ export async function sendPickupReminderEmail(
           </tr>
           <tr>
             <td style="padding:0 8px 8px 0;font-size:14px;vertical-align:top;">&#x2022;</td>
-            <td style="padding:0 0 8px;font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.5;">Pickup at <strong>56 7th Ave, NYC NY</strong></td>
+            <td style="padding:0 0 8px;font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.5;">${whereLine}</td>
           </tr>
           <tr>
             <td style="padding:0 8px 0 0;font-size:14px;vertical-align:top;">&#x2022;</td>
-            <td style="padding:0;font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.5;">Bagels will be outside! Use call box if needed.</td>
+            <td style="padding:0;font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.5;">${finalNote}</td>
           </tr>
         </table>
       </td></tr>
@@ -408,7 +432,9 @@ export async function sendPickupReminderEmail(
   await resend.emails.send({
     from: 'Paige\'s Bagels <orders@paigesbagels.com>',
     to: order.customer_email,
-    subject: `See you tomorrow! 🥯 Pickup at ${formatTime(timeSlot.time)}`,
+    subject: delivery
+      ? `See you tomorrow! 🥯 Delivery around ${formatTime(timeSlot.time)}`
+      : `See you tomorrow! 🥯 Pickup at ${formatTime(timeSlot.time)}`,
     html: emailHtml,
   });
 }
