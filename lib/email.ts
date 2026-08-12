@@ -121,7 +121,7 @@ export async function sendConfirmationEmail(
   const fulfillmentLabel = delivery ? 'Delivery' : 'Pickup';
   const whereLine = delivery
     ? `Your bagels will be delivered to <strong>${delivery.address}</strong>`
-    : `Pickup at <strong>56 7th Ave, NYC NY</strong>`;
+    : `Pickup at <strong>Candela Tower, 56 7th Avenue</strong>`;
   const finalNote = delivery
     ? `We&rsquo;ll text you when your bagels are on the way!`
     : `Bagels will be outside! Use call box if needed.`;
@@ -256,7 +256,7 @@ export async function sendReadyEmail(
               </tr>
               <tr>
                 <td style="font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#333;">
-                  ${delivery ? delivery.address : '56 7th Ave, NYC NY'}
+                  ${delivery ? delivery.address : 'Candela Tower, 56 7th Avenue'}
                 </td>
               </tr>
             </table>
@@ -347,7 +347,7 @@ export async function sendPickupReminderEmail(
   const fulfillmentLabel = delivery ? 'Delivery' : 'Pickup';
   const whereLine = delivery
     ? `Your bagels will be delivered to <strong>${delivery.address}</strong>`
-    : `Pickup at <strong>56 7th Ave, NYC NY</strong>`;
+    : `Pickup at <strong>Candela Tower, 56 7th Avenue</strong>`;
   const finalNote = delivery
     ? `We&rsquo;ll text you when your bagels are on the way!`
     : `Bagels will be outside! Use call box if needed.`;
