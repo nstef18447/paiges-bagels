@@ -194,29 +194,42 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
   const comboDiscount = calculateComboDiscount(total, addOnUnits);
   const price = bagelSubtotal + addOnSubtotal + biteSubtotal + deliveryFee - comboDiscount;
 
-  // Bundle pricing is greedy, so some counts (4 or 5 bagels, say) end up costing
-  // more per bagel than a larger tier does. Find the nearest count that's a
-  // better per-bagel deal and is a small enough step up to be worth offering.
+  // Point people at the next bundle up whenever it's genuinely better value:
+  // either the step is small enough to be an easy yes, or the per-bagel price
+  // drops meaningfully. Tiers come from the pricing table, so this follows any
+  // future price change rather than hardcoding quantities.
   const upsell = useMemo(() => {
-    if (total <= 0 || total >= 13 || pricing.length === 0) return null;
-    const singleTier = pricing.find((t) => t.bagel_quantity === 1);
-    if (!singleTier) return null;
-    const maxStep = singleTier.price * 2;
+    if (total <= 0 || pricing.length === 0) return null;
+
+    const nextQuantity = pricing
+      .map((t) => t.bagel_quantity)
+      .sort((a, b) => a - b)
+      .find((q) => q > total);
+    if (nextQuantity === undefined) return null;
 
     const currentPrice = calculateBundlePrice(total, pricing);
-    const currentPerBagel = currentPrice / total;
+    const nextPrice = calculateBundlePrice(nextQuantity, pricing);
+    const extraCost = nextPrice - currentPrice;
+    if (extraCost <= 0) return null;
 
-    let best: { quantity: number; price: number; extraCost: number; extraBagels: number } | null = null;
-    for (let q = total + 1; q <= 13; q++) {
-      const qPrice = calculateBundlePrice(q, pricing);
-      const extraCost = qPrice - currentPrice;
-      if (qPrice / q >= currentPerBagel - 0.005) continue;
-      if (extraCost <= 0 || extraCost > maxStep) continue;
-      if (!best || extraCost < best.extraCost) {
-        best = { quantity: q, price: qPrice, extraCost, extraBagels: q - total };
-      }
-    }
-    return best;
+    const currentPerBagel = currentPrice / total;
+    const nextPerBagel = nextPrice / nextQuantity;
+    if (nextPerBagel >= currentPerBagel - 0.005) return null;
+
+    const singleTier = pricing.find((t) => t.bagel_quantity === 1);
+    const isSmallStep = singleTier ? extraCost <= singleTier.price * 1.25 : false;
+    const savesMeaningfully = (currentPerBagel - nextPerBagel) / currentPerBagel >= 0.05;
+    if (!isSmallStep && !savesMeaningfully) return null;
+
+    return {
+      quantity: nextQuantity,
+      price: nextPrice,
+      extraCost,
+      extraBagels: nextQuantity - total,
+      currentPerBagel,
+      nextPerBagel,
+      isSmallStep,
+    };
   }, [total, pricing]);
 
   // Order is valid if they have bagels, valid bites, or both
@@ -511,7 +524,14 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
                   <strong style={{ color: 'var(--blue)' }}>
                     {upsell.quantity} for ${upsell.price.toFixed(2)}
                   </strong>{' '}
-                  &mdash; only ${upsell.extraCost.toFixed(2)} more.
+                  {upsell.isSmallStep ? (
+                    <>&mdash; only ${upsell.extraCost.toFixed(2)} more.</>
+                  ) : (
+                    <>
+                      &mdash; ${upsell.nextPerBagel.toFixed(2)} a bagel instead of $
+                      {upsell.currentPerBagel.toFixed(2)}.
+                    </>
+                  )}
                 </p>
               </div>
             )}
