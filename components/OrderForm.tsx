@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -171,6 +171,31 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
 
   const deliveryFee = isDelivery ? DELIVERY_FEE : 0;
   const price = calculatePrice(total) + addOnSubtotal + biteSubtotal + deliveryFee;
+
+  // Bundle pricing is greedy, so some counts (4 or 5 bagels, say) end up costing
+  // more per bagel than a larger tier does. Find the nearest count that's a
+  // better per-bagel deal and is a small enough step up to be worth offering.
+  const upsell = useMemo(() => {
+    if (total <= 0 || total >= 13 || pricing.length === 0) return null;
+    const singleTier = pricing.find((t) => t.bagel_quantity === 1);
+    if (!singleTier) return null;
+    const maxStep = singleTier.price * 2;
+
+    const currentPrice = calculateBundlePrice(total, pricing);
+    const currentPerBagel = currentPrice / total;
+
+    let best: { quantity: number; price: number; extraCost: number; extraBagels: number } | null = null;
+    for (let q = total + 1; q <= 13; q++) {
+      const qPrice = calculateBundlePrice(q, pricing);
+      const extraCost = qPrice - currentPrice;
+      if (qPrice / q >= currentPerBagel - 0.005) continue;
+      if (extraCost <= 0 || extraCost > maxStep) continue;
+      if (!best || extraCost < best.extraCost) {
+        best = { quantity: q, price: qPrice, extraCost, extraBagels: q - total };
+      }
+    }
+    return best;
+  }, [total, pricing]);
 
   // Order is valid if they have bagels, valid bites, or both
   const hasBagels = total > 0 && isValidTotal(total);
@@ -452,6 +477,22 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
               onChange={setBagelCounts}
               maxTotal={13}
             />
+
+            {upsell && (
+              <div
+                className="mt-4 rounded-lg px-4 py-3 flex items-center gap-2.5"
+                style={{ backgroundColor: 'var(--blue-light)', border: '1px solid var(--border)' }}
+              >
+                <span className="text-base leading-none" aria-hidden="true">🥯</span>
+                <p className="text-[0.85rem] leading-snug" style={{ color: 'var(--text-medium)' }}>
+                  Add {upsell.extraBagels} more and get{' '}
+                  <strong style={{ color: 'var(--blue)' }}>
+                    {upsell.quantity} for ${upsell.price.toFixed(2)}
+                  </strong>{' '}
+                  &mdash; only ${upsell.extraCost.toFixed(2)} more.
+                </p>
+              </div>
+            )}
           </section>
 
           {/* Paige's Bites */}
