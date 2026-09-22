@@ -100,7 +100,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [error, setError] = useState('');
 
-  const DELIVERY_FEE = 20;
+  const DELIVERY_FEE = 25;
 
   const bagelsRef = useRef<HTMLElement>(null);
   const checkoutRef = useRef<HTMLElement>(null);
@@ -528,7 +528,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
                     Chicago Delivery
                   </div>
                   <div className="text-[0.82rem] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                    We&apos;ll Uber your bagels right to you · +$20.00
+                    We&apos;ll Uber your bagels right to you · +$25.00
                   </div>
                 </div>
                 {isDelivery ? (
@@ -680,7 +680,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
               {isDelivery && (
                 <div className="flex justify-between items-center mb-2 pb-2" style={{ borderBottom: '1px solid #C8DFC9' }}>
                   <span className="text-sm" style={{ color: '#2D5A3D' }}>Chicago Delivery</span>
-                  <span className="text-sm font-semibold" style={{ color: '#2D5A3D' }}>+$20.00</span>
+                  <span className="text-sm font-semibold" style={{ color: '#2D5A3D' }}>+$25.00</span>
                 </div>
               )}
               <div className="flex justify-between items-center">
