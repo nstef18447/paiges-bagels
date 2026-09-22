@@ -100,7 +100,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [error, setError] = useState('');
 
-  const DELIVERY_FEE = 25;
+  const DELIVERY_FEE = 20;
 
   const bagelsRef = useRef<HTMLElement>(null);
   const checkoutRef = useRef<HTMLElement>(null);
@@ -369,7 +369,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
       >
         {!isHangover && (
           <p className="text-xs sm:text-sm font-bold uppercase tracking-[0.22em] mb-2" style={{ color: 'var(--blue)' }}>
-            🗽 Hey NYC
+            🌭 Hey Chicago
           </p>
         )}
         <h1
@@ -525,10 +525,10 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="text-[1.05rem] font-bold" style={{ color: 'var(--blue)' }}>
-                    Delivery
+                    Chicago Delivery
                   </div>
                   <div className="text-[0.82rem] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                    We&apos;ll get your bagels right to your door · from $25.00
+                    We&apos;ll Uber your bagels right to you · +$20.00
                   </div>
                 </div>
                 {isDelivery ? (
@@ -563,7 +563,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
                   id="deliveryAddress"
                   value={deliveryAddress}
                   onChange={(e) => setDeliveryAddress(e.target.value)}
-                  placeholder="123 W 4th St, Apt 2, New York, NY 10012"
+                  placeholder="123 W Main St, Chicago, IL 60601"
                   className="w-full px-4 py-3 rounded-lg transition-all"
                   style={{
                     border: '1px solid var(--border)',
@@ -573,9 +573,6 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
                   onFocus={(e) => e.target.style.borderColor = focusBorder}
                   onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
                 />
-                <p className="text-[0.78rem] mt-2" style={{ color: 'var(--text-secondary)' }}>
-                  Delivery starts at $25.00. Paige will confirm the final delivery price with you based on your address.
-                </p>
               </div>
             )}
           </section>
@@ -682,8 +679,8 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
             >
               {isDelivery && (
                 <div className="flex justify-between items-center mb-2 pb-2" style={{ borderBottom: '1px solid #C8DFC9' }}>
-                  <span className="text-sm" style={{ color: '#2D5A3D' }}>Delivery (from)</span>
-                  <span className="text-sm font-semibold" style={{ color: '#2D5A3D' }}>+$25.00</span>
+                  <span className="text-sm" style={{ color: '#2D5A3D' }}>Chicago Delivery</span>
+                  <span className="text-sm font-semibold" style={{ color: '#2D5A3D' }}>+$20.00</span>
                 </div>
               )}
               <div className="flex justify-between items-center">
