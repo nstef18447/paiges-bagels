@@ -6,9 +6,19 @@ interface AddOnSelectorProps {
   addOnTypes: AddOnType[];
   counts: AddOnCounts;
   onChange: (counts: AddOnCounts) => void;
+  /** A spread is on the order alongside bagels, so the 50c combo is applied. */
+  comboActive?: boolean;
+  /** Bagels are on the order but no spread is — the combo is still available. */
+  comboHint?: boolean;
 }
 
-export default function AddOnSelector({ addOnTypes, counts, onChange }: AddOnSelectorProps) {
+export default function AddOnSelector({
+  addOnTypes,
+  counts,
+  onChange,
+  comboActive = false,
+  comboHint = false,
+}: AddOnSelectorProps) {
   const handleIncrement = (addOnTypeId: string) => {
     onChange({ ...counts, [addOnTypeId]: (counts[addOnTypeId] || 0) + 1 });
   };
@@ -42,6 +52,30 @@ export default function AddOnSelector({ addOnTypes, counts, onChange }: AddOnSel
           />
         ))}
       </div>
+
+      {(comboActive || comboHint) && (
+        <div
+          className="p-3 rounded-lg flex items-center gap-2.5"
+          style={{
+            backgroundColor: comboActive ? '#EAF5EC' : '#FFFFFF',
+            border: comboActive ? '1px solid #C8DFC9' : '1px solid #E5E0DB',
+          }}
+        >
+          <span className="text-base leading-none" aria-hidden="true">{comboActive ? '🎉' : '🥯'}</span>
+          <p className="text-[0.85rem] leading-snug" style={{ color: '#4A4A4A' }}>
+            {comboActive ? (
+              <>
+                <strong style={{ color: '#2D5A3D' }}>Combo applied</strong> &mdash; 50&cent; off for adding a
+                spread to your bagels.
+              </>
+            ) : (
+              <>
+                Add a spread to your bagels and <strong style={{ color: '#004AAD' }}>take 50&cent; off</strong> the order.
+              </>
+            )}
+          </p>
+        </div>
+      )}
 
       {subtotal > 0 && (
         <div

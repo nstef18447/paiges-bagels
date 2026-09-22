@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, getServiceSupabase } from '@/lib/supabase';
 import { OrderFormData } from '@/types';
-import { calculateTotal, isValidTotal, calculateBundlePrice, generateVenmoNote } from '@/lib/utils';
+import { calculateTotal, isValidTotal, calculateBundlePrice, calculateComboDiscount, generateVenmoNote } from '@/lib/utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
 
     // Calculate add-on total
     let addOnTotal = 0;
+    let addOnUnits = 0;
     const addOnCounts = formData.addOnCounts || {};
     const addOnEntries = Object.entries(addOnCounts).filter(([_, qty]) => qty > 0);
 
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest) {
       for (const [addOnTypeId, quantity] of addOnEntries) {
         const unitPrice = addOnPriceMap.get(addOnTypeId) || 0;
         addOnTotal += quantity * unitPrice;
+        addOnUnits += quantity;
       }
     }
 
@@ -90,7 +92,9 @@ export async function POST(request: NextRequest) {
 
     // Calculate price
     const deliveryFee = delivery?.fee ?? 0;
-    const price = calculateBundlePrice(total, pricingTiers) + addOnTotal + bitesPrice + deliveryFee;
+    const comboDiscount = calculateComboDiscount(total, addOnUnits);
+    const price =
+      calculateBundlePrice(total, pricingTiers) + addOnTotal + bitesPrice + deliveryFee - comboDiscount;
 
     // Atomic order creation — locks the slot, checks capacity, and inserts in one transaction
     const { data: orderId, error: insertError } = await supabase.rpc(

@@ -18,6 +18,15 @@ export function calculateBundlePrice(total: number, pricingTiers: Pricing[]): nu
   return price;
 }
 
+// A spread bought alongside bagels takes 50c off the order — the "combo".
+// Shared by the order form and the orders API so the two can't drift apart.
+export const COMBO_DISCOUNT = 0.5;
+
+export function calculateComboDiscount(totalBagels: number, addOnUnits: number): number {
+  if (totalBagels <= 0 || addOnUnits <= 0) return 0;
+  return COMBO_DISCOUNT;
+}
+
 export function isValidTotal(total: number): boolean {
   return total >= 1 && total <= 13;
 }

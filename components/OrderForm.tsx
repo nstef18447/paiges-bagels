@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { AddOnCounts, AddOnType, BagelCounts, BagelType, BiteFlavor, BiteFlavorCounts, BitePricing, TimeSlotWithCapacity, Pricing } from '@/types';
 import NavBar from './NavBar';
-import { calculateTotal, isValidTotal, calculateBundlePrice } from '@/lib/utils';
+import { calculateTotal, isValidTotal, calculateBundlePrice, calculateComboDiscount } from '@/lib/utils';
 import BagelSelector from './BagelSelector';
 import BiteSelector from './BiteSelector';
 import AddOnSelector from './AddOnSelector';
@@ -93,6 +93,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
   const [selectedBitePackSize, setSelectedBitePackSize] = useState<number | null>(null);
   const [biteFlavorCounts, setBiteFlavorCounts] = useState<BiteFlavorCounts>({});
   const [addOnCounts, setAddOnCounts] = useState<AddOnCounts>({});
+  const [addOnsTouched, setAddOnsTouched] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -154,6 +155,24 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
 
   const total = calculateTotal(bagelCounts);
 
+  // Most bagel orders want a schmear, so it starts selected. Once the customer
+  // changes the add-ons themselves we never touch their choice again.
+  const schmearType = addOnTypes.find((t) => /schmear/i.test(t.name));
+  useEffect(() => {
+    if (addOnsTouched || !schmearType) return;
+    setAddOnCounts((prev) => {
+      const has = (prev[schmearType.id] || 0) > 0;
+      if (total > 0 && !has) return { ...prev, [schmearType.id]: 1 };
+      if (total === 0 && has) return { ...prev, [schmearType.id]: 0 };
+      return prev;
+    });
+  }, [total, schmearType, addOnsTouched]);
+
+  const handleAddOnChange = (counts: AddOnCounts) => {
+    setAddOnsTouched(true);
+    setAddOnCounts(counts);
+  };
+
   const calculatePrice = (total: number): number => {
     return calculateBundlePrice(total, pricing);
   };
@@ -161,6 +180,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
   const addOnSubtotal = addOnTypes.reduce((sum, type) => {
     return sum + (addOnCounts[type.id] || 0) * type.price;
   }, 0);
+  const addOnUnits = addOnTypes.reduce((sum, type) => sum + (addOnCounts[type.id] || 0), 0);
 
   const biteTotalSelected = Object.values(biteFlavorCounts).reduce((sum, n) => sum + n, 0);
   const activePackSizes = bitePricing.filter((p) => p.active).map((p) => p.pack_size);
@@ -170,7 +190,9 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
   const bitesValid = !bitesStarted || activePackSizes.includes(biteTotalSelected);
 
   const deliveryFee = isDelivery ? DELIVERY_FEE : 0;
-  const price = calculatePrice(total) + addOnSubtotal + biteSubtotal + deliveryFee;
+  const bagelSubtotal = calculatePrice(total);
+  const comboDiscount = calculateComboDiscount(total, addOnUnits);
+  const price = bagelSubtotal + addOnSubtotal + biteSubtotal + deliveryFee - comboDiscount;
 
   // Bundle pricing is greedy, so some counts (4 or 5 bagels, say) end up costing
   // more per bagel than a larger tier does. Find the nearest count that's a
@@ -535,7 +557,9 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
               <AddOnSelector
                 addOnTypes={addOnTypes}
                 counts={addOnCounts}
-                onChange={setAddOnCounts}
+                onChange={handleAddOnChange}
+                comboActive={comboDiscount > 0}
+                comboHint={total > 0 && addOnUnits === 0}
               />
             </section>
           )}
@@ -718,12 +742,42 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
                 border: '1px solid #C8DFC9'
               }}
             >
-              {isDelivery && (
-                <div className="flex justify-between items-center mb-2 pb-2" style={{ borderBottom: '1px solid #C8DFC9' }}>
-                  <span className="text-sm" style={{ color: '#2D5A3D' }}>Chicago Delivery</span>
-                  <span className="text-sm font-semibold" style={{ color: '#2D5A3D' }}>+$25.00</span>
-                </div>
-              )}
+              <div className="mb-2 pb-2 space-y-1" style={{ borderBottom: '1px solid #C8DFC9' }}>
+                {total > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm" style={{ color: '#2D5A3D' }}>
+                      {total} {total === 1 ? 'bagel' : 'bagels'}
+                    </span>
+                    <span className="text-sm font-semibold" style={{ color: '#2D5A3D' }}>${bagelSubtotal.toFixed(2)}</span>
+                  </div>
+                )}
+                {biteSubtotal > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm" style={{ color: '#2D5A3D' }}>{biteTotalSelected} bites</span>
+                    <span className="text-sm font-semibold" style={{ color: '#2D5A3D' }}>${biteSubtotal.toFixed(2)}</span>
+                  </div>
+                )}
+                {addOnSubtotal > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm" style={{ color: '#2D5A3D' }}>
+                      {addOnUnits === 1 ? 'Spread' : `Spreads (${addOnUnits})`}
+                    </span>
+                    <span className="text-sm font-semibold" style={{ color: '#2D5A3D' }}>${addOnSubtotal.toFixed(2)}</span>
+                  </div>
+                )}
+                {comboDiscount > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-semibold" style={{ color: '#2D5A3D' }}>Bagels + spread combo</span>
+                    <span className="text-sm font-bold" style={{ color: 'var(--success)' }}>&minus;${comboDiscount.toFixed(2)}</span>
+                  </div>
+                )}
+                {isDelivery && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm" style={{ color: '#2D5A3D' }}>Chicago Delivery</span>
+                    <span className="text-sm font-semibold" style={{ color: '#2D5A3D' }}>+${DELIVERY_FEE.toFixed(2)}</span>
+                  </div>
+                )}
+              </div>
               <div className="flex justify-between items-center">
                 <span
                   className="text-lg"
