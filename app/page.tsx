@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { BagelType, BiteFlavor } from '@/types';
 import NavBar from '@/components/NavBar';
+import { isSpecial, PINK } from '@/lib/specials';
 
 /* ── Hardcoded transparent bagel images for the carousel ──
    These map to /public/<file>.png. If we can match by name from the API
@@ -242,8 +243,12 @@ export default function Home() {
                     style={{ flex: '0 0 160px' }}
                   >
                     <div
-                      className="flex items-center justify-center mx-auto mb-3.5"
-                      style={{ width: 150, height: 150 }}
+                      className="flex items-center justify-center mx-auto mb-3.5 rounded-full"
+                      style={{
+                        width: 150,
+                        height: 150,
+                        backgroundColor: isSpecial(bagel.name) ? PINK.bg : undefined,
+                      }}
                     >
                       {imgSrc ? (
                         <img
@@ -268,10 +273,18 @@ export default function Home() {
                     </div>
                     <p
                       className="font-bold text-base"
-                      style={{ fontFamily: 'var(--font-playfair)', color: 'var(--blue)' }}
+                      style={{ fontFamily: 'var(--font-playfair)', color: isSpecial(bagel.name) ? PINK.strong : 'var(--blue)' }}
                     >
                       {bagel.name}
                     </p>
+                    {isSpecial(bagel.name) && (
+                      <span
+                        className="mt-1.5 inline-block rounded-full px-2.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide"
+                        style={{ backgroundColor: PINK.strong, color: '#FFFFFF' }}
+                      >
+                        ✨ This week only
+                      </span>
+                    )}
                   </div>
                 );
               })}

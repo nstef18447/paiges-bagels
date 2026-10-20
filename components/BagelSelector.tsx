@@ -2,6 +2,7 @@
 
 import { BagelCounts, BagelType } from '@/types';
 import { calculateTotal, isValidTotal } from '@/lib/utils';
+import { isSpecial, PINK, SPRINKLE_BACKGROUND } from '@/lib/specials';
 
 const BAGEL_IMAGES: Record<string, string> = {
   plain: '/plaintrans.png',
@@ -10,6 +11,7 @@ const BAGEL_IMAGES: Record<string, string> = {
   'poppy seed': '/poppytrans.png',
   poppy: '/poppytrans.png',
   salt: '/salttrans.png',
+  funfetti: '/funfetti-bagel.svg',
 };
 
 function getBagelImage(name: string): string | null {
@@ -55,6 +57,7 @@ export default function BagelSelector({ bagelTypes, counts, onChange, maxTotal }
             key={type.id}
             name={type.name}
             imageUrl={getBagelImage(type.name)}
+            special={isSpecial(type.name)}
             count={counts[type.id] || 0}
             onIncrement={() => handleIncrement(type.id)}
             onDecrement={() => handleDecrement(type.id)}
@@ -90,18 +93,29 @@ interface BagelCounterProps {
   onIncrement: () => void;
   onDecrement: () => void;
   disabled?: boolean;
+  special?: boolean;
 }
 
-function BagelCounter({ name, imageUrl, count, onIncrement, onDecrement, disabled }: BagelCounterProps) {
+function BagelCounter({ name, imageUrl, count, onIncrement, onDecrement, disabled, special }: BagelCounterProps) {
   const isActive = count > 0;
+  const accent = special ? PINK.strong : '#004AAD';
+  const accentLight = special ? PINK.soft : '#E8EDF5';
 
   return (
     <div
       className="flex items-center gap-4 p-4 rounded-lg transition-all"
-      style={{
-        backgroundColor: isActive ? '#e8f0fb' : '#FFFFFF',
-        border: isActive ? '2px solid #004aad' : '2px solid #E5E0DB',
-      }}
+      style={
+        special
+          ? {
+              backgroundColor: isActive ? PINK.bgActive : PINK.bg,
+              backgroundImage: SPRINKLE_BACKGROUND,
+              border: `2px ${isActive ? 'solid' : 'dashed'} ${isActive ? PINK.strong : PINK.border}`,
+            }
+          : {
+              backgroundColor: isActive ? '#e8f0fb' : '#FFFFFF',
+              border: isActive ? '2px solid #004aad' : '2px solid #E5E0DB',
+            }
+      }
     >
       {/* Bagel image */}
       {imageUrl && (
@@ -116,12 +130,15 @@ function BagelCounter({ name, imageUrl, count, onIncrement, onDecrement, disable
       )}
 
       {/* Name */}
-      <span
-        className="flex-1 font-medium"
-        style={{ color: '#1A1A1A', fontFamily: 'var(--font-playfair)' }}
-      >
-        {name}
-      </span>
+      <div className="flex-1">
+        <span
+          className="font-medium"
+          style={{ color: special ? PINK.text : '#1A1A1A', fontFamily: 'var(--font-playfair)' }}
+        >
+          {name}
+        </span>
+        {special && <SpecialBadge />}
+      </div>
 
       {/* +/- controls */}
       <div className="flex items-center gap-3 flex-shrink-0">
@@ -131,8 +148,8 @@ function BagelCounter({ name, imageUrl, count, onIncrement, onDecrement, disable
           disabled={count === 0}
           className="w-9 h-9 flex items-center justify-center rounded-full transition-all"
           style={{
-            backgroundColor: count === 0 ? '#E5E0DB' : '#E8EDF5',
-            color: count === 0 ? '#A0A0A0' : '#004AAD',
+            backgroundColor: count === 0 ? '#E5E0DB' : accentLight,
+            color: count === 0 ? '#A0A0A0' : accent,
             cursor: count === 0 ? 'not-allowed' : 'pointer',
             fontWeight: 'bold',
             fontSize: '18px'
@@ -152,7 +169,7 @@ function BagelCounter({ name, imageUrl, count, onIncrement, onDecrement, disable
           disabled={disabled}
           className="w-9 h-9 flex items-center justify-center rounded-full transition-all"
           style={{
-            backgroundColor: disabled ? '#E5E0DB' : '#004AAD',
+            backgroundColor: disabled ? '#E5E0DB' : accent,
             color: disabled ? '#A0A0A0' : '#FFFFFF',
             cursor: disabled ? 'not-allowed' : 'pointer',
             fontWeight: 'bold',
@@ -163,5 +180,16 @@ function BagelCounter({ name, imageUrl, count, onIncrement, onDecrement, disable
         </button>
       </div>
     </div>
+  );
+}
+
+export function SpecialBadge() {
+  return (
+    <span
+      className="mt-1 flex w-fit items-center gap-1 rounded-full px-2.5 py-0.5 text-[0.7rem] font-semibold uppercase tracking-wide"
+      style={{ backgroundColor: PINK.strong, color: '#FFFFFF' }}
+    >
+      ✨ This week only
+    </span>
   );
 }

@@ -1,6 +1,8 @@
 'use client';
 
 import { AddOnCounts, AddOnType } from '@/types';
+import { isSpecial, PINK, SPRINKLE_BACKGROUND } from '@/lib/specials';
+import { SpecialBadge } from './BagelSelector';
 
 interface AddOnSelectorProps {
   addOnTypes: AddOnType[];
@@ -46,6 +48,7 @@ export default function AddOnSelector({
             key={type.id}
             label={type.name}
             price={type.price}
+            special={isSpecial(type.name)}
             count={counts[type.id] || 0}
             onIncrement={() => handleIncrement(type.id)}
             onDecrement={() => handleDecrement(type.id)}
@@ -100,22 +103,34 @@ interface AddOnCounterProps {
   count: number;
   onIncrement: () => void;
   onDecrement: () => void;
+  special?: boolean;
 }
 
-function AddOnCounter({ label, price, count, onIncrement, onDecrement }: AddOnCounterProps) {
+function AddOnCounter({ label, price, count, onIncrement, onDecrement, special }: AddOnCounterProps) {
   const isActive = count > 0;
+  const accent = special ? PINK.strong : '#004AAD';
+  const accentLight = special ? PINK.soft : '#E8EDF5';
 
   return (
     <div
       className="flex items-center justify-between p-4 rounded-lg transition-all"
-      style={{
-        backgroundColor: isActive ? '#e8f0fb' : '#FFFFFF',
-        border: isActive ? '2px solid #004aad' : '2px solid #E5E0DB',
-      }}
+      style={
+        special
+          ? {
+              backgroundColor: isActive ? PINK.bgActive : PINK.bg,
+              backgroundImage: SPRINKLE_BACKGROUND,
+              border: `2px ${isActive ? 'solid' : 'dashed'} ${isActive ? PINK.strong : PINK.border}`,
+            }
+          : {
+              backgroundColor: isActive ? '#e8f0fb' : '#FFFFFF',
+              border: isActive ? '2px solid #004aad' : '2px solid #E5E0DB',
+            }
+      }
     >
       <div>
-        <span className="font-medium" style={{ color: '#1A1A1A' }}>{label}</span>
-        <span className="ml-2 text-sm" style={{ color: '#6B6B6B' }}>${price.toFixed(2)} each</span>
+        <span className="font-medium" style={{ color: special ? PINK.text : '#1A1A1A' }}>{label}</span>
+        <span className="ml-2 text-sm" style={{ color: special ? PINK.text : '#6B6B6B' }}>${price.toFixed(2)} each</span>
+        {special && <SpecialBadge />}
       </div>
       <div className="flex items-center gap-3">
         <button
@@ -124,8 +139,8 @@ function AddOnCounter({ label, price, count, onIncrement, onDecrement }: AddOnCo
           disabled={count === 0}
           className="w-9 h-9 flex items-center justify-center rounded-full transition-all"
           style={{
-            backgroundColor: count === 0 ? '#E5E0DB' : '#E8EDF5',
-            color: count === 0 ? '#A0A0A0' : '#004AAD',
+            backgroundColor: count === 0 ? '#E5E0DB' : accentLight,
+            color: count === 0 ? '#A0A0A0' : accent,
             cursor: count === 0 ? 'not-allowed' : 'pointer',
             fontWeight: 'bold',
             fontSize: '18px'
@@ -144,7 +159,7 @@ function AddOnCounter({ label, price, count, onIncrement, onDecrement }: AddOnCo
           onClick={onIncrement}
           className="w-9 h-9 flex items-center justify-center rounded-full transition-all"
           style={{
-            backgroundColor: '#004AAD',
+            backgroundColor: accent,
             color: '#FFFFFF',
             cursor: 'pointer',
             fontWeight: 'bold',

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { BagelType, BiteFlavor } from '@/types';
 import NavBar from '@/components/NavBar';
+import { isSpecial, PINK } from '@/lib/specials';
 
 const INGREDIENTS = ['Sourdough Starter', 'Bread Flour', 'Water', 'Sugar', 'Salt', 'Malt'];
 
@@ -144,7 +145,10 @@ export default function MenuPage() {
                   className="flex-shrink-0 text-center px-1 py-3"
                   style={{ width: '160px', scrollSnapAlign: 'center' }}
                 >
-                  <div className="w-[140px] h-[140px] mx-auto mb-3 flex items-center justify-center md:w-[180px] md:h-[180px]">
+                  <div
+                    className="w-[140px] h-[140px] mx-auto mb-3 flex items-center justify-center rounded-full md:w-[180px] md:h-[180px]"
+                    style={{ backgroundColor: isSpecial(bagel.name) ? PINK.bg : undefined }}
+                  >
                     {bagel.image_url ? (
                       <Image
                         src={`/${bagel.image_url}`}
@@ -159,10 +163,18 @@ export default function MenuPage() {
                   </div>
                   <h3
                     className="text-[0.95rem] font-bold"
-                    style={{ fontFamily: 'var(--font-playfair)', color: 'var(--blue)' }}
+                    style={{ fontFamily: 'var(--font-playfair)', color: isSpecial(bagel.name) ? PINK.strong : 'var(--blue)' }}
                   >
                     {bagel.name}
                   </h3>
+                  {isSpecial(bagel.name) && (
+                    <span
+                      className="mt-1.5 inline-block rounded-full px-2.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide"
+                      style={{ backgroundColor: PINK.strong, color: '#FFFFFF' }}
+                    >
+                      ✨ This week only
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
