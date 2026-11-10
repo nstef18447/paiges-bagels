@@ -7,18 +7,30 @@ import Image from 'next/image';
 const FLOUR_G_PER_BATCH = 500;
 const G_PER_LB = 453.592;
 
+const RECIPE_VERSION = '2.1';
+
 const BASE_RECIPE = [
-  { name: 'Active Sourdough Starter', amount: 100, unit: 'g' },
   { name: 'Bread Flour', amount: 500, unit: 'g' },
-  { name: 'Water', amount: 270, unit: 'g' },
-  { name: 'Salt', amount: 10, unit: 'g' },
-  { name: 'Sugar', amount: 10, unit: 'g' },
-  { name: 'Diastatic Malt Powder', amount: 1, unit: 'tsp' },
+  { name: 'Water', amount: 264, unit: 'g' },
+  { name: 'Active Sourdough Starter', amount: 131, unit: 'g' },
+  { name: 'Honey', amount: 29, unit: 'g' },
+  { name: 'Fine Sea Salt', amount: 12, unit: 'g' },
 ];
 
-const BASE_DOUGH_WEIGHT = 890;
+const INSTRUCTIONS = [
+  { step: 'Mix', text: 'Combine starter, water, and honey. Add flour and salt.' },
+  { step: 'Knead', text: 'Mix in KitchenAid on speed 1 for 2–3 minutes. Rest 15 minutes, then knead on speed 2 for 6–8 minutes until smooth.' },
+  { step: 'Bulk ferment', text: 'Approximately 6 hours at 72°F, until nearly doubled.' },
+  { step: 'Shape', text: 'Divide into 110g pieces, roll into balls, rest covered for 10 minutes, then shape into bagels.' },
+  { step: 'Cold proof', text: 'Cover and refrigerate overnight (8–14 hours).' },
+  { step: 'Boil', text: '45 seconds per side in gently boiling water with barley malt syrup.' },
+  { step: 'Bake', text: '450°F for approximately 23–25 minutes, until deep golden brown.' },
+];
+
+const BASE_DOUGH_WEIGHT = BASE_RECIPE.reduce((sum, i) => sum + (i.unit === 'g' ? i.amount : 0), 0);
 const BAGEL_DOUGH_G = 110;
 const BITE_DOUGH_G = 50;
+const BAGELS_PER_BATCH = Math.floor(BASE_DOUGH_WEIGHT / BAGEL_DOUGH_G);
 
 interface DayPlan {
   date: string;
@@ -111,7 +123,12 @@ export default function RecipePage() {
       {/* Recipe card */}
       <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Bagel Recipe</h2>
+          <div>
+            <h2 className="text-2xl font-bold">Bagel Recipe <span className="text-base font-semibold text-gray-400">v{RECIPE_VERSION}</span></h2>
+            <p className="text-sm text-gray-500 mt-1">
+              {FLOUR_G_PER_BATCH * multiplier}g flour · yields {BAGELS_PER_BATCH * multiplier} bagels ({BAGEL_DOUGH_G}g each) + {(BASE_DOUGH_WEIGHT - BAGELS_PER_BATCH * BAGEL_DOUGH_G) * multiplier}g extra dough
+            </p>
+          </div>
           <div className="flex gap-2">
             {[0.5, 1, 2, 3].map((x) => (
               <button
@@ -150,9 +167,26 @@ export default function RecipePage() {
 
         <div className="mt-6 pt-4 border-t border-gray-100">
           <p className="text-sm text-gray-500">
-            Total dough weight: <span className="font-semibold text-gray-700">{(100 + 500 + 270 + 10 + 10) * multiplier}g</span>
+            Total dough weight: <span className="font-semibold text-gray-700">{BASE_DOUGH_WEIGHT * multiplier}g</span>
           </p>
         </div>
+
+        <h3 className="text-lg font-bold mt-8 mb-3">Instructions</h3>
+        <ol className="space-y-3">
+          {INSTRUCTIONS.map(({ step, text }, i) => (
+            <li key={step} className="flex gap-3">
+              <span
+                className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                style={{ backgroundColor: '#004AAD' }}
+              >
+                {i + 1}
+              </span>
+              <p className="text-gray-700 pt-0.5">
+                <span className="font-semibold text-gray-900">{step}:</span> {text}
+              </p>
+            </li>
+          ))}
+        </ol>
       </div>
 
       {/* Dough calculator */}

@@ -30,7 +30,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, unit, cost_per_unit, units_per_bagel, cost_type, add_on_type_id } = body;
+    const { name, unit, cost_per_unit, units_per_bagel, cost_type, add_on_type_id, effective_from } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
         units_per_bagel: units_per_bagel || 0,
         cost_type: cost_type || 'per_bagel',
         add_on_type_id: add_on_type_id || null,
+        ...(effective_from ? { effective_from } : {}),
       })
       .select()
       .single();
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, name, unit, cost_per_unit, units_per_bagel, cost_type, add_on_type_id } = body;
+    const { id, name, unit, cost_per_unit, units_per_bagel, cost_type, add_on_type_id, effective_to } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -93,6 +94,7 @@ export async function PATCH(request: NextRequest) {
     if (units_per_bagel !== undefined) updateData.units_per_bagel = units_per_bagel;
     if (cost_type !== undefined) updateData.cost_type = cost_type;
     if (add_on_type_id !== undefined) updateData.add_on_type_id = add_on_type_id || null;
+    if (effective_to !== undefined) updateData.effective_to = effective_to;
 
     const { data, error } = await serviceSupabase
       .from('ingredients')

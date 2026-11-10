@@ -22,18 +22,20 @@ interface BiteStats {
   biteOnly: { count: number; avgPackSize: number; avgRevenue: number } | null;
 }
 
-// ── Recipe constants ──────────────────────────────────────────────────────────
-// Starter (100g) = 50g regular flour + 50g water. Water is free.
-// Malt powder: recipe calls for 1 tsp ≈ 3g, purchased by oz.
+// ── Recipe constants (Paige's Bagels 2.1) ─────────────────────────────────────
+// Starter (131g) = 65.5g regular flour + 65.5g water. Water is free.
 const RECIPE = [
-  { name: 'Bread Flour',           amount: 500, unit: 'g', note: undefined,            purchaseUnits: ['g', 'kg', 'lb', 'oz'] },
-  { name: 'Regular Flour',         amount: 50,  unit: 'g', note: 'goes into starter',  purchaseUnits: ['g', 'kg', 'lb', 'oz'] },
-  { name: 'Salt',                  amount: 10,  unit: 'g', note: undefined,            purchaseUnits: ['g', 'kg', 'lb', 'oz'] },
-  { name: 'Sugar',                 amount: 10,  unit: 'g', note: undefined,            purchaseUnits: ['g', 'kg', 'lb', 'oz'] },
-  { name: 'Diastatic Malt Powder', amount: 3,   unit: 'g', note: '≈1 tsp per batch',  purchaseUnits: ['oz', 'g', 'lb'] },
+  { name: 'Bread Flour',   amount: 500,  unit: 'g', note: undefined,           purchaseUnits: ['g', 'kg', 'lb', 'oz'] },
+  { name: 'Regular Flour', amount: 65.5, unit: 'g', note: 'goes into starter', purchaseUnits: ['g', 'kg', 'lb', 'oz'] },
+  { name: 'Honey',         amount: 29,   unit: 'g', note: undefined,           purchaseUnits: ['oz', 'g', 'lb'] },
+  { name: 'Salt',          amount: 12,   unit: 'g', note: 'fine sea salt',     purchaseUnits: ['g', 'kg', 'lb', 'oz'] },
 ];
 
-const BAGELS_PER_BATCH = 890 / 110; // ~8.09
+// 936g of dough makes 8 bagels at 110g; the extra 56g isn't sold.
+const BAGELS_PER_BATCH = 8;
+
+const todayISO = () => new Date().toISOString().split('T')[0];
+const isCurrent = (i: Ingredient) => !i.effective_to;
 
 const TO_BASE: Record<string, number> = {
   g: 1, kg: 1000, lb: 453.592, oz: 28.3495,
@@ -131,7 +133,7 @@ export default function AdminCostsPage() {
     const data: Ingredient[] = await res.json();
     const map: { [key: string]: EditableCost } = {};
     data
-      .filter(i => i.cost_type !== 'per_bagel')
+      .filter(i => i.cost_type !== 'per_bagel' && isCurrent(i))
       .forEach(i => {
         map[i.id] = {
           id: i.id, name: i.name, unit: i.unit,
@@ -314,36 +316,46 @@ export default function AdminCostsPage() {
       // Save recipe ingredient costs to DB (for financials)
       const existingRes = await fetch('/api/ingredients');
       const existingAll: Ingredient[] = await existingRes.json();
-      const existingRecipe = existingAll.filter(i => i.cost_type === 'per_bagel');
+      const existingRecipe = existingAll.filter(i => i.cost_type === 'per_bagel' && isCurrent(i));
+      const today = todayISO();
 
+      // Recipe costs are versioned: a change closes the current row as of today and
+      // starts a new one, so orders before today keep the costs they were made with.
       for (const ing of RECIPE) {
         const p = purchases[ing.name];
         const cpb = costPerBatch(ing, p || { amount: '', unit: ing.purchaseUnits[0], price: '' });
-        const costPerUnit = cpb > 0 ? cpb / ing.amount : 0;
+        if (cpb <= 0) continue; // no purchase entered — leave whatever is on file
+        const costPerUnit = cpb / ing.amount;
         const unitsPerBagel = ing.amount / BAGELS_PER_BATCH;
         const existing = existingRecipe.find(e => e.name === ing.name);
 
-        const payload = {
-          name: ing.name, unit: ing.unit,
-          cost_per_unit: costPerUnit,
-          units_per_bagel: unitsPerBagel,
-          cost_type: 'per_bagel',
-          add_on_type_id: null,
-        };
+        if (
+          existing &&
+          Math.abs(Number(existing.cost_per_unit) - costPerUnit) < 0.00005 &&
+          Math.abs(Number(existing.units_per_bagel) - unitsPerBagel) < 0.00005
+        ) continue;
 
         if (existing) {
-          await fetch('/api/ingredients', {
+          const res = await fetch('/api/ingredients', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: existing.id, ...payload }),
+            body: JSON.stringify({ id: existing.id, effective_to: today }),
           });
-        } else {
-          await fetch('/api/ingredients', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
+          if (!res.ok) throw new Error(`Failed to retire ${ing.name}`);
         }
+        const res = await fetch('/api/ingredients', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: ing.name, unit: ing.unit,
+            cost_per_unit: costPerUnit,
+            units_per_bagel: unitsPerBagel,
+            cost_type: 'per_bagel',
+            add_on_type_id: null,
+            effective_from: today,
+          }),
+        });
+        if (!res.ok) throw new Error(`Failed to save ${ing.name}`);
       }
 
       // Save add-on and fixed costs

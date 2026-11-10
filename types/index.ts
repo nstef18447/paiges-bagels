@@ -155,6 +155,10 @@ export interface Ingredient {
   units_per_bagel: number;
   cost_type: 'per_bagel' | 'per_addon' | 'fixed';
   add_on_type_id: string | null;
+  /** First pickup date this cost applies to (inclusive); null = since the beginning. */
+  effective_from: string | null;
+  /** Pickup date this cost stopped applying (exclusive); null = still current. */
+  effective_to: string | null;
   created_at: string;
   updated_at: string;
 }

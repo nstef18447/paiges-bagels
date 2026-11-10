@@ -40,19 +40,21 @@ export async function GET(request: NextRequest) {
     const perAddonIngredients = (ingredients || []).filter(i => i.cost_type === 'per_addon');
     const fixedCosts = (ingredients || []).filter(i => i.cost_type === 'fixed');
 
-    // Per-bagel cost
-    const costPerBagelFromIngredients = perBagelIngredients.reduce(
-      (sum, ing) => sum + Number(ing.cost_per_unit) * Number(ing.units_per_bagel),
-      0
-    );
+    // Ingredient costs are versioned by pickup date so a recipe or price change
+    // only affects orders from that date on — past COGS stay as they were.
+    const activeOn = (ing: { effective_from?: string | null; effective_to?: string | null }, date: string) =>
+      (!ing.effective_from || ing.effective_from <= date) && (!ing.effective_to || date < ing.effective_to);
 
-    // Build a map of add-on cost per unit: add_on_type_id → cost
-    const addonCostMap: Record<string, number> = {};
-    for (const ing of perAddonIngredients) {
-      if (ing.add_on_type_id) {
-        addonCostMap[ing.add_on_type_id] = (addonCostMap[ing.add_on_type_id] || 0) + Number(ing.cost_per_unit);
-      }
-    }
+    const costPerBagelOn = (date: string) =>
+      perBagelIngredients
+        .filter(ing => activeOn(ing, date))
+        .reduce((sum, ing) => sum + Number(ing.cost_per_unit) * Number(ing.units_per_bagel), 0);
+
+    // add_on_type_id → cost per unit, as of a given date
+    const addonCostOn = (date: string, addOnTypeId: string) =>
+      perAddonIngredients
+        .filter(ing => ing.add_on_type_id === addOnTypeId && activeOn(ing, date))
+        .reduce((sum, ing) => sum + Number(ing.cost_per_unit), 0);
 
     // Total fixed costs
     const totalFixedCosts = fixedCosts.reduce(
@@ -100,7 +102,7 @@ export async function GET(request: NextRequest) {
       // Calculate add-on COGS for this order
       const addOns = order.order_add_ons as unknown as { quantity: number; add_on_type_id: string }[] || [];
       for (const addon of addOns) {
-        const unitCost = addonCostMap[addon.add_on_type_id] || 0;
+        const unitCost = addonCostOn(date, addon.add_on_type_id);
         dailyMap[date].addon_cogs += addon.quantity * unitCost;
       }
     }
@@ -109,8 +111,9 @@ export async function GET(request: NextRequest) {
     const dailyFinancials = Object.entries(dailyMap)
       .sort(([a], [b]) => b.localeCompare(a)) // newest first
       .map(([date, data]) => {
-        const bagelCogs = data.bagels_sold * costPerBagelFromIngredients;
-        const biteCogs = data.bites_sold * costPerBagelFromIngredients * (50 / 110);
+        const dayCostPerBagel = costPerBagelOn(date);
+        const bagelCogs = data.bagels_sold * dayCostPerBagel;
+        const biteCogs = data.bites_sold * dayCostPerBagel * (50 / 110);
         // Amortize fixed costs proportionally by bagel-equivalent units sold this day
         const totalUnits = grandTotalBagels + grandTotalBites * (50 / 110);
         const dayUnits = data.bagels_sold + data.bites_sold * (50 / 110);
@@ -155,7 +158,8 @@ export async function GET(request: NextRequest) {
 
     // Cost per bagel includes per-bagel ingredients + amortized fixed costs
     const fixedPerBagel = grandTotalBagels > 0 ? totalFixedCosts / grandTotalBagels : 0;
-    const costPerBagel = costPerBagelFromIngredients + fixedPerBagel;
+    const today = new Date().toISOString().split('T')[0];
+    const costPerBagel = costPerBagelOn(today) + fixedPerBagel;
 
     return NextResponse.json({
       daily: dailyFinancials,
