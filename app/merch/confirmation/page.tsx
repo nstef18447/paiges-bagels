@@ -199,16 +199,15 @@ export default function MerchConfirmationPage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#f6f4f0' }}>
       <div className="max-w-xl mx-auto px-6 pb-10">
-        <div className="flex flex-col items-center overflow-hidden" style={{ marginBottom: '-30px' }}>
+        <div className="flex flex-col items-center pt-8 pb-6">
           <Link href="/">
             <Image
-              src="/logo.svg"
+              src="/logo-primary.png"
               alt="Paige's Bagels"
-              width={375}
-              height={375}
+              width={1200}
+              height={545}
               unoptimized
-              className="w-auto h-auto max-w-[450px] cursor-pointer"
-              style={{ marginTop: '-50px', marginBottom: '-70px' }}
+              className="w-auto h-auto max-w-[260px] cursor-pointer"
               priority
             />
           </Link>

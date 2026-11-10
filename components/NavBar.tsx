@@ -30,16 +30,16 @@ export default function NavBar() {
     <>
       {/* Sticky Nav */}
       <nav
-        className="sticky top-0 z-50 flex items-center justify-between px-5 py-3 md:px-10 md:py-4 overflow-hidden"
+        className="sticky top-0 z-50 flex items-center justify-between px-5 py-2 md:px-10 md:py-3 overflow-hidden"
         style={{ backgroundColor: 'var(--bg)', borderBottom: '1px solid var(--border)' }}
       >
         {/* Logo */}
         <Link href="/" className="flex-shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/logo.svg"
+            src="/logo-primary.png"
             alt="Paige's Bagels"
-            className="h-10 md:h-12 w-auto"
+            className="h-16 md:h-24 w-auto"
           />
         </Link>
 

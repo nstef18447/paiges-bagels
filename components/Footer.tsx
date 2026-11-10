@@ -56,16 +56,10 @@ export default function Footer() {
         <div className="md:col-span-1">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/logo-white.svg"
+            src="/logo-primary-light.png"
             alt="Paige's Bagels"
-            className="h-10 w-auto mx-auto md:mx-0 mb-3"
+            className="h-20 w-auto mx-auto md:mx-0 mb-4"
           />
-          <p
-            className="text-[0.78rem] font-semibold uppercase tracking-[0.15em] mb-3"
-            style={{ color: '#c9a24e' }}
-          >
-            Seriously Sourdough
-          </p>
           <p className="text-[0.82rem] leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>
             Handcrafted sourdough bagels made with six simple ingredients. Naturally fermented,
             boiled &amp; baked fresh.

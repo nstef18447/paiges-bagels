@@ -62,7 +62,7 @@ export default function BagelfestPage() {
       <div className="flex justify-center pt-4 pb-0 px-5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/logo.svg"
+          src="/logo-primary.png"
           alt="Paige's Bagels"
           className="h-16 w-auto"
         />

@@ -340,7 +340,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
       <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ backgroundColor: bgColor }}>
         <Link href="/">
           <Image
-            src="/logo.svg"
+            src="/logo-primary.png"
             alt="Paige's Bagels"
             width={200}
             height={200}
@@ -382,7 +382,7 @@ export default function OrderForm({ mode = 'regular' }: OrderFormProps) {
         >
           <Link href="/">
             <Image
-              src="/logo-transparent.svg"
+              src="/logo-primary.png"
               alt="Paige's Bagels"
               width={350}
               height={350}

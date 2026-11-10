@@ -30,8 +30,8 @@ export const metadata: Metadata = {
   title: "Paige's Bagels - Sourdough Bagels",
   description: "Fresh sourdough bagels made to order. Worth waking up for!",
   icons: {
-    icon: "/icon.svg",
-    apple: "/icon.svg",
+    icon: "/icon.png",
+    apple: "/apple-icon.png",
   },
   openGraph: {
     title: "Paige's Bagels",
@@ -41,8 +41,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "https://paigesbagels.com/logo.png",
-        width: 822,
-        height: 452,
+        width: 1200,
+        height: 630,
         alt: "Paige's Bagels Logo",
       },
     ],

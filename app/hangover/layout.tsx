@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     description: "Fresh sourdough ready in 1 hour. Order now, thank us later.",
     url: "https://paigesbagels.com/hangover",
     siteName: "Paige's Bagels",
-    images: [{ url: "https://paigesbagels.com/logo.png", width: 822, height: 452 }],
+    images: [{ url: "https://paigesbagels.com/logo.png", width: 1200, height: 630 }],
     type: "website",
   },
 };
