@@ -14,7 +14,7 @@ export default function AdminOrdersPage() {
   const [activeTab, setActiveTab] = useState<'pending' | 'confirmed' | 'completed' | 'history'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCustomForm, setShowCustomForm] = useState(false);
-  const [customOrder, setCustomOrder] = useState({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '', isGifted: false, deliveryAddress: '' });
+  const [customOrder, setCustomOrder] = useState({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '', isGifted: false, deliveryAddress: '', courierFee: '' });
   const [bagelTypes, setBagelTypes] = useState<BagelType[]>([]);
   const [bagelBreakdown, setBagelBreakdown] = useState<Record<string, number>>({});
   const [biteFlavors, setBiteFlavors] = useState<{ id: string; slug: string; name: string }[]>([]);
@@ -161,6 +161,7 @@ export default function AdminOrdersPage() {
           customerName: customOrder.customerName || undefined,
           isGifted: customOrder.isGifted,
           deliveryAddress: customOrder.deliveryAddress || undefined,
+          courierFee: parseFloat(customOrder.courierFee) || 0,
           bagelBreakdown: Object.keys(bagelBreakdown).length > 0 ? bagelBreakdown : undefined,
           bitesBreakdown: Object.keys(bitesBreakdown).length > 0 ? bitesBreakdown : undefined,
           biteFlavorNames: Object.fromEntries(biteFlavors.map(f => [f.slug, f.name])),
@@ -168,7 +169,7 @@ export default function AdminOrdersPage() {
       });
 
       if (response.ok) {
-        setCustomOrder({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '', isGifted: false, deliveryAddress: '' });
+        setCustomOrder({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '', isGifted: false, deliveryAddress: '', courierFee: '' });
         setBagelBreakdown({});
         setBitesBreakdown({});
         setShowCustomForm(false);
@@ -329,6 +330,21 @@ export default function AdminOrdersPage() {
                   onChange={(e) => setCustomOrder({ ...customOrder, totalPrice: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004AAD] disabled:bg-gray-100 disabled:text-gray-400"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Courier Fee ($)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={customOrder.courierFee}
+                  onChange={(e) => setCustomOrder({ ...customOrder, courierFee: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004AAD]"
+                />
+                <p className="text-xs text-gray-400 mt-1">What you paid the courier — subtracted from revenue</p>
               </div>
             </div>
             {bagelTypes.length > 0 && (

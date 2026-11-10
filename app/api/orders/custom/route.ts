@@ -3,7 +3,7 @@ import { getServiceSupabase } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
-    const { date, totalBagels, totalBites, totalPrice, customerName, isGifted, deliveryAddress, bagelBreakdown, bitesBreakdown, biteFlavorNames } = await request.json();
+    const { date, totalBagels, totalBites, totalPrice, customerName, isGifted, deliveryAddress, courierFee, bagelBreakdown, bitesBreakdown, biteFlavorNames } = await request.json();
 
     if (!date || totalPrice == null) {
       return NextResponse.json(
@@ -66,6 +66,10 @@ export async function POST(request: NextRequest) {
           }
           return totalBites > 0 ? { pack_size: totalBites, flavors: { custom: totalBites }, flavor_names: { custom: 'Bites' } } : null;
         })(),
+        // Same shape as checkout delivery; financials subtracts delivery.fee from revenue
+        delivery: Number(courierFee) > 0 || deliveryAddress
+          ? { address: deliveryAddress || '', fee: Number(courierFee) || 0 }
+          : null,
         status: 'confirmed',
         venmo_note: isGifted
           ? `Gifted - PR / Influencer${deliveryAddress ? ` · ${deliveryAddress}` : ''}`
