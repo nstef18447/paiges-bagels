@@ -3,7 +3,7 @@ import { getServiceSupabase } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
-    const { date, totalBagels, totalBites, totalPrice, customerName, isGifted, deliveryAddress, courierFee, bagelBreakdown, bitesBreakdown, biteFlavorNames } = await request.json();
+    const { date, totalBagels, totalBites, totalPrice, customerName, isGifted, deliveryAddress, courierFee, creamCheeseCost, bagelBreakdown, bitesBreakdown, biteFlavorNames } = await request.json();
 
     if (!date || totalPrice == null) {
       return NextResponse.json(
@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
         delivery: Number(courierFee) > 0 || deliveryAddress
           ? { address: deliveryAddress || '', fee: Number(courierFee) || 0 }
           : null,
+        extra_cogs: Number(creamCheeseCost) || 0,
         status: 'confirmed',
         venmo_note: isGifted
           ? `Gifted - PR / Influencer${deliveryAddress ? ` · ${deliveryAddress}` : ''}`

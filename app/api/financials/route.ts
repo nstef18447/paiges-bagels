@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     // Fetch all confirmed/ready orders with time slots and add-ons
     const { data: orders, error: ordersError } = await supabase
       .from('orders')
-      .select('id, total_bagels, total_price, status, bites, delivery, time_slot_id, time_slots(date), order_add_ons(quantity, add_on_type_id)')
+      .select('id, total_bagels, total_price, status, bites, delivery, extra_cogs, time_slot_id, time_slots(date), order_add_ons(quantity, add_on_type_id)')
       .in('status', ['confirmed', 'ready'])
       .eq('is_fake', false);
 
@@ -69,6 +69,7 @@ export async function GET(request: NextRequest) {
       bites_sold: number;
       revenue: number;
       addon_cogs: number;
+      extra_cogs: number;
     }> = {};
 
     let grandTotalBagels = 0;
@@ -84,7 +85,7 @@ export async function GET(request: NextRequest) {
       if (endDate && date > endDate) continue;
 
       if (!dailyMap[date]) {
-        dailyMap[date] = { orders: 0, bagels_sold: 0, bites_sold: 0, revenue: 0, addon_cogs: 0 };
+        dailyMap[date] = { orders: 0, bagels_sold: 0, bites_sold: 0, revenue: 0, addon_cogs: 0, extra_cogs: 0 };
       }
 
       const orderBites = (order as any).bites as { flavors: Record<string, number> } | null;
@@ -96,6 +97,8 @@ export async function GET(request: NextRequest) {
       dailyMap[date].bagels_sold += order.total_bagels;
       dailyMap[date].bites_sold += bitesQty;
       dailyMap[date].revenue += Number(order.total_price) - deliveryFee;
+      // One-off costs entered on custom orders (e.g. cream cheese for a corporate order)
+      dailyMap[date].extra_cogs += Number(order.extra_cogs) || 0;
       grandTotalBagels += order.total_bagels;
       grandTotalBites += bitesQty;
 
@@ -120,7 +123,7 @@ export async function GET(request: NextRequest) {
         const fixedCogsPortion = totalUnits > 0
           ? totalFixedCosts * (dayUnits / totalUnits)
           : 0;
-        const cogs = bagelCogs + biteCogs + data.addon_cogs + fixedCogsPortion;
+        const cogs = bagelCogs + biteCogs + data.addon_cogs + data.extra_cogs + fixedCogsPortion;
         const profit = data.revenue - cogs;
         const profit_margin = data.revenue > 0 ? (profit / data.revenue) * 100 : 0;
 

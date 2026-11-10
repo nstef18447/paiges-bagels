@@ -14,7 +14,7 @@ export default function AdminOrdersPage() {
   const [activeTab, setActiveTab] = useState<'pending' | 'confirmed' | 'completed' | 'history'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCustomForm, setShowCustomForm] = useState(false);
-  const [customOrder, setCustomOrder] = useState({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '', isGifted: false, deliveryAddress: '', courierFee: '' });
+  const [customOrder, setCustomOrder] = useState({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '', isGifted: false, deliveryAddress: '', courierFee: '', creamCheeseCost: '' });
   const [bagelTypes, setBagelTypes] = useState<BagelType[]>([]);
   const [bagelBreakdown, setBagelBreakdown] = useState<Record<string, number>>({});
   const [biteFlavors, setBiteFlavors] = useState<{ id: string; slug: string; name: string }[]>([]);
@@ -162,6 +162,7 @@ export default function AdminOrdersPage() {
           isGifted: customOrder.isGifted,
           deliveryAddress: customOrder.deliveryAddress || undefined,
           courierFee: parseFloat(customOrder.courierFee) || 0,
+          creamCheeseCost: parseFloat(customOrder.creamCheeseCost) || 0,
           bagelBreakdown: Object.keys(bagelBreakdown).length > 0 ? bagelBreakdown : undefined,
           bitesBreakdown: Object.keys(bitesBreakdown).length > 0 ? bitesBreakdown : undefined,
           biteFlavorNames: Object.fromEntries(biteFlavors.map(f => [f.slug, f.name])),
@@ -169,7 +170,7 @@ export default function AdminOrdersPage() {
       });
 
       if (response.ok) {
-        setCustomOrder({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '', isGifted: false, deliveryAddress: '', courierFee: '' });
+        setCustomOrder({ date: '', totalBagels: '', totalBites: '', totalPrice: '', customerName: '', isGifted: false, deliveryAddress: '', courierFee: '', creamCheeseCost: '' });
         setBagelBreakdown({});
         setBitesBreakdown({});
         setShowCustomForm(false);
@@ -345,6 +346,21 @@ export default function AdminOrdersPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004AAD]"
                 />
                 <p className="text-xs text-gray-400 mt-1">What you paid the courier — subtracted from revenue</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Cream Cheese Cost ($)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={customOrder.creamCheeseCost}
+                  onChange={(e) => setCustomOrder({ ...customOrder, creamCheeseCost: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004AAD]"
+                />
+                <p className="text-xs text-gray-400 mt-1">What the cream cheese cost you — added to COGS</p>
               </div>
             </div>
             {bagelTypes.length > 0 && (
